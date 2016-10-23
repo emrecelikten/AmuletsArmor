@@ -10,6 +10,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <string.h>
 #include "CLI_SEND.H"
 #include "CLIENT.H"
 #include "COLOR.H"
@@ -17,7 +18,6 @@
 #include "MAP.H"
 #include "MAINUI.H"
 #include "MEMORY.H"
-#include "PACKET.H"
 #include "PROMPT.H"
 #include "SMCCHOOS.H"
 #include "SMMAIN.H"
@@ -1255,7 +1255,7 @@ T_void SMCChooseCheckPasswordForLoadEnter(
     DebugCheck(p_data != NULL) ;
 
     StatsGetPassword(StatsGetActive(), password) ;
-    if (strnicmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)  {
+    if (strncasecmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)  {
         ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_OK) ;
     } else {
         ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_WRONG) ;
@@ -1353,7 +1353,7 @@ T_void SMCChooseChangePasswordEnter(
             "Enter password",
             MAX_SIZE_PASSWORD,
             password) == TRUE))  {
-        if (strnicmp(oldPassword, password, 12) != 0)  {
+        if (strncasecmp(oldPassword, password, 12) != 0)  {
             /* passwords don't match up.  Bad password status */
             ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_WRONG) ;
         } else {
