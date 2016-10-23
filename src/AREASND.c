@@ -264,7 +264,7 @@ T_areaSound AreaSoundCreate(
     /* First check to see if sound is turned on. */
     if (SoundIsOn()==TRUE)  {
         /* Allocate memory for the sound. */
-        p_sound = MemAlloc(sizeof(T_areaSoundStruct)) ;
+        p_sound = (T_areaSoundStruct*)MemAlloc(sizeof(T_areaSoundStruct)) ;
 
         /* If sound is allocated ... */
         DebugCheck(p_sound != NULL) ;
@@ -903,7 +903,7 @@ static T_void ISoundForAreaSoundIsDone(
 
     DebugRoutine("ISoundForAreaSoundIsDone") ;
 
-    id = (T_word32)p_data ;
+    id = *((T_word32*)p_data) ;
 //printf("Area sound %d is done\n", id) ; fflush(stdout) ;
     p_areaSound = IFindAreaSoundByID(id) ;
 
