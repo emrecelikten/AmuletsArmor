@@ -182,56 +182,6 @@ static T_void IShowScreenNextPage (E_mouseEvent event,
     DebugEnd();
 }
 
-T_void CheckCopyProtection(T_void)
-{
-    T_file file ;
-    char filename[80] ;
-    char code[20] ;
-    E_Boolean good = FALSE ;
-    char key ;
-
-    DebugRoutine("CheckCopyProtection") ;
-
-    do {
-        sprintf(filename, "%c:\\morepics.res", ConfigGetCDROMDrive()) ;
-        file = FileOpen(filename, FILE_MODE_READ) ;
-        if (file != FILE_BAD)  {
-            FileSeek(file, 333333333L) ;
-            FileRead(file, code, 20) ;
-            FileClose(file) ;
-
-            if (strncmp("YcArIp", code, 7) == 0)
-                good = TRUE ;
-        }
-
-        if (good == FALSE)  {
-            printf("Please insert the Amulets & Armor CDROM into drive %c:\n", toupper(ConfigGetCDROMDrive())) ;
-            puts("and press SPACE to continue.  If this is the wrong drive,") ;
-            puts("press the letter of the drive to check.  Hit ESC to cancel.") ;
-
-            do  {
-                key = toupper(getch()) ;
-
-                if (key == 0x1b)  {
-                    puts("Aborting game.") ;
-                    exit(1) ;
-                }
-
-                if ((key >= 'D') && (key <= 'Z'))  {
-                    code[0] = key ;
-                    code[1] = '\0' ;
-                    INIFilePut(ConfigGetINIFile(), "cdrom", "drive", code) ;
-                    ConfigClose() ;
-                    ConfigOpen() ;
-                    key = ' ' ;
-                }
-            } while (key != ' ') ;
-        }
-    } while (good == FALSE) ;
-
-    DebugEnd() ;
-}
-
 //#define PULL_OUT
 
 #ifdef PULL_OUT
@@ -280,7 +230,7 @@ T_void PullOut(T_void)
 }
 #endif
 
-#ifdef WIN32
+#ifdef SDL
 T_void game_main(T_word16 argc, char *argv[])
 #else
 T_void main(T_word16 argc, char *argv[])
@@ -323,7 +273,7 @@ extern void SleepMS(T_word32 sleepMS);
         exit(1) ;
     }
 
-#ifndef WIN32
+#ifndef SDL
     if (argc != 2)  {
         puts("USAGE: GAME <Direct Talk Handle>") ;
         DebugEnd() ;
@@ -333,7 +283,7 @@ extern void SleepMS(T_word32 sleepMS);
     sscanf(argv[1], "%lX", &handle) ;
 //    printf("DirectTalk Handle: 0x%08lX\n", handle) ;
 #else
-    if (argc == 1) {
+    if (argc <= 1) {
         handle = 0;
     } else if (argc == 2)  {
 #if WIN_IPX
@@ -363,7 +313,6 @@ extern void SleepMS(T_word32 sleepMS);
          NULL,
          NULL,
          handle) ;
-
     /* Initialize the game. */
     UpdateGameBegin() ;
     DebugSaveVectorTable() ;
