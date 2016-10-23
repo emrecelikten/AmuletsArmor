@@ -26,6 +26,7 @@
 #define MathCosineLookup(x)       COS( (x) >> 6 )
 #else
 #include "math.h"
+#undef M_PI
 #define M_PI	3.14159265358979323846
 //#define MathSineLookup(x)         SIN( (x) >> 6 )
 #define MathSineLookup(x)			((T_sword32)(sin(((double)(x))*2.0*M_PI/65536.0)*65536.0))
