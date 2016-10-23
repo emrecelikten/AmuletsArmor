@@ -1383,7 +1383,7 @@ SoundInitialize(T_void)
         desired.samples = 2048;
         // Our callback function
         desired.callback = IMixer;
-//        desired.userdata = 0;
+        desired.userdata = 0;
         // Open the audio device
         audioDevice = SDL_OpenAudioDevice(NULL, 0, &desired, &G_audioSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
         if (audioDevice == 0)
@@ -1392,7 +1392,7 @@ SoundInitialize(T_void)
             exit(-1);
         }
 
-        SDL_PauseAudio(0);
+        SDL_PauseAudioDevice(audioDevice, 0);
 
 #if 0 // test code
         CreateTestSounds();
