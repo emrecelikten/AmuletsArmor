@@ -17,40 +17,42 @@
 #include "MAP.H"
 #include "MEMORY.H"
 #include "OBJECT.H"
-#include "PICS.H"
-#include "RESOURCE.H"
 #include "3D_VIEW.H"
 
 #define LIGHT_TAG            (*((T_word32 *)"LiT"))
 #define LIGHT_DEAD_TAG       (*((T_word32 *)"DlI"))
 
-typedef struct {
-    T_word32 tag ;
-    T_word16 *p_table ;
-    T_resource res ;
+typedef struct
+{
+    T_word32 tag;
+    T_word16 *p_table;
+    T_resource res;
 
     T_word32 tableLen;
     T_word32 tableAllocLen;
-} T_lightTableStruct ;
+} T_lightTableStruct;
 
 /* Variable that keeps all the light values of sectors after */
 /* illuminating objects are applied. */
-T_byte8 *G_preLightCalculations ;
+T_byte8 *G_preLightCalculations;
 
 /* variable that keeps all the intermediate light calculations. */
-T_byte8 *G_lightCalculations ;
+T_byte8 *G_lightCalculations;
 
 /* Internal prototypes: */
-static T_void ILightIlluminate(T_byte8 *p_lightList) ;
+static T_void
+ILightIlluminate(T_byte8 *p_lightList);
 
 // Append a 16-bit value to the end of the light script
-static T_void ILSAppend(T_lightTableStruct *p_light, T_word16 aValue)
+static T_void
+ILSAppend(T_lightTableStruct *p_light, T_word16 aValue)
 {
     T_word16 *p_more;
     // Are we out of room?
-    if (p_light->tableLen >= p_light->tableAllocLen) {
+    if (p_light->tableLen >= p_light->tableAllocLen)
+    {
         // Yes, need more space.  Alloc more space
-        p_more = MemAlloc(p_light->tableLen+1024);
+        p_more = MemAlloc(p_light->tableLen + 1024);
         memcpy(p_more, p_light->p_table, p_light->tableLen);
         MemFree(p_light->p_table);
         p_light->p_table = p_more;
@@ -58,104 +60,118 @@ static T_void ILSAppend(T_lightTableStruct *p_light, T_word16 aValue)
     }
 
     // We have enough room (now), let's append to the end this value
-    *((T_word16 *)(((T_byte8 *)(p_light->p_table))+p_light->tableLen)) = aValue;
+    *((T_word16 *) (((T_byte8 *) (p_light->p_table)) + p_light->tableLen)) = aValue;
     p_light->tableLen += 2;
 }
 
-static T_word16 AddToList(
-             T_word16 *p_list,
-             T_word16 max,
-             T_word16 numItems,
-             T_word16 item)
+static T_word16
+AddToList(
+    T_word16 *p_list,
+    T_word16 max,
+    T_word16 numItems,
+    T_word16 item)
 {
-    T_word16 i ;
+    T_word16 i;
 
-    DebugRoutine("AddToList") ;
+    DebugRoutine("AddToList");
 
-    for (i=0; i<numItems; i++)  {
+    for (i = 0; i < numItems; i++)
+    {
         if (p_list[i] == item)
-            break ;
+            break;
     }
 
-    if (i == numItems)  {
+    if (i == numItems)
+    {
         //printf("Placing i:%d of %d (item: %d)\n", i, numItems, item) ;  fflush(stdout) ;
-        if (numItems < max)  {
-            p_list[i] = item ;
-            numItems++ ;
-        } else {
-            DebugCheck(FALSE) ;
+        if (numItems < max)
+        {
+            p_list[i] = item;
+            numItems++;
+        }
+        else
+        {
+            DebugCheck(FALSE);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return numItems ;
+    return numItems;
 }
 
-static T_word16 FindAdjacentSectors(
-             T_word16 sector,
-             T_word16 *p_list,
-             T_word16 max)
+static T_word16
+FindAdjacentSectors(
+    T_word16 sector,
+    T_word16 *p_list,
+    T_word16 max)
 {
-    T_word16 line ;
-    T_3dLine *p_line ;
-    T_3dSide *p_side1 ;
-    T_3dSide *p_side2 ;
-    T_word16 numItems = 0 ;
+    T_word16 line;
+    T_3dLine *p_line;
+    T_3dSide *p_side1;
+    T_3dSide *p_side2;
+    T_word16 numItems = 0;
 
-    DebugRoutine("FindAdjacentSectors") ;
+    DebugRoutine("FindAdjacentSectors");
 
-    for (line=0; line<G_Num3dLines; line++)  {
+    for (line = 0; line < G_Num3dLines; line++)
+    {
         //printf("line: %05d\r", line) ; fflush(stdout);
-        p_line = G_3dLineArray + line ;
-        if (p_line->flags & LINE_IS_TWO_SIDED)  {
-            p_side1 = G_3dSideArray + p_line->side[0] ;
-            p_side2 = G_3dSideArray + p_line->side[1] ;
+        p_line = G_3dLineArray + line;
+        if (p_line->flags & LINE_IS_TWO_SIDED)
+        {
+            p_side1 = G_3dSideArray + p_line->side[0];
+            p_side2 = G_3dSideArray + p_line->side[1];
             if (p_side1->sector == sector)
-                numItems = AddToList(p_list, max, numItems, p_side2->sector) ;
+                numItems = AddToList(p_list, max, numItems, p_side2->sector);
             if (p_side2->sector == sector)
-                numItems = AddToList(p_list, max, numItems, p_side1->sector) ;
+                numItems = AddToList(p_list, max, numItems, p_side1->sector);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return numItems ;
+    return numItems;
 }
 
-static T_word16 RemoveSectorFromList(T_word16 *p_list, T_word16 num, T_word16 item)
+static T_word16
+RemoveSectorFromList(T_word16 *p_list, T_word16 num, T_word16 item)
 {
-    T_word16 i ;
-    T_word16 j ;
+    T_word16 i;
+    T_word16 j;
 
     /* Go through the list and remove all the instances of item. */
-    for (i=j=0; i<num; i++)  {
-        if (item != p_list[i])  {
-            p_list[j] = p_list[i] ;
-            j++ ;
+    for (i = j = 0; i < num; i++)
+    {
+        if (item != p_list[i])
+        {
+            p_list[j] = p_list[i];
+            j++;
         }
     }
 
-    return j ;
+    return j;
 }
 
-static int QSort16Compare(const void *p_data1, const void *p_data2)
+static int
+QSort16Compare(const void *p_data1, const void *p_data2)
 {
-    T_word16 data1, data2 ;
+    T_word16 data1, data2;
 
-    data1 = *((T_word16 *)p_data1) ;
-    data2 = *((T_word16 *)p_data2) ;
+    data1 = *((T_word16 *) p_data1);
+    data2 = *((T_word16 *) p_data2);
 
     if (data1 == data2)
-        return 0 ;
+        return 0;
 
     if (data1 < data2)
-        return -1 ;
+        return -1;
 
-    return 1 ;
+    return 1;
 }
 
-T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
+T_void
+LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
 {
     E_Boolean isDoor = FALSE;
     T_word16 adjacentSectors[1000];
@@ -184,7 +200,8 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
     p_sector = G_3dSectorArray + sector;
     // Is this a sky sector?
     if ((strncmp(p_sector->ceilingTx, "F_SKY", 5) == 0)
-            || (p_sector->trigger & 1)) {
+        || (p_sector->trigger & 1))
+    {
         //fprintf(fp, "S%d = OUTSIDE * 100%% .\n", sector) ;
 
         // This is a sky sector, so just output 100% of the SKY register
@@ -192,7 +209,9 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
         ILSAppend(p_light, LIGHT_SCRIPT_REGISTER_SKY);
         ILSAppend(p_light, LIGHT_SCRIPT_MODIFIER_100_PERCENT);
         ILSAppend(p_light, LIGHT_SCRIPT_END_OF_FORMULA);
-    } else {
+    }
+    else
+    {
         // No sky.  Are we a door?
         isDoor = DoorIsAtSector(sector);
 
@@ -200,36 +219,43 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
         numAdjacent = FindAdjacentSectors(sector, adjacentSectors, 1000);
 
         // Do we have any adjacent sectors?
-        if (numAdjacent > 0) {
+        if (numAdjacent > 0)
+        {
             // At least one?
-            if (numAdjacent > 1) {
+            if (numAdjacent > 1)
+            {
                 // Sort them by sector number (nice and orderly this way)
                 qsort(adjacentSectors, numAdjacent, sizeof(T_word16),
-                        QSort16Compare);
+                      QSort16Compare);
             }
 
             // Let's look at those adjacent sectors
-            for (i = 0; i < numAdjacent; i++) {
+            for (i = 0; i < numAdjacent; i++)
+            {
                 // Is this adjacent sector a door?
-                if (DoorIsAtSector(adjacentSectors[i])) {
+                if (DoorIsAtSector(adjacentSectors[i]))
+                {
                     // Yes, a door.  How many are adjacent to this door?
                     numDoorAdjacent = FindAdjacentSectors(adjacentSectors[i],
-                            adjacentToDoor, 1000);
+                                                          adjacentToDoor, 1000);
                     // Any?
-                    if (numDoorAdjacent > 0) {
+                    if (numDoorAdjacent > 0)
+                    {
                         // One?
-                        if (numDoorAdjacent > 1) {
+                        if (numDoorAdjacent > 1)
+                        {
                             // Sort this list back
                             qsort(adjacentToDoor, numDoorAdjacent,
-                                    sizeof(T_word16), QSort16Compare);
+                                  sizeof(T_word16), QSort16Compare);
                         }
 
                         // Now remove the common list.  Don't want a loop of logic
                         numDoorAdjacent = RemoveSectorFromList(adjacentToDoor,
-                                numDoorAdjacent, sector);
+                                                               numDoorAdjacent, sector);
 
                         // How many now?  At least one?
-                        if (numDoorAdjacent > 0) {
+                        if (numDoorAdjacent > 0)
+                        {
                             // Okay, let's out the registers for these intermediate
                             // values.  NOTE: There is a limit of 10 doors adjacent to
                             // a single sector!
@@ -239,7 +265,8 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
 
                             // Divide the sectors evenly between the doors
                             percentRemain = 100;
-                            for (j = 0; j < numDoorAdjacent; j++) {
+                            for (j = 0; j < numDoorAdjacent; j++)
+                            {
                                 percent = percentRemain / (numDoorAdjacent - j);
                                 percentRemain -= percent;
 
@@ -248,7 +275,7 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
                                 //fflush(fp);
                                 // Output the sector multiplied by the percent
                                 ILSAppend(p_light, adjacentToDoor[j]);
-                                ILSAppend(p_light, (percent<<8)/100);
+                                ILSAppend(p_light, (percent << 8) / 100);
 
                                 // More?
                                 //if ((j + 1) == numDoorAdjacent) {
@@ -281,10 +308,13 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
 
             // Let's create the resulting formula (doors use registers, sectors use
             // final values).
-            if (isDoor) {
+            if (isDoor)
+            {
                 //fprintf(fp, "R%d = ", reg2);
                 ILSAppend(p_light, LIGHT_SCRIPT_REGISTER(reg2));
-            } else {
+            }
+            else
+            {
                 //fprintf(fp, "S%d = ", sector);
                 ILSAppend(p_light, sector);
             }
@@ -294,22 +324,26 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
             // let's do the final round for this sector
             percentRemain = 100;
             reg = 0;
-            for (i = 0; i < numAdjacent; i++) {
+            for (i = 0; i < numAdjacent; i++)
+            {
                 percent = percentRemain / (numAdjacent - i);
                 percentRemain -= percent;
 
                 // Is this an adjacent door or sector?
-                if (adjDoors[reg] == adjacentSectors[i]) {
+                if (adjDoors[reg] == adjacentSectors[i])
+                {
                     // Doors use previously calculated registers
                     //fprintf(fp, "R%d * %d%% ", reg, percent);
                     ILSAppend(p_light, LIGHT_SCRIPT_REGISTER(reg));
-                    ILSAppend(p_light, (percent<<8)/100);
+                    ILSAppend(p_light, (percent << 8) / 100);
                     reg++;
-                } else {
+                }
+                else
+                {
                     // Sectors use there current values
                     //fprintf(fp, "S%d * %d%% ", adjacentSectors[i], percent);
                     ILSAppend(p_light, adjacentSectors[i]);
-                    ILSAppend(p_light, (percent<<8)/100);
+                    ILSAppend(p_light, (percent << 8) / 100);
                 }
                 //fflush(fp);
 
@@ -323,7 +357,8 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
             // End the formula for this one sector
             ILSAppend(p_light, LIGHT_SCRIPT_END_OF_FORMULA);
 
-            if (isDoor) {
+            if (isDoor)
+            {
                 //fprintf(fp, "S%d = R%d * D%d .\n", sector, reg2, sector);
                 // The door itself gets it's own overriding formula which
                 // darkens underneath it as it closes down.
@@ -354,17 +389,19 @@ T_void LightScriptCreateForSector(T_lightTableStruct *p_light, T_word16 sector)
  *  @return Handle to light table
  *
  *<!-----------------------------------------------------------------------*/
-T_lightTable LightTableLoad(T_word32 number)
+T_lightTable
+LightTableLoad(T_word32 number)
 {
-    T_lightTableStruct *p_light ;
+    T_lightTableStruct *p_light;
 
-    DebugRoutine("LightTableLoad") ;
+    DebugRoutine("LightTableLoad");
     /* Allocate a structure for a light table handle. */
-    p_light = MemAlloc(sizeof(T_lightTableStruct)) ;
-    DebugCheck(p_light != NULL) ;
+    p_light = MemAlloc(sizeof(T_lightTableStruct));
+    DebugCheck(p_light != NULL);
 
     /* Make sure we got the handle. */
-    if (p_light)  {
+    if (p_light)
+    {
 #if 0
         /* Get the appropriate name. */
         sprintf(name, "L%ld.LIT", number) ;
@@ -395,30 +432,31 @@ T_lightTable LightTableLoad(T_word32 number)
         }
 #else
         // Instead, let's generate the .LIT file at load time
-        T_word16 sector ;
+        T_word16 sector;
         p_light->p_table = MemAlloc(1024);
         p_light->tableLen = 0;
         p_light->tableAllocLen = 1024;
 
-        for (sector=0; sector<G_Num3dSectors; sector++)  {
-            LightScriptCreateForSector(p_light, sector) ;
+        for (sector = 0; sector < G_Num3dSectors; sector++)
+        {
+            LightScriptCreateForSector(p_light, sector);
         }
         // And close out the final script field
         ILSAppend(p_light, LIGHT_SCRIPT_END_OF_TABLE);
 
         p_light->tag = LIGHT_TAG;
         /* Allocate memory for the intermeditate calculations. */
-        G_lightCalculations = MemAlloc(G_Num3dSectors) ;
-        DebugCheck(G_lightCalculations != NULL) ;
-        G_preLightCalculations = MemAlloc(G_Num3dSectors) ;
-        DebugCheck(G_preLightCalculations != NULL) ;
+        G_lightCalculations = MemAlloc(G_Num3dSectors);
+        DebugCheck(G_lightCalculations != NULL);
+        G_preLightCalculations = MemAlloc(G_Num3dSectors);
+        DebugCheck(G_preLightCalculations != NULL);
 #endif
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return what we found for a light table handle. */
-    return ((T_lightTable)p_light) ;
+    return ((T_lightTable) p_light);
 }
 
 /*-------------------------------------------------------------------------*
@@ -430,36 +468,39 @@ T_lightTable LightTableLoad(T_word32 number)
  *  @param light -- Handle to light table to unload
  *
  *<!-----------------------------------------------------------------------*/
-T_void LightTableUnload(T_lightTable light)
+T_void
+LightTableUnload(T_lightTable light)
 {
-    T_lightTableStruct *p_light ;
+    T_lightTableStruct *p_light;
 
-    DebugRoutine("LightTableUnload") ;
-    DebugCheck(light != NULL) ;
+    DebugRoutine("LightTableUnload");
+    DebugCheck(light != NULL);
 
     /* Make sure we got a handle. */
-    if (light)  {
+    if (light)
+    {
         /* Dereference the handle. */
-        p_light = (T_lightTableStruct *)light ;
-        DebugCheck(p_light->tag == LIGHT_TAG) ;
+        p_light = (T_lightTableStruct *) light;
+        DebugCheck(p_light->tag == LIGHT_TAG);
 
         /* Make sure it is a legal handle. */
-        if (p_light->tag == LIGHT_TAG)  {
+        if (p_light->tag == LIGHT_TAG)
+        {
             /* Unload the light table. */
 #if 0
             PictureUnlockAndUnfind(p_light->res) ;
 #else
             MemFree(p_light->p_table);
 #endif
-            p_light->tag = LIGHT_DEAD_TAG ;
-            MemFree(p_light) ;
+            p_light->tag = LIGHT_DEAD_TAG;
+            MemFree(p_light);
 
-            MemFree(G_lightCalculations) ;
-            MemFree(G_preLightCalculations) ;
+            MemFree(G_lightCalculations);
+            MemFree(G_preLightCalculations);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -473,126 +514,144 @@ T_void LightTableUnload(T_lightTable light)
  *  @param outsideLighting -- Lighting level of outside (main)
  *
  *<!-----------------------------------------------------------------------*/
-T_void LightTableRecalculate(T_lightTable light, T_byte8 outsideLighting)
+T_void
+LightTableRecalculate(T_lightTable light, T_byte8 outsideLighting)
 {
-    T_lightTableStruct *p_light ;
-    T_word16 *p_pos ;
-    T_word16 storageReg ;
-    T_word32 registers[11] ;
-    T_word32 total ;
-    T_word16 sourceReg ;
-    T_word16 multReg ;
-    T_word32 value ;
-    T_word32 mult ;
-    T_word16 i ;
-    T_word16 j ;
+    T_lightTableStruct *p_light;
+    T_word16 *p_pos;
+    T_word16 storageReg;
+    T_word32 registers[11];
+    T_word32 total;
+    T_word16 sourceReg;
+    T_word16 multReg;
+    T_word32 value;
+    T_word32 mult;
+    T_word16 i;
+    T_word16 j;
 
-    DebugRoutine("LightTableRecalculate") ;
-    DebugCheck(light != NULL) ;
+    DebugRoutine("LightTableRecalculate");
+    DebugCheck(light != NULL);
 
-    for (j=0; j<2; j++)  {
+    for (j = 0; j < 2; j++)
+    {
         /* Make sure we got a handle. */
-        if (light)  {
+        if (light)
+        {
             /* Dereference the handle. */
-            p_light = (T_lightTableStruct *)light ;
-            DebugCheck(p_light->tag == LIGHT_TAG) ;
+            p_light = (T_lightTableStruct *) light;
+            DebugCheck(p_light->tag == LIGHT_TAG);
 
             /* Make sure it is a legal handle. */
-            if (p_light->tag == LIGHT_TAG)  {
+            if (p_light->tag == LIGHT_TAG)
+            {
                 /* First, get the light levels. */
-                for (i=0; i<G_Num3dSectors; i++)  {
+                for (i = 0; i < G_Num3dSectors; i++)
+                {
                     G_preLightCalculations[i] =
-                        G_lightCalculations[i] =
-                            MapGetSectorLighting(i) ;
+                    G_lightCalculations[i] =
+                        MapGetSectorLighting(i);
                 }
 
                 /* Second, modify based on illuminating objects */
-                ILightIlluminate(G_preLightCalculations) ;
+                ILightIlluminate(G_preLightCalculations);
 
                 /* Now recalculate the light table. */
-                p_pos = p_light->p_table ;
-                memset(registers, 0, sizeof(registers)) ;
-                registers[10] = outsideLighting ;
+                p_pos = p_light->p_table;
+                memset(registers, 0, sizeof(registers));
+                registers[10] = outsideLighting;
 
                 /* Loop until end of table. */
-                while (*p_pos != 0xFFFF)  {
-                    storageReg = *(p_pos++) ;
-                    total = 0 ;
+                while (*p_pos != 0xFFFF)
+                {
+                    storageReg = *(p_pos++);
+                    total = 0;
 
                     /* Loop until end of formula. */
-                    while (*p_pos != 0xFFFF)  {
+                    while (*p_pos != 0xFFFF)
+                    {
                         /* Get a source variable. */
-                        sourceReg = *(p_pos++) ;
-                        value = 0 ;
+                        sourceReg = *(p_pos++);
+                        value = 0;
                         /* What type of source is it? */
-                        if (sourceReg & 0x8000)  {
+                        if (sourceReg & 0x8000)
+                        {
                             /* It is a register. */
-                            sourceReg &= 0x7FFF ;
-                            DebugCheck(sourceReg < 11) ;
+                            sourceReg &= 0x7FFF;
+                            DebugCheck(sourceReg < 11);
                             if (sourceReg < 11)
-                                value = registers[sourceReg] ;
-                        } else if (sourceReg & 0x4000)  {
+                                value = registers[sourceReg];
+                        }
+                        else if (sourceReg & 0x4000)
+                        {
                             /* It is a constant 100. */
-                            value = sourceReg & 0x3FFF ;
-                        } else {
+                            value = sourceReg & 0x3FFF;
+                        }
+                        else
+                        {
                             /* It is a sector based light. */
-                            DebugCheck(sourceReg < G_Num3dSectors) ;
-    //                        value = G_preLightCalculations[sourceReg] ;
-                            value = MapGetSectorLighting(sourceReg) ;
+                            DebugCheck(sourceReg < G_Num3dSectors);
+                            //                        value = G_preLightCalculations[sourceReg] ;
+                            value = MapGetSectorLighting(sourceReg);
                         }
 
                         /* Get a multiplier. */
-                        multReg = *(p_pos++) ;
+                        multReg = *(p_pos++);
 
                         /* Is it a door or just a constant? */
-                        if (multReg & 0x8000)  {
+                        if (multReg & 0x8000)
+                        {
                             /* It is a door. */
-                            mult = DoorGetPercentOpen(multReg & 0x7FFF) ;
-                        } else {
+                            mult = DoorGetPercentOpen(multReg & 0x7FFF);
+                        }
+                        else
+                        {
                             /* Just a constant percentage. */
-                            mult = multReg ;
+                            mult = multReg;
                         }
 
                         /* Add to the total. */
-                        total += mult * value ;
+                        total += mult * value;
                     }
 
                     /* Skip the 0xFFFF */
-                    p_pos++ ;
+                    p_pos++;
 
                     /* Peel off the extra bits. */
-                    total >>= 8 ;
+                    total >>= 8;
 
                     /* Make sure the total is in range. */
                     if (total >= 256)
-                        total = 255 ;
+                        total = 255;
 
                     /* Store the total in the requested slot. */
-                    if (storageReg & 0x8000)  {
+                    if (storageReg & 0x8000)
+                    {
                         /* Must be a register. */
-                        storageReg &= 0x7FFF ;
-                        DebugCheck(storageReg < 11) ;
+                        storageReg &= 0x7FFF;
+                        DebugCheck(storageReg < 11);
                         if (storageReg < 11)
-                            registers[storageReg] = total ;
-                    } else {
+                            registers[storageReg] = total;
+                    }
+                    else
+                    {
                         /* Must be a sector. */
-                        DebugCheck(storageReg < G_Num3dSectors) ;
-                        G_lightCalculations[storageReg] = total ;
+                        DebugCheck(storageReg < G_Num3dSectors);
+                        G_lightCalculations[storageReg] = total;
                     }
                 }
 
                 /* Second, modify based on illuminating objects */
-                ILightIlluminate(G_lightCalculations) ;
+                ILightIlluminate(G_lightCalculations);
 
                 /* All the calculations have been made. */
                 /* Store the light levels. */
-                for (i=0; i<G_Num3dSectors; i++)
-                    MapSetSectorLighting(i, G_lightCalculations[i]) ;
+                for (i = 0; i < G_Num3dSectors; i++)
+                    MapSetSectorLighting(i, G_lightCalculations[i]);
             }
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -603,19 +662,22 @@ T_void LightTableRecalculate(T_lightTable light, T_byte8 outsideLighting)
  *  objects.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void ILightIlluminate(T_byte8 *p_lightList)
+static T_void
+ILightIlluminate(T_byte8 *p_lightList)
 {
-    T_3dObject *p_obj ;
-    T_sword16 illum ;
-    T_word16 sector ;
-    T_sword16 light ;
+    T_3dObject *p_obj;
+    T_sword16 illum;
+    T_word16 sector;
+    T_sword16 light;
 
-    DebugRoutine("ILightIlluminate") ;
+    DebugRoutine("ILightIlluminate");
 
-    p_obj = ObjectsGetFirst() ;
-    while (p_obj)   {
-        illum = ObjectGetIllumination(p_obj) ;
-        if (illum)  {
+    p_obj = ObjectsGetFirst();
+    while (p_obj)
+    {
+        illum = ObjectGetIllumination(p_obj);
+        if (illum)
+        {
 #if 0
             num = ObjectGetNumAreaSectors(p_obj) ;
             for (i=0; i<num; i++)  {
@@ -631,25 +693,26 @@ static T_void ILightIlluminate(T_byte8 *p_lightList)
                 p_lightList[sector] = light ;
             }
 #else
-            sector = ObjectGetCenterSector(p_obj) ;
+            sector = ObjectGetCenterSector(p_obj);
 
-            DebugCheck(sector < G_Num3dSectors) ;
-            if (sector < G_Num3dSectors)  {
-                light = p_lightList[sector] ;
-                light += illum ;
+            DebugCheck(sector < G_Num3dSectors);
+            if (sector < G_Num3dSectors)
+            {
+                light = p_lightList[sector];
+                light += illum;
                 if (light >= 256)
-                    light = 255 ;
+                    light = 255;
                 else if (light < 0)
-                    light = 0 ;
-                p_lightList[sector] = (T_byte8)light ;
+                    light = 0;
+                p_lightList[sector] = (T_byte8) light;
             }
 #endif
         }
 
-        p_obj = ObjectGetNext(p_obj) ;
+        p_obj = ObjectGetNext(p_obj);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

@@ -11,7 +11,6 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include "DBLLINK.H"
-#include "GENERAL.H"
 #include "MOUSEMOD.H"
 #include "PICS.H"
 
@@ -20,50 +19,50 @@
 #endif
 
 /* Flag that determines if the mouse module has been initialized. */
-static T_byte8 F_MouseIsInitialized = FALSE ;
+static T_byte8 F_MouseIsInitialized = FALSE;
 
 /* Keep track of how hidden/shown the mouse is. */
 /*      > 0   -- shown     */
 /*     <= 0   -- hidden    */
-static T_sword16 G_mouseShowLevel = 0 ;
+static T_sword16 G_mouseShowLevel = 0;
 
 /* Note what events we will pass on: */
-static T_byte8 F_mouseEventsHandled = MOUSE_EVENT_DEFAULT_OPTIONS ;
+static T_byte8 F_mouseEventsHandled = MOUSE_EVENT_DEFAULT_OPTIONS;
 
 /* Keep the event handler:  (default = NONE) */
-static T_mouseEventHandler P_mouseEventHandler = NULL ;
+static T_mouseEventHandler P_mouseEventHandler = NULL;
 
 /* Note if events are being blocked */
-static E_Boolean F_mouseBlockEvents = FALSE ;
+static E_Boolean F_mouseBlockEvents = FALSE;
 
 #define MOUSE_STATE_IDLE   0
 #define MOUSE_STATE_HELD   1
 
 /* Keep track of what state the mouse is in. */
-static T_word16 G_mouseState = MOUSE_STATE_IDLE ;
-static T_word16 G_mouseLastX = 0 ;
-static T_word16 G_mouseLastY = 0 ;
+static T_word16 G_mouseState = MOUSE_STATE_IDLE;
+static T_word16 G_mouseLastX = 0;
+static T_word16 G_mouseLastY = 0;
 
 /* Where to center the mouse. */
-static T_word16 G_hotSpotX = 0 ;
-static T_word16 G_hotSpotY = 0 ;
+static T_word16 G_hotSpotX = 0;
+static T_word16 G_hotSpotY = 0;
 
 /* COMPRESSED bitmap to use. */
-static T_bitmap *G_bitmap = NULL ;
+static T_bitmap *G_bitmap = NULL;
 
-static T_word16 G_lastDrawX = 0 ;
-static T_word16 G_lastDrawY = 0 ;
+static T_word16 G_lastDrawX = 0;
+static T_word16 G_lastDrawY = 0;
 
-static T_word16 G_defaultHotSpotX = 0 ;
-static T_word16 G_defaultHotSpotY = 0 ;
-static T_bitmap *G_defaultBitmap = NULL ;
+static T_word16 G_defaultHotSpotX = 0;
+static T_word16 G_defaultHotSpotY = 0;
+static T_bitmap *G_defaultBitmap = NULL;
 
 /* Flag to tell if the mouse callback routine has been installed. */
-static E_Boolean G_callbackInstalled = FALSE ;
+static E_Boolean G_callbackInstalled = FALSE;
 
 /* Flag to tell if atexit has been installed to make sure the */
 /* mouse callback is turned off. */
-static E_Boolean G_atexitInstalled = FALSE ;
+static E_Boolean G_atexitInstalled = FALSE;
 
 #define MOUSE_BUTTON_LEFT   0x01       /* --------1 */
 #define MOUSE_BUTTON_RIGHT  0x02       /* -------1- */
@@ -71,19 +70,25 @@ static E_Boolean G_atexitInstalled = FALSE ;
 
 /* Internal prototypes: */
 
-static T_buttonClick IMouseGetButtonStatus(T_void) ;
+static T_buttonClick
+IMouseGetButtonStatus(T_void);
 
-static T_void IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos) ;
+static T_void
+IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos);
 
-static T_screen G_mouseScreen ;
+static T_screen G_mouseScreen;
 
-T_void IMouseTransfer(T_word16 x, T_word16 y, T_screen from, T_screen to) ;
+T_void
+IMouseTransfer(T_word16 x, T_word16 y, T_screen from, T_screen to);
 
-T_void IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y) ;
+T_void
+IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y);
 
-T_void IMouseInstallCallback(T_void) ;
+T_void
+IMouseInstallCallback(T_void);
 
-T_void IMouseUninstallCallback(T_void) ;
+T_void
+IMouseUninstallCallback(T_void);
 
 //static T_void _interrupt _loadds far IMouseCallback(T_word32 max, T_word32 mcx, T_word32 mdx) ;
 #ifdef WATCOM
@@ -91,14 +96,14 @@ T_void IMouseUninstallCallback(T_void) ;
 static T_void _loadds __far IMouseCallback(T_word32 max, T_word32 mcx, T_word32 mdx) ;
 #endif
 
-static T_sword16 G_interX = 0 ;
-static T_sword16 G_interY = 0 ;
+static T_sword16 G_interX = 0;
+static T_sword16 G_interY = 0;
 
-static E_colorizeTable G_colorTable = COLORIZE_TABLE_NONE ;
+static E_colorizeTable G_colorTable = COLORIZE_TABLE_NONE;
 
-static E_Boolean G_allowUpdate = TRUE ;
+static E_Boolean G_allowUpdate = TRUE;
 
-static T_doubleLinkList G_eventStack = DOUBLE_LINK_LIST_BAD ;
+static T_doubleLinkList G_eventStack = DOUBLE_LINK_LIST_BAD;
 
 /* Relative mode registers */
 static E_Boolean G_relativeMode = FALSE;
@@ -120,40 +125,41 @@ static E_Boolean G_relativeModeFirstIsZero = FALSE;
  *  if you need to re-initialize the mouse (but you shouldn't).
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseInitialize(T_void)
+T_void
+MouseInitialize(T_void)
 {
-    DebugRoutine("MouseInitialize") ;
-    DebugCheck(MouseCheckInstalled() == TRUE) ;
-    DebugCheck(F_MouseIsInitialized == FALSE) ;
+    DebugRoutine("MouseInitialize");
+    DebugCheck(MouseCheckInstalled() == TRUE);
+    DebugCheck(F_MouseIsInitialized == FALSE);
 
-    F_MouseIsInitialized = TRUE ;
+    F_MouseIsInitialized = TRUE;
 
     /* Note that the mouse module has been initialized. */
-    G_mouseShowLevel = 0 ;
+    G_mouseShowLevel = 0;
 
     /* Set the default options. */
-    MouseSetEventOptions(MOUSE_EVENT_DEFAULT_OPTIONS) ;
+    MouseSetEventOptions(MOUSE_EVENT_DEFAULT_OPTIONS);
 
     /* Allow the mouse to move all over the screen. */
-    MouseReleaseBounds() ;
+    MouseReleaseBounds();
 
     /* Note that the current mouse state is idle. */
-    G_mouseState = MOUSE_STATE_IDLE ;
+    G_mouseState = MOUSE_STATE_IDLE;
 
     /* Put the mouse in the upper left hand corner. */
-    MouseMoveTo(0, 0) ;
+    MouseMoveTo(0, 0);
 
     /* Allocate a place to put stuff behind the mouse. */
-    G_mouseScreen = GrScreenAlloc() ;
+    G_mouseScreen = GrScreenAlloc();
 
 #ifdef DOS32
     IMouseInstallCallback() ;
 #endif
 
-    G_eventStack = DoubleLinkListCreate() ;
-    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD) ;
+    G_eventStack = DoubleLinkListCreate();
+    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -175,19 +181,21 @@ T_void MouseInitialize(T_void)
  *      handler.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetEventHandler(T_mouseEventHandler p_handler)
+T_void
+MouseSetEventHandler(T_mouseEventHandler p_handler)
 {
-    DebugRoutine("MouseSetEventHandler") ;
+    DebugRoutine("MouseSetEventHandler");
 
     /* Just copy it over.  Since NULL is also allowed, there is no */
     /* type checking or anything that we can do to make sure the */
     /* handler is good.  Hopefully the compiler will be enough. */
-    P_mouseEventHandler = p_handler ;
+    P_mouseEventHandler = p_handler;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_mouseEventHandler MouseGetEventHandler (T_void)
+T_mouseEventHandler
+MouseGetEventHandler(T_void)
 {
     return (P_mouseEventHandler);
 }
@@ -203,15 +211,16 @@ T_mouseEventHandler MouseGetEventHandler (T_void)
  *  @param f_options -- Or'd list of MOUSE_EVENT_OPTION's
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetEventOptions(T_byte8 f_options)
+T_void
+MouseSetEventOptions(T_byte8 f_options)
 {
-    DebugRoutine("MouseSetEventOptions") ;
-    DebugCheck((f_options & MOUSE_EVENT_OPTION_UNKNOWN) == 0) ;
+    DebugRoutine("MouseSetEventOptions");
+    DebugCheck((f_options & MOUSE_EVENT_OPTION_UNKNOWN) == 0);
 
     /* Just record the flags. */
-    F_mouseEventsHandled = f_options ;
+    F_mouseEventsHandled = f_options;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -225,7 +234,8 @@ T_void MouseSetEventOptions(T_byte8 f_options)
  *      FALSE= No mouse driver found
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MouseCheckInstalled(T_void)
+E_Boolean
+MouseCheckInstalled(T_void)
 {
 #ifdef DOS32
     E_Boolean f_installed ;
@@ -245,7 +255,7 @@ E_Boolean MouseCheckInstalled(T_void)
 
     return(f_installed);
 #else
-    return TRUE ;
+    return TRUE;
 #endif
 }
 
@@ -258,7 +268,8 @@ E_Boolean MouseCheckInstalled(T_void)
  *  equal number of MouseHide calls to turn the mouse off.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseShow(T_void)
+T_void
+MouseShow(T_void)
 {
 #if 0
     union REGPACK regs;
@@ -269,11 +280,11 @@ T_void MouseShow(T_void)
     if (G_mouseShowLevel == 0)  {
         /* If the mouse was just hidden (and soon won't be), */
         /* turn on the mouse. */
-/*
+  /*
         memset(&regs,0,sizeof(union REGPACK));
         regs.w.ax = 1;
         intr(0x33,&regs);
-*/
+  */
         MouseDraw() ;
     }
 
@@ -295,7 +306,8 @@ T_void MouseShow(T_void)
  *  the mouse reappear.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseHide(T_void)
+T_void
+MouseHide(T_void)
 {
 #if 0
     union REGPACK regs;
@@ -306,11 +318,11 @@ T_void MouseHide(T_void)
     if (G_mouseShowLevel == 1)  {
         /* If the mouse was just hidden (and soon won't be), */
         /* turn on the mouse. */
-/*
+  /*
         memset(&regs,0,sizeof(union REGPACK));
         regs.w.ax = 2;
         intr(0x33,&regs);
-*/
+  */
         MouseErase() ;
     }
 
@@ -331,7 +343,8 @@ T_void MouseHide(T_void)
  *  to MouseMoveTo().  The mouse will then be at that new location.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseMoveTo(T_word16 x, T_word16 y)
+T_void
+MouseMoveTo(T_word16 x, T_word16 y)
 {
 #ifdef DOS32
     union REGPACK regs;
@@ -354,7 +367,8 @@ T_void MouseMoveTo(T_word16 x, T_word16 y)
 
     DebugEnd() ;
 #else
-    extern void OutsideMouseDriverSet(T_word16 xPos, T_word16 yPos);
+    extern void
+    OutsideMouseDriverSet(T_word16 xPos, T_word16 yPos);
     OutsideMouseDriverSet(x, y);
 #endif
 }
@@ -377,11 +391,12 @@ T_void MouseMoveTo(T_word16 x, T_word16 y)
  *  @param bottom -- Bottom edge of box
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetBounds(
-           T_word16 left,
-           T_word16 top,
-           T_word16 right,
-           T_word16 bottom)
+T_void
+MouseSetBounds(
+    T_word16 left,
+    T_word16 top,
+    T_word16 right,
+    T_word16 bottom)
 {
 #ifdef DOS32
     union REGPACK regs;
@@ -423,16 +438,17 @@ T_void MouseSetBounds(
  *  MouseAllowEvents.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseBlockEvents(T_void)
+T_void
+MouseBlockEvents(T_void)
 {
-    DebugRoutine("MouseBlockEvents") ;
-    DebugCheck(F_MouseIsInitialized == TRUE) ;
-    DebugCheck(F_mouseBlockEvents == FALSE) ;
+    DebugRoutine("MouseBlockEvents");
+    DebugCheck(F_MouseIsInitialized == TRUE);
+    DebugCheck(F_mouseBlockEvents == FALSE);
 
     /* Turn on block. */
-    F_mouseBlockEvents = TRUE ;
+    F_mouseBlockEvents = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -446,16 +462,17 @@ T_void MouseBlockEvents(T_void)
  *  You can only call this routine after MouseBlockEvents was called.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseAllowEvents(T_void)
+T_void
+MouseAllowEvents(T_void)
 {
-    DebugRoutine("MouseAllowEvents") ;
-    DebugCheck(F_MouseIsInitialized == TRUE) ;
-    DebugCheck(F_mouseBlockEvents == TRUE) ;
+    DebugRoutine("MouseAllowEvents");
+    DebugCheck(F_MouseIsInitialized == TRUE);
+    DebugCheck(F_mouseBlockEvents == TRUE);
 
     /* Turn off block. */
-    F_mouseBlockEvents = FALSE ;
+    F_mouseBlockEvents = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -472,114 +489,127 @@ T_void MouseAllowEvents(T_void)
  *  mouse updates.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseUpdateEvents(T_void)
+T_void
+MouseUpdateEvents(T_void)
 {
-    T_word16 newX ;
-    T_word16 newY ;
-    T_buttonClick buttonStatus ;
+    T_word16 newX;
+    T_word16 newY;
+    T_buttonClick buttonStatus;
 
-    DebugRoutine("MouseUpdateEvents") ;
-    DebugCheck(F_MouseIsInitialized == TRUE) ;
+    DebugRoutine("MouseUpdateEvents");
+    DebugCheck(F_MouseIsInitialized == TRUE);
 
-    if (!MouseIsRelativeMode()) {
+    if (!MouseIsRelativeMode())
+    {
         /* No matter what we do, we might as well get the button status */
         /* and the mouse x & y locations. */
-        buttonStatus = IMouseGetButtonStatus() ;
-        IMouseGetMousePosition(&newX, &newY) ;
+        buttonStatus = IMouseGetButtonStatus();
+        IMouseGetMousePosition(&newX, &newY);
 
         /* Let the current state of the mouse determine our actions */
-        switch(G_mouseState)  {
+        switch (G_mouseState)
+        {
             case MOUSE_STATE_IDLE:
                 /* Check to see if we have moved. */
-                if ((newX != G_mouseLastX) || (newY != G_mouseLastY))  {
+                if ((newX != G_mouseLastX) || (newY != G_mouseLastY))
+                {
                     /* We have.  Send mouse move event if there is a mouse */
                     /* handler and events are not blocked and if the option */
                     /* for receiving move events are there. */
                     if (F_mouseBlockEvents == FALSE)
                         if (F_mouseEventsHandled &&
-                                (MOUSE_EVENT_OPTION_HANDLE_MOVE != 0))
+                            (MOUSE_EVENT_OPTION_HANDLE_MOVE != 0))
                             P_mouseEventHandler(
                                 MOUSE_EVENT_MOVE,
                                 newX,
                                 newY,
-                                buttonStatus) ;
-                } else if (buttonStatus != 0)  {
+                                buttonStatus);
+                }
+                else if (buttonStatus != 0)
+                {
                     /* Check to see if the button is pressed */
                     /* We are changing state, send out a mouse start event. */
                     /* But make sure it is not being blocked. */
                     if (P_mouseEventHandler != NULL)
                         if (F_mouseBlockEvents == FALSE)
                             if (F_mouseEventsHandled &&
-                                    (MOUSE_EVENT_OPTION_HANDLE_START != 0))
+                                (MOUSE_EVENT_OPTION_HANDLE_START != 0))
                                 P_mouseEventHandler(
                                     MOUSE_EVENT_START,
                                     newX,
                                     newY,
-                                    buttonStatus) ;
+                                    buttonStatus);
 
                     /* Go to the button held state. */
-                    G_mouseState = MOUSE_STATE_HELD ;
-                } else {
+                    G_mouseState = MOUSE_STATE_HELD;
+                }
+                else
+                {
                     /* None of the above, try sending a MOUSE_EVENT_IDLE. */
                     if (F_mouseBlockEvents == FALSE)
                         if (F_mouseEventsHandled &&
-                                (MOUSE_EVENT_OPTION_HANDLE_IDLE != 0))
+                            (MOUSE_EVENT_OPTION_HANDLE_IDLE != 0))
                             P_mouseEventHandler(
                                 MOUSE_EVENT_IDLE,
                                 newX,
                                 newY,
-                                buttonStatus) ;
+                                buttonStatus);
                 }
-                break ;
+                break;
             case MOUSE_STATE_HELD:
-                if (buttonStatus == 0)  {
+                if (buttonStatus == 0)
+                {
                     /* Check to see if the button is pressed */
                     /* We are changing state, send out a mouse end event. */
                     /* But make sure it is not being blocked. */
                     if (P_mouseEventHandler != NULL)
                         if (F_mouseBlockEvents == FALSE)
                             if (F_mouseEventsHandled &&
-                                    (MOUSE_EVENT_OPTION_HANDLE_END != 0))
+                                (MOUSE_EVENT_OPTION_HANDLE_END != 0))
                                 P_mouseEventHandler(
                                     MOUSE_EVENT_END,
                                     newX,
                                     newY,
-                                    buttonStatus) ;
+                                    buttonStatus);
 
                     /* Go to the mouse idle state. */
-                    G_mouseState = MOUSE_STATE_IDLE ;
-                } else if ((newX != G_mouseLastX) || (newY != G_mouseLastY))  {
+                    G_mouseState = MOUSE_STATE_IDLE;
+                }
+                else if ((newX != G_mouseLastX) || (newY != G_mouseLastY))
+                {
                     /* Check to see if we have moved. */
                     /* We have.  Send mouse move event if there is a mouse */
                     /* handler and events are not blocked and if the option */
                     /* for receiving drag events are there. */
                     if (F_mouseBlockEvents == FALSE)
                         if (F_mouseEventsHandled &&
-                                (MOUSE_EVENT_OPTION_HANDLE_DRAG != 0))
+                            (MOUSE_EVENT_OPTION_HANDLE_DRAG != 0))
                             P_mouseEventHandler(
                                 MOUSE_EVENT_DRAG,
                                 newX,
                                 newY,
-                                buttonStatus) ;
-                } else {
+                                buttonStatus);
+                }
+                else
+                {
                     /* None of the above, try sending a MOUSE_EVENT_HELD. */
                     if (F_mouseBlockEvents == FALSE)
                         if (F_mouseEventsHandled &&
-                                (MOUSE_EVENT_OPTION_HANDLE_HELD != 0))
+                            (MOUSE_EVENT_OPTION_HANDLE_HELD != 0))
                             P_mouseEventHandler(
                                 MOUSE_EVENT_HELD,
                                 newX,
                                 newY,
-                                buttonStatus) ;
+                                buttonStatus);
                 }
-                break ;
-        } ;
+                break;
+        };
 
-        G_mouseLastX = newX ;
-        G_mouseLastY = newY ;
+        G_mouseLastX = newX;
+        G_mouseLastY = newY;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -591,36 +621,37 @@ T_void MouseUpdateEvents(T_void)
  *  active mode and you can consider it no longer being used.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseFinish(T_void)
+T_void
+MouseFinish(T_void)
 {
-    DebugRoutine("MouseFinish") ;
-    DebugCheck(F_MouseIsInitialized == TRUE) ;
-    DebugCheck(G_mouseShowLevel < 2) ;
+    DebugRoutine("MouseFinish");
+    DebugCheck(F_MouseIsInitialized == TRUE);
+    DebugCheck(G_mouseShowLevel < 2);
 
-    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD) ;
-    DoubleLinkListDestroy(G_eventStack) ;
+    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD);
+    DoubleLinkListDestroy(G_eventStack);
 
     /* Hide the mouse. */
-    MouseHide() ;
+    MouseHide();
 
     /* Turn off the event handler. */
-    MouseSetEventHandler(NULL) ;
+    MouseSetEventHandler(NULL);
 
     /* Set the default options. */
-    MouseSetEventOptions(MOUSE_EVENT_DEFAULT_OPTIONS) ;
+    MouseSetEventOptions(MOUSE_EVENT_DEFAULT_OPTIONS);
 
     /* Allow the mouse to move all over the screen. */
-    MouseReleaseBounds() ;
+    MouseReleaseBounds();
 
     /* Note that the mouse module is no longer in use. */
-    F_MouseIsInitialized = FALSE ;
+    F_MouseIsInitialized = FALSE;
 
     /* Free up the mouse background screen. */
-    GrScreenFree(G_mouseScreen) ;
+    GrScreenFree(G_mouseScreen);
 #ifdef DOS32
     IMouseUninstallCallback() ;
 #endif
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -630,15 +661,16 @@ T_void MouseFinish(T_void)
  *  MouseReleaseBounds lets the mouse now roam the whole screen.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseReleaseBounds(T_void)
+T_void
+MouseReleaseBounds(T_void)
 {
-    DebugRoutine("MouseReleaseBounds") ;
-    DebugCheck(F_MouseIsInitialized == TRUE) ;
+    DebugRoutine("MouseReleaseBounds");
+    DebugCheck(F_MouseIsInitialized == TRUE);
 
     /* Set the bounds to the size of the screen. */
-    MouseSetBounds(0, 0, 319, 199) ;
+    MouseSetBounds(0, 0, 319, 199);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -652,7 +684,8 @@ T_void MouseReleaseBounds(T_void)
  *      mouse buttons.
  *
  *<!-----------------------------------------------------------------------*/
-static T_buttonClick IMouseGetButtonStatus(T_void)
+static T_buttonClick
+IMouseGetButtonStatus(T_void)
 {
 #if DOS32
     union REGPACK regs;
@@ -670,7 +703,8 @@ static T_buttonClick IMouseGetButtonStatus(T_void)
     DebugEnd() ;
     return buttonStatus ;
 #elif SDL
-	extern T_buttonClick MouseGetButton(T_void);
+    extern T_buttonClick
+    MouseGetButton(T_void);
 
     return MouseGetButton();
 #else
@@ -690,7 +724,8 @@ static T_buttonClick IMouseGetButtonStatus(T_void)
  *  @param yPos -- Pointer to y position to store into
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos)
+static T_void
+IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos)
 {
 #ifdef DOS32
     union REGPACK regs;
@@ -705,13 +740,14 @@ static T_void IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos)
     intr(0x33,&regs);
     *xPos = regs.w.cx>>1 ;
     *yPos = regs.w.dx ;
-/*
+  /*
     *xPos = G_interX ;
     *yPos = G_interY ;
-*/
+  */
     DebugEnd() ;
 #else
-    extern void OutsideMouseDriverGet(T_word16 *xPos, T_word16 *yPos);
+    extern void
+    OutsideMouseDriverGet(T_word16 *xPos, T_word16 *yPos);
     OutsideMouseDriverGet(xPos, yPos);
 #endif
 }
@@ -727,37 +763,39 @@ static T_void IMouseGetMousePosition(T_word16 *xPos, T_word16 *yPos)
  *  @param p_bitmap -- COMPRESSED Bitmap to use
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetBitmap(
-          T_word16 hot_spot_x,
-          T_word16 hot_spot_y,
-          T_bitmap *p_bitmap)
+T_void
+MouseSetBitmap(
+    T_word16 hot_spot_x,
+    T_word16 hot_spot_y,
+    T_bitmap *p_bitmap)
 {
-    DebugRoutine("MouseSetBitmap") ;
+    DebugRoutine("MouseSetBitmap");
 //    DebugCheck(p_bitmap != NULL) ;
 
-    G_hotSpotX = hot_spot_x ;
-    G_hotSpotY = hot_spot_y ;
+    G_hotSpotX = hot_spot_x;
+    G_hotSpotY = hot_spot_y;
 
 //    if (G_mouseShowLevel > 0)
 //        MouseErase() ;
 
     MouseHide();
-    G_bitmap = p_bitmap ;
-    MouseShow() ;
+    G_bitmap = p_bitmap;
+    MouseShow();
 //    if (G_mouseShowLevel > 0)
 //        MouseDraw() ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void MouseGetBitmap(
-          T_word16 *hot_spot_x,
-          T_word16 *hot_spot_y,
-          T_bitmap **p_bitmap)
+T_void
+MouseGetBitmap(
+    T_word16 *hot_spot_x,
+    T_word16 *hot_spot_y,
+    T_bitmap **p_bitmap)
 {
-    *hot_spot_x = G_hotSpotX ;
-    *hot_spot_y = G_hotSpotY ;
-    *p_bitmap = G_bitmap ;
+    *hot_spot_x = G_hotSpotX;
+    *hot_spot_y = G_hotSpotY;
+    *p_bitmap = G_bitmap;
 }
 
 /*-------------------------------------------------------------------------*
@@ -771,20 +809,21 @@ T_void MouseGetBitmap(
  *  @param p_bitmap -- COMPRESSED Bitmap to use
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetDefaultBitmap(
-          T_word16 hot_spot_x,
-          T_word16 hot_spot_y,
-          T_bitmap *p_bitmap)
+T_void
+MouseSetDefaultBitmap(
+    T_word16 hot_spot_x,
+    T_word16 hot_spot_y,
+    T_bitmap *p_bitmap)
 {
-    DebugRoutine("MouseSetDefaultBitmap") ;
+    DebugRoutine("MouseSetDefaultBitmap");
 //    DebugCheck(p_bitmap != NULL) ;
 
-    G_defaultHotSpotX = hot_spot_x ;
-    G_defaultHotSpotY = hot_spot_y ;
+    G_defaultHotSpotX = hot_spot_x;
+    G_defaultHotSpotY = hot_spot_y;
 
-    G_defaultBitmap = p_bitmap ;
+    G_defaultBitmap = p_bitmap;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -794,39 +833,42 @@ T_void MouseSetDefaultBitmap(
  *  MouseDraw is used to force the mouse to display on the screen.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseDraw(T_void)
+T_void
+MouseDraw(T_void)
 {
-    T_word16 mx, my ;
-    T_screen was ;
+    T_word16 mx, my;
+    T_screen was;
 
-    DebugRoutine("MouseDraw") ;
+    DebugRoutine("MouseDraw");
 //    DebugCheck(G_bitmap != NULL) ;
 
     // Draw if we have a bitmap AND we are not in relative mouse mode
-    if (G_bitmap)  {
-        IMouseGetUpperLeft(&mx, &my) ;
+    if (G_bitmap)
+    {
+        IMouseGetUpperLeft(&mx, &my);
 
         /* First, save what is behind the mouse. */
-        IMouseTransfer(mx, my, GRAPHICS_ACTUAL_SCREEN, G_mouseScreen) ;
+        IMouseTransfer(mx, my, GRAPHICS_ACTUAL_SCREEN, G_mouseScreen);
 
-        if (MouseIsRelativeMode() == FALSE) {
-            was = GrScreenGet() ;
-            GrScreenSet(GRAPHICS_ACTUAL_SCREEN) ;
+        if (MouseIsRelativeMode() == FALSE)
+        {
+            was = GrScreenGet();
+            GrScreenSet(GRAPHICS_ACTUAL_SCREEN);
 
             GrDrawCompressedBitmapAndClipAndColor(
-                PictureToBitmap((T_byte8 *)G_bitmap),
+                PictureToBitmap((T_byte8 *) G_bitmap),
                 mx,
                 my,
-                G_colorTable) ;
+                G_colorTable);
 
-            G_lastDrawX = mx ;
-            G_lastDrawY = my ;
+            G_lastDrawX = mx;
+            G_lastDrawY = my;
 
-            GrScreenSet(was) ;
+            GrScreenSet(was);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -836,17 +878,20 @@ T_void MouseDraw(T_void)
  *  MouseErase removes the mouse from the display using the hidden data.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseErase(T_void)
+T_void
+MouseErase(T_void)
 {
-    DebugRoutine("MouseErase") ;
+    DebugRoutine("MouseErase");
 
-    if (G_bitmap != NULL) {
-        if (MouseIsRelativeMode() == FALSE) {
+    if (G_bitmap != NULL)
+    {
+        if (MouseIsRelativeMode() == FALSE)
+        {
             /* Draw what was behind the mouse back on the screen. */
-            IMouseTransfer(G_lastDrawX, G_lastDrawY, G_mouseScreen, GRAPHICS_ACTUAL_SCREEN) ;
+            IMouseTransfer(G_lastDrawX, G_lastDrawY, G_mouseScreen, GRAPHICS_ACTUAL_SCREEN);
         }
     }
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -856,64 +901,66 @@ T_void MouseErase(T_void)
  *  MouseErase removes the mouse from the display using the hidden data.
  *
  *<!-----------------------------------------------------------------------*/
-T_void IMouseTransfer(T_word16 x, T_word16 y, T_screen from, T_screen to)
+T_void
+IMouseTransfer(T_word16 x, T_word16 y, T_screen from, T_screen to)
 {
-    T_screen was ;
-    T_sword16 top, bottom, left, right ;
+    T_screen was;
+    T_sword16 top, bottom, left, right;
 
-    DebugRoutine("IMouseTransfer") ;
-    DebugCheck(G_bitmap != NULL) ;
+    DebugRoutine("IMouseTransfer");
+    DebugCheck(G_bitmap != NULL);
 
     /* Transfer the mouse */
-    was = GrScreenGet() ;
-    GrScreenSet(from) ;
+    was = GrScreenGet();
+    GrScreenSet(from);
 
-    top = y ;
-    bottom = y + PictureGetHeight(G_bitmap)-1 ;
-    left = x ;
-    right = x + PictureGetWidth(G_bitmap)-1 ;
+    top = y;
+    bottom = y + PictureGetHeight(G_bitmap) - 1;
+    left = x;
+    right = x + PictureGetWidth(G_bitmap) - 1;
 
     if (top < 0)
-        top = 0 ;
+        top = 0;
     if (bottom >= 200)
-        bottom = 199 ;
+        bottom = 199;
     if (left < 0)
-        left = 0 ;
+        left = 0;
     if (right >= 320)
-        right = 319 ;
+        right = 319;
 
     GrTransferRectangle(
-           to,
-           left,
-           top,
-           right,
-           bottom,
-           left,
-           top) ;
+        to,
+        left,
+        top,
+        right,
+        bottom,
+        left,
+        top);
 
-    GrScreenSet(was) ;
+    GrScreenSet(was);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y)
+T_void
+IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y)
 {
-    T_word16 mx, my ;
-    T_word16 sx, sy ;
-    T_sword16 gx, gy ;
+    T_word16 mx, my;
+    T_word16 sx, sy;
+    T_sword16 gx, gy;
 
-    DebugRoutine("IMouseGetUpperLeft") ;
+    DebugRoutine("IMouseGetUpperLeft");
 
     /* Get the mouse coordinates */
-    IMouseGetMousePosition(&mx, &my) ;
+    IMouseGetMousePosition(&mx, &my);
 
     /* Get the picture size. */
-    PictureGetXYSize(G_bitmap, &sy, &sx) ;
+    PictureGetXYSize(G_bitmap, &sy, &sx);
 
-    gx = mx ;
-    gy = my ;
-    gx -= G_hotSpotX ;
-    gy -= G_hotSpotY ;
+    gx = mx;
+    gy = my;
+    gx -= G_hotSpotX;
+    gy -= G_hotSpotY;
 
 /*
     if (gx < 0)
@@ -927,8 +974,8 @@ T_void IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y)
         gy = 199-sy ;
 */
 
-    *p_x = gx ;
-    *p_y = gy ;
+    *p_x = gx;
+    *p_y = gy;
 
 /*
     DebugCheck(gx < 320) ;
@@ -937,7 +984,7 @@ T_void IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y)
     DebugCheck(gy+sy < 200) ;
 */
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -947,18 +994,19 @@ T_void IMouseGetUpperLeft(T_word16 *p_x, T_word16 *p_y)
  *  MouseUseDefaultBitmap returns the mouse to its default picture.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseUseDefaultBitmap()
+T_void
+MouseUseDefaultBitmap()
 {
-    DebugRoutine("MouseUseDefaultBitmap") ;
+    DebugRoutine("MouseUseDefaultBitmap");
 //    DebugCheck(G_defaultBitmap != NULL) ;
 
     /* Revert to no colorization. */
-    G_colorTable = COLORIZE_TABLE_NONE ;
+    G_colorTable = COLORIZE_TABLE_NONE;
 
     /* Change to the default bitmap picture. */
-    MouseSetBitmap(G_defaultHotSpotX, G_defaultHotSpotY, G_defaultBitmap) ;
+    MouseSetBitmap(G_defaultHotSpotX, G_defaultHotSpotY, G_defaultBitmap);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1068,24 +1116,27 @@ static T_void _loadds __far IMouseCallback(T_word32 max, T_word32 mcx, T_word32 
  *  @param colorTable -- Colorization table to use
  *
  *<!-----------------------------------------------------------------------*/
-T_void MouseSetColorize(E_colorizeTable colorTable)
+T_void
+MouseSetColorize(E_colorizeTable colorTable)
 {
-    DebugRoutine("MouseSetColorize") ;
-    DebugCheck(colorTable < MAX_COLORIZE_TABLES) ;
+    DebugRoutine("MouseSetColorize");
+    DebugCheck(colorTable < MAX_COLORIZE_TABLES);
 
-    G_colorTable = colorTable ;
+    G_colorTable = colorTable;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void MouseDisallowUpdate(T_void)
+T_void
+MouseDisallowUpdate(T_void)
 {
-    G_allowUpdate = FALSE ;
+    G_allowUpdate = FALSE;
 }
 
-T_void MouseAllowUpdate(T_void)
+T_void
+MouseAllowUpdate(T_void)
 {
-    G_allowUpdate = TRUE ;
+    G_allowUpdate = TRUE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1096,26 +1147,28 @@ T_void MouseAllowUpdate(T_void)
  *  (if there is one).
  *
  *<!-----------------------------------------------------------------------*/
-T_void MousePopEventHandler(T_void)
+T_void
+MousePopEventHandler(T_void)
 {
-    T_doubleLinkListElement first ;
-    T_mouseEventHandler handler ;
+    T_doubleLinkListElement first;
+    T_mouseEventHandler handler;
 
-    DebugRoutine("MousePopEventHandler") ;
+    DebugRoutine("MousePopEventHandler");
 
     /* Get the old event handler. */
-    first = DoubleLinkListGetFirst(G_eventStack) ;
-    DebugCheck(first != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    first = DoubleLinkListGetFirst(G_eventStack);
+    DebugCheck(first != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
-    if (first != DOUBLE_LINK_LIST_ELEMENT_BAD)  {
+    if (first != DOUBLE_LINK_LIST_ELEMENT_BAD)
+    {
         handler = (T_mouseEventHandler)
-                      DoubleLinkListElementGetData(first) ;
+            DoubleLinkListElementGetData(first);
 
-        MouseSetEventHandler(handler) ;
-        DoubleLinkListRemoveElement(first) ;
+        MouseSetEventHandler(handler);
+        DoubleLinkListRemoveElement(first);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1130,32 +1183,35 @@ T_void MousePopEventHandler(T_void)
  *      for none.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MousePushEventHandler(T_mouseEventHandler mouseEventHandler)
+T_void
+MousePushEventHandler(T_mouseEventHandler mouseEventHandler)
 {
-    DebugRoutine("MousePushEventHandler") ;
+    DebugRoutine("MousePushEventHandler");
 
     /* Store the old event handler. */
     DoubleLinkListAddElementAtFront(
         G_eventStack,
-        (T_void *)MouseGetEventHandler) ;
+        (T_void *) MouseGetEventHandler);
 
     /* set up the new handler. */
-    MouseSetEventHandler(mouseEventHandler) ;
+    MouseSetEventHandler(mouseEventHandler);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void MouseRelativeModeOn(T_void)
+T_void
+MouseRelativeModeOn(T_void)
 {
     DebugRoutine("MouseRelativeModeOn");
 
-    if (!G_relativeMode) {
+    if (!G_relativeMode)
+    {
         G_relativeMode = TRUE;
         // Remember where the mouse is located (we'll return there when we exit)
         IMouseGetMousePosition(&G_mousePreRelativeX, &G_mousePreRelativeY);
 
         // Center the mouse
-        MouseMoveTo(SCREEN_SIZE_X/2, SCREEN_SIZE_Y/2);
+        MouseMoveTo(SCREEN_SIZE_X / 2, SCREEN_SIZE_Y / 2);
 
         G_relativeModeFirstIsZero = TRUE;
     }
@@ -1163,11 +1219,13 @@ T_void MouseRelativeModeOn(T_void)
     DebugEnd();
 }
 
-T_void MouseRelativeModeOff(T_void)
+T_void
+MouseRelativeModeOff(T_void)
 {
     DebugRoutine("MouseRelativeModeOff");
 
-    if (G_relativeMode) {
+    if (G_relativeMode)
+    {
         // Restore the original mouse location
         MouseMoveTo(G_mousePreRelativeX, G_mousePreRelativeY);
 
@@ -1178,12 +1236,14 @@ T_void MouseRelativeModeOff(T_void)
     DebugEnd();
 }
 
-E_Boolean MouseIsRelativeMode(T_void)
+E_Boolean
+MouseIsRelativeMode(T_void)
 {
     return G_relativeMode;
 }
 
-T_void MouseSetRelativeSensitivity(T_word16 sensitivity)
+T_void
+MouseSetRelativeSensitivity(T_word16 sensitivity)
 {
     DebugRoutine("MouseSetRelativeSensitivity");
     DebugCheck(sensitivity > 0);
@@ -1194,29 +1254,36 @@ T_void MouseSetRelativeSensitivity(T_word16 sensitivity)
     DebugEnd();
 }
 
-T_void MouseRelativeRead(T_sword16 *aDeltaX, T_sword16 *aDeltaY)
+T_void
+MouseRelativeRead(T_sword16 *aDeltaX, T_sword16 *aDeltaY)
 {
     T_word16 x, y;
     DebugRoutine("MouseRelativeRead");
 
-    if (G_relativeMode) {
+    if (G_relativeMode)
+    {
         // Read the mouse position and then recenter the mouse
         IMouseGetMousePosition(&x, &y);
 
         // Is this the first reading?  If so, we'll default to no movement
-        if (G_relativeModeFirstIsZero) {
+        if (G_relativeModeFirstIsZero)
+        {
             *aDeltaX = 0;
             *aDeltaY = 0;
             G_relativeModeFirstIsZero = FALSE;
-        } else {
+        }
+        else
+        {
             // How far off did the mouse move from the middle?
-            *aDeltaX = ((T_sword16)(x - SCREEN_SIZE_X/2))*G_relativeSensitivity;
-            *aDeltaY = ((T_sword16)(y - SCREEN_SIZE_Y/2))*G_relativeSensitivity;
+            *aDeltaX = ((T_sword16) (x - SCREEN_SIZE_X / 2)) * G_relativeSensitivity;
+            *aDeltaY = ((T_sword16) (y - SCREEN_SIZE_Y / 2)) * G_relativeSensitivity;
         }
 
         // Center the mouse
-        MouseMoveTo(SCREEN_SIZE_X/2, SCREEN_SIZE_Y/2);
-    } else {
+        MouseMoveTo(SCREEN_SIZE_X / 2, SCREEN_SIZE_Y / 2);
+    }
+    else
+    {
         // Not in relative mouse mode, just return 0's
         *aDeltaX = *aDeltaY = 0;
     }
@@ -1224,13 +1291,14 @@ T_void MouseRelativeRead(T_sword16 *aDeltaX, T_sword16 *aDeltaY)
     DebugEnd();
 }
 
-T_buttonClick MouseGetButtonStatus(T_void)
+T_buttonClick
+MouseGetButtonStatus(T_void)
 {
     T_buttonClick buttonStatus;
 
     DebugRoutine("MouseGetButtonStatus");
 
-    buttonStatus = IMouseGetButtonStatus() ;
+    buttonStatus = IMouseGetButtonStatus();
 
     DebugEnd();
 

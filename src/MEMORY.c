@@ -34,42 +34,45 @@
 
 /* This is a header block to attach at the beginning of all allocated */
 /* blocks. */
-struct T_memBlockHeader_tag {
-    T_word32 blockId ;
-    T_byte8 blockTag[MEM_BLOCK_TAG_SIZE] ;
-    struct T_memBlockHeader_tag *p_nextBlock ;
-    struct T_memBlockHeader_tag *p_prevBlock ;
-    T_memDiscardCallbackFunc p_callback ;
+struct T_memBlockHeader_tag
+{
+    T_word32 blockId;
+    T_byte8 blockTag[MEM_BLOCK_TAG_SIZE];
+    struct T_memBlockHeader_tag *p_nextBlock;
+    struct T_memBlockHeader_tag *p_prevBlock;
+    T_memDiscardCallbackFunc p_callback;
     /* DEBUG! */
 #ifdef _MEM_RECORD_ROUTINES_
     T_byte8 *routine ;   /* Calling routine and line number. */
     long line ;
 #endif
-    T_word32 size ;
-} ;
+    T_word32 size;
+};
 
-typedef struct T_memBlockHeader_tag T_memBlockHeader ;
+typedef struct T_memBlockHeader_tag T_memBlockHeader;
 
 /* Number of block being allocated.  Start at one. */
-static T_word32 G_allocCount = 1 ;
-static T_word32 G_deallocCount = 0 ;
+static T_word32 G_allocCount = 1;
+static T_word32 G_deallocCount = 0;
 
 //#ifndef NDEBUG
-static T_word32 G_sizeAllocated = 0 ;
-static T_word32 G_maxSizeAllocated = 0 ;
+static T_word32 G_sizeAllocated = 0;
+static T_word32 G_maxSizeAllocated = 0;
 //#endif
 
 /* Pointer to beginning of discarded list. */
-static T_memBlockHeader *P_startOfDiscardList = NULL ;
+static T_memBlockHeader *P_startOfDiscardList = NULL;
 
 /* Pointer to end of discarded list.  The end represents the oldest */
 /* items in the discard list and is where memory should be freed first. */
-static T_memBlockHeader *P_endOfDiscardList = NULL ;
+static T_memBlockHeader *P_endOfDiscardList = NULL;
 
 /* Internal Functions Prototypes: */
-static E_Boolean IMemFindFreeSpace(T_void) ;
+static E_Boolean
+IMemFindFreeSpace(T_void);
 
-T_word32 FreeMemory(T_void) ;
+T_word32
+FreeMemory(T_void);
 
 #ifdef _MEM_CHECK_FULL_
 #define MAX_BLOCK_LIST 20000
@@ -107,87 +110,97 @@ static T_word16 IFindPointer(T_memBlockHeader *p_ptr) ;
  *  @return Pointer or NULL to memory block.
  *
  *<!-----------------------------------------------------------------------*/
-T_void *MemAlloc(T_word32 size)
+T_void *
+MemAlloc(T_word32 size)
 {
-    T_byte8 *p_memory ;
-    T_memBlockHeader *p_header ;
-    E_Boolean memFound ;
-    T_word16 next ;
-    const char *p_name ;
-    long line ;
+    T_byte8 *p_memory;
+    T_memBlockHeader *p_header;
+    E_Boolean memFound;
+    T_word16 next;
+    const char *p_name;
+    long line;
 
-    DebugRoutine("MemAlloc") ;
+    DebugRoutine("MemAlloc");
 
-DebugGetCaller(&p_name, &line) ;
+    DebugGetCaller(&p_name, &line);
 //printf("|%s,%ld\.0\n", p_name, size) ;
 #ifdef COMPILE_OPTION_OUTPUT_ALLOCATION
-//printf("!A %d %s\n", size, DebugGetCallerFile()) ;
-printf("!A %d %s:%s ", size, DebugGetCallerFile(), DebugGetCallerName()) ;
+    //printf("!A %d %s\n", size, DebugGetCallerFile()) ;
+    printf("!A %d %s:%s ", size, DebugGetCallerFile(), DebugGetCallerName()) ;
 #endif
     /* Allocate memory and room for our tag. */
-    do {
+    do
+    {
 //DebugCheck(_heapchk() == _HEAPOK) ;
-        p_memory = (T_byte8*) malloc(sizeof(T_memBlockHeader)+size) ;
+        p_memory = (T_byte8 *) malloc(sizeof(T_memBlockHeader) + size);
 //DebugCheck(_heapchk() == _HEAPOK) ;
 
         /* If the memory was not allocated, check to see if */
         /* Memory can be allocated. */
-        if (p_memory == NULL)  {
+        if (p_memory == NULL)
+        {
             /* Check if there are blocks that we can discard. */
-            if (IMemFindFreeSpace()==TRUE)  {
+            if (IMemFindFreeSpace() == TRUE)
+            {
                 /* If there is, note that we have not found memory */
                 /* so the loop continues trying to allocate. */
-                memFound = FALSE ;
-            } else {
+                memFound = FALSE;
+            }
+            else
+            {
                 /* If there is not, say we found memory to break */
                 /* out of the loop (when we actually did not). */
-                memFound = TRUE ;
+                memFound = TRUE;
             }
-        } else {
-            memFound = TRUE ;
         }
-    } while (memFound == FALSE) ;
+        else
+        {
+            memFound = TRUE;
+        }
+    }
+    while (memFound == FALSE);
 
     /* Check to see if we actually got the memory. */
-    if (p_memory != NULL)  {
+    if (p_memory != NULL)
+    {
         /* Initialize the header for this block. */
-        p_header = (T_memBlockHeader *)p_memory ;
+        p_header = (T_memBlockHeader *) p_memory;
 
 #ifdef _MEM_RECORD_ROUTINES_
-       DebugGetCaller(&p_header->routine, &p_header->line) ;
+        DebugGetCaller(&p_header->routine, &p_header->line) ;
 #endif
 #ifdef _MEM_CHECK_FULL_
-       /* Place the block on the allocated block list. */
-       if (G_firstFree == 0xFFFF)  {
-           /* Use a fresh block. */
-           DebugCheck(G_numBlocks < MAX_BLOCK_LIST) ;
-           G_blockList[G_numBlocks++] = p_header ;
-       } else {
-           /* Take one off the free list. */
-           next = (T_word32)G_blockList[G_firstFree] ;
-           G_blockList[G_firstFree] = p_header ;
-           G_firstFree = next ;
-       }
+        /* Place the block on the allocated block list. */
+        if (G_firstFree == 0xFFFF)  {
+            /* Use a fresh block. */
+            DebugCheck(G_numBlocks < MAX_BLOCK_LIST) ;
+            G_blockList[G_numBlocks++] = p_header ;
+        } else {
+            /* Take one off the free list. */
+            next = (T_word32)G_blockList[G_firstFree] ;
+            G_blockList[G_firstFree] = p_header ;
+            G_firstFree = next ;
+        }
 #endif
-        p_header->size = size ;
+        p_header->size = size;
         /* Make sure the block has been tagged. */
-        strcpy((char *)p_header->blockTag, "TaG") ;
+        strcpy((char *) p_header->blockTag, "TaG");
 
         /* Make sure that the block has an id (for debugging). */
-        p_header->blockId = G_allocCount++ ;
+        p_header->blockId = G_allocCount++;
 
         /* Clear out the previous and next pointers. */
-        p_header->p_nextBlock = p_header->p_prevBlock = NULL ;
+        p_header->p_nextBlock = p_header->p_prevBlock = NULL;
 
         /* Make sure the callback routine points to no where. */
-        p_header->p_callback = NULL ;
+        p_header->p_callback = NULL;
 
 /* Get who called this routine. */
 //DebugGetCaller(&p_header->routine, &p_header->line) ;
 
         /* Move pointer up past header. That way we can return a pointer
            to where the information really is. */
-        p_memory += sizeof(T_memBlockHeader) ;
+        p_memory += sizeof(T_memBlockHeader);
 //DebugCheck(_heapchk() == _HEAPOK) ;
     }
 //printf("ALLC: %d   \r", FreeMemory()) ;
@@ -199,30 +212,30 @@ printf("!A %d %s:%s ", size, DebugGetCallerFile(), DebugGetCallerName()) ;
 
 //#ifndef NDEBUG
     /* Add to the total amount of memory allocated this size. */
-    G_sizeAllocated += sizeof(T_memBlockHeader)+size ;
+    G_sizeAllocated += sizeof(T_memBlockHeader) + size;
 
     /* Is this the biggest it has ever been? */
     if (G_sizeAllocated > G_maxSizeAllocated)
         /* Yes, it is bigger.  Store this new maximum. */
-        G_maxSizeAllocated = G_sizeAllocated ;
+        G_maxSizeAllocated = G_sizeAllocated;
 //#endif
 
-    DebugEnd() ;
+    DebugEnd();
 
 #ifndef REAL_MODE
-    if (p_memory==NULL)
+    if (p_memory == NULL)
     {
         /* fail hard! out of memory ! */
         GrGraphicsOff();
-        printf ("Out of memory error, exiting\n");
-        MemDumpDiscarded() ;
+        printf("Out of memory error, exiting\n");
+        MemDumpDiscarded();
         exit(-1);
     }
 #endif
 #ifdef COMPILE_OPTION_OUTPUT_ALLOCATION
-printf("(@0x%08X)\n", p_memory) ;
+    printf("(@0x%08X)\n", p_memory) ;
 #endif
-    return p_memory ;
+    return p_memory;
 }
 
 /*-------------------------------------------------------------------------*
@@ -242,21 +255,22 @@ printf("(@0x%08X)\n", p_memory) ;
  *      Normally we can assume p_data points to data and is not NULL.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MemFree(T_void *p_data)
+T_void
+MemFree(T_void *p_data)
 {
-    T_byte8 *p_bytes ;
-    T_memBlockHeader *p_header ;
-    T_word16 pos ;
+    T_byte8 *p_bytes;
+    T_memBlockHeader *p_header;
+    T_word16 pos;
 
-    DebugRoutine("MemFree") ;
-    DebugCheck(p_data != NULL) ;
+    DebugRoutine("MemFree");
+    DebugCheck(p_data != NULL);
 
     /* Back up from the pointer we are given and try to find the
        header tag. */
-    p_bytes = p_data ;
-    p_bytes -= sizeof(T_memBlockHeader) ;
+    p_bytes = p_data;
+    p_bytes -= sizeof(T_memBlockHeader);
 
-    p_header = (T_memBlockHeader *)p_bytes ;
+    p_header = (T_memBlockHeader *) p_bytes;
 //printf("Freeing %p, ID: %d, for %s\n", p_data, p_header->blockId, DebugGetCallerName()) ;
 
 //printf("free ID: %ld, @ %p, %s\n", p_header->blockId, p_data, DebugGetCallerName()) ;
@@ -278,19 +292,19 @@ T_void MemFree(T_void *p_data)
 
 //printf("MemFree: %s (%p)\n", ((T_memBlockHeader *)p_bytes)->blockTag, p_data) ;
     /* Make sure we are freeing one of our blocks. */
-    DebugCheck(strcmp (((T_memBlockHeader *)p_bytes)->blockTag, "DaG") != 0) ;
-    DebugCheck(strcmp (((T_memBlockHeader *)p_bytes)->blockTag, "TaG") == 0) ;
+    DebugCheck(strcmp(((T_memBlockHeader *) p_bytes)->blockTag, "DaG") != 0);
+    DebugCheck(strcmp(((T_memBlockHeader *) p_bytes)->blockTag, "TaG") == 0);
 
     /* Check if the tag is there, or bomb. */
-    DebugCheck(strcmp(((T_memBlockHeader *)p_bytes)->blockTag, "TaG") == 0) ;
-    strcpy(((T_memBlockHeader *)p_bytes)->blockTag, "!!!");
+    DebugCheck(strcmp(((T_memBlockHeader *) p_bytes)->blockTag, "TaG") == 0);
+    strcpy(((T_memBlockHeader *) p_bytes)->blockTag, "!!!");
 
 //#ifndef NDEBUG
     /* Note that the total is now less. */
-    G_sizeAllocated -= sizeof(T_memBlockHeader) + p_header->size ;
+    G_sizeAllocated -= sizeof(T_memBlockHeader) + p_header->size;
 #ifdef COMPILE_OPTION_OUTPUT_ALLOCATION
-printf("!F %d %s (@0x%08X)\n", p_header->size, DebugGetCallerFile(), p_bytes) ;
-printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName()) ;
+    printf("!F %d %s (@0x%08X)\n", p_header->size, DebugGetCallerFile(), p_bytes) ;
+    printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName()) ;
 #endif
 
 #ifndef NDEBUG
@@ -301,15 +315,15 @@ printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName
     memset(p_bytes, 0xCD, sizeof(T_memBlockHeader) + p_header->size) ;
 #endif
     /* OK, free up the valid block. */
-    free(p_bytes) ;
+    free(p_bytes);
 //puts("OK") ;
 //printf("FREE: %d   \r", FreeMemory()) ;
 //fflush(stdout) ;
 
     /* Cound how many are freed. */
-    G_deallocCount++ ;
+    G_deallocCount++;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -341,11 +355,12 @@ printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName
  *      status really is.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MemMarkDiscardable(
-           T_void *p_data,
-           T_memDiscardCallbackFunc p_callback)
+T_void
+MemMarkDiscardable(
+    T_void *p_data,
+    T_memDiscardCallbackFunc p_callback)
 {
-    T_memBlockHeader *p_header ;
+    T_memBlockHeader *p_header;
 
     /* All that needs to be done to make a memory block discardable is */
     /* to place it on the discard list.  This is a double linked list */
@@ -355,12 +370,12 @@ T_void MemMarkDiscardable(
     /* The double links are needed in case the block is reclaimed at */
     /* a later point by MemReclaimDiscardable().  */
 
-    DebugRoutine("MemMarkDiscardable") ;
-    DebugCheck(p_data != NULL) ;
+    DebugRoutine("MemMarkDiscardable");
+    DebugCheck(p_data != NULL);
 
     /* Start by accessing the header for this block. */
     p_header = (T_memBlockHeader *)
-               (((T_byte8 *)p_data) - sizeof(T_memBlockHeader)) ;
+        (((T_byte8 *) p_data) - sizeof(T_memBlockHeader));
 //printf("MemMarkDiscardable %p %s\n", p_header, DebugGetCallerName()) ; fflush(stdout) ;
 
 #ifndef NDEBUG
@@ -380,45 +395,48 @@ T_void MemMarkDiscardable(
     }
 #endif
 
-    DebugCheck(strcmp(p_header->blockTag, "TaG") == 0) ;
+    DebugCheck(strcmp(p_header->blockTag, "TaG") == 0);
 
     /* Note that this is a discardable block by changing the tag. */
-    p_header->blockTag[0] = 'D' ;
+    p_header->blockTag[0] = 'D';
 
     /* Put this block on the discard list. */
 
     /* The next block is the current beginning of the list (or NULL) */
     p_header->p_nextBlock =
-        (struct T_memBlockHeader_tag *)P_startOfDiscardList ;
+        (struct T_memBlockHeader_tag *) P_startOfDiscardList;
 
     /* Note that we are the beginning by nulling out the previous field */
-    p_header->p_prevBlock = NULL ;
+    p_header->p_prevBlock = NULL;
 
-    if (P_startOfDiscardList == NULL)  {
+    if (P_startOfDiscardList == NULL)
+    {
         /* If NULL start of discard list, initialize the end of the */
         /* discard list. */
-        P_endOfDiscardList = p_header ;
-    } else {
+        P_endOfDiscardList = p_header;
+    }
+    else
+    {
         /* If not NULL, then we need to make the first item */
         /* point to the new item. */
         P_startOfDiscardList->p_prevBlock =
-            (struct T_memBlockHeader_tag *)p_header ;
+            (struct T_memBlockHeader_tag *) p_header;
     }
     /* In both cases, make the start of the discard list */
     /* point to this new item. */
-    P_startOfDiscardList = p_header ;
+    P_startOfDiscardList = p_header;
 
     /* Finally, record the callback functions in the block itself. */
-    p_header->p_callback = p_callback ;
+    p_header->p_callback = p_callback;
 
 #ifndef NDEBUG
-/*
-    p_data = (T_byte8 *)(p_header+1) ;
-    for (i=0; i<p_header->size; i++)
-       ((T_byte8 *)p_data)[i] ^= 0xFF ;
-*/
+    /*
+        p_data = (T_byte8 *)(p_header+1) ;
+        for (i=0; i<p_header->size; i++)
+           ((T_byte8 *)p_data)[i] ^= 0xFF ;
+    */
 #endif
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -438,62 +456,69 @@ T_void MemMarkDiscardable(
  *  @param p_data -- Pointer to originally discarded block
  *
  *<!-----------------------------------------------------------------------*/
-T_void MemReclaimDiscardable(T_void *p_data)
+T_void
+MemReclaimDiscardable(T_void *p_data)
 {
-    T_memBlockHeader *p_header ;
+    T_memBlockHeader *p_header;
 
     /* All we have to do here is remove the block that was originally */
     /* discarded from the discard list.  Pretty simple, huh? */
     /* Since we used a double linked list, it is only a matter of */
     /* "mending" the links of the previous and next block. */
 
-    DebugRoutine("MemReclaimDiscardable") ;
-    DebugCheck(p_data != NULL) ;
+    DebugRoutine("MemReclaimDiscardable");
+    DebugCheck(p_data != NULL);
 //printf("Reclaim: %p\n", p_data) ; fflush(stdout) ;
     /* Start by accessing the header for this block. */
-    p_header = (T_memBlockHeader *)(((T_byte8 *)p_data) - sizeof(T_memBlockHeader)) ;
+    p_header = (T_memBlockHeader *) (((T_byte8 *) p_data) - sizeof(T_memBlockHeader));
 
     /* Make sure you are restoring a discarded block. */
-    DebugCheck(strcmp(p_header->blockTag, "DaG") == 0) ;
+    DebugCheck(strcmp(p_header->blockTag, "DaG") == 0);
 
     /* Take care of the previous block (if any) */
 
     /* Check if there is a previous block to the block we are removing. */
-    if (p_header->p_prevBlock == NULL)  {
+    if (p_header->p_prevBlock == NULL)
+    {
         /* There is not a previous block, so make the next block the */
         /* start of the discard list. */
-        P_startOfDiscardList = p_header->p_nextBlock ;
-    } else {
+        P_startOfDiscardList = p_header->p_nextBlock;
+    }
+    else
+    {
         /* OK, there is a previous block.  Make that previous block */
         /* linked to the next block. */
-        p_header->p_prevBlock->p_nextBlock = p_header->p_nextBlock ;
+        p_header->p_prevBlock->p_nextBlock = p_header->p_nextBlock;
     }
 
     /* Check if there is a next block to the block we are removing. */
-    if (p_header->p_nextBlock == NULL)  {
+    if (p_header->p_nextBlock == NULL)
+    {
         /* There is not a next block, so make the previous block the */
         /* end of the discard list. */
-        P_endOfDiscardList = p_header->p_nextBlock ;
-    } else {
+        P_endOfDiscardList = p_header->p_nextBlock;
+    }
+    else
+    {
         /* OK, there is a next block.  Make that next block */
         /* linked to the previous block. */
-        p_header->p_nextBlock->p_prevBlock = p_header->p_prevBlock ;
+        p_header->p_nextBlock->p_prevBlock = p_header->p_prevBlock;
     }
 
     /* Mark this block as free from the discard list (and make */
     /* it look just like a normal block. */
-    p_header->blockTag[0] = 'T' ;
+    p_header->blockTag[0] = 'T';
 
     /* We are now removed from the discard double link list. */
 
 #ifndef NDEBUG
-/*
-    p_data = (T_byte8 *)(p_header+1) ;
-    for (i=0; i<p_header->size; i++)
-       ((T_byte8 *)p_data)[i] ^= 0xFF ;
-*/
+    /*
+        p_data = (T_byte8 *)(p_header+1) ;
+        for (i=0; i<p_header->size; i++)
+           ((T_byte8 *)p_data)[i] ^= 0xFF ;
+    */
 #endif
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -518,17 +543,18 @@ T_void MemReclaimDiscardable(T_void *p_data)
  *      FALSE = no more memory can be freed.
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IMemFindFreeSpace(T_void)
+static E_Boolean
+IMemFindFreeSpace(T_void)
 {
-    E_Boolean answer = FALSE ;
-    T_memBlockHeader *p_header ;
-    T_word16 pos ;
+    E_Boolean answer = FALSE;
+    T_memBlockHeader *p_header;
+    T_word16 pos;
 
-    DebugRoutine("IMemFindFreeSpace") ;
+    DebugRoutine("IMemFindFreeSpace");
 
 //printf("Finding free space!\n") ;
 //fprintf(stderr, "Finding free space!") ;
-MemCheck(2925) ;
+    MemCheck(2925);
 //MemDumpDiscarded() ;
 //_heapmin() ;
 
@@ -542,20 +568,21 @@ while (p_header)  {
 printf("End of list\n\n") ;
 */
     /* Do we have any blocks on the discard list? */
-    if (P_startOfDiscardList != NULL)  {
+    if (P_startOfDiscardList != NULL)
+    {
         /* Yes, call it's callback routine -- it is about to be */
         /* freed from memory.  Make sure to pass a pointer to the */
         /* true data part (past header) of the memory block. */
-        p_header = P_startOfDiscardList ;
+        p_header = P_startOfDiscardList;
 
         /* Make sure you are freeing a discarded block. */
-        DebugCheck(strcmp(p_header->blockTag, "DaG") == 0) ;
+        DebugCheck(strcmp(p_header->blockTag, "DaG") == 0);
 
 //printf("Discard %p\n", (((T_byte8 *)p_header)+sizeof(T_memBlockHeader))) ;
-        p_header->p_callback(((T_byte8 *)p_header)+sizeof(T_memBlockHeader)) ;
+        p_header->p_callback(((T_byte8 *) p_header) + sizeof(T_memBlockHeader));
 
         /* Make sure you are freeing a discarded block. */
-        DebugCheck(strcmp(p_header->blockTag, "DaG") == 0) ;
+        DebugCheck(strcmp(p_header->blockTag, "DaG") == 0);
 
         /* Now that the block's owner has been notified, we */
         /* can continue. */
@@ -574,17 +601,17 @@ printf("End of list\n\n") ;
                 P_startOfDiscardList = NULL ;
         }
 #endif
-        P_startOfDiscardList = p_header->p_nextBlock ;
+        P_startOfDiscardList = p_header->p_nextBlock;
         if (P_startOfDiscardList == NULL)
-            P_endOfDiscardList = NULL ;
+            P_endOfDiscardList = NULL;
         else
-            p_header->p_nextBlock->p_prevBlock = NULL ;
+            p_header->p_nextBlock->p_prevBlock = NULL;
 
         /* Note that the total is now less. */
-        G_sizeAllocated -= sizeof(T_memBlockHeader) + p_header->size ;
+        G_sizeAllocated -= sizeof(T_memBlockHeader) + p_header->size;
 #ifdef COMPILE_OPTION_OUTPUT_ALLOCATION
-printf("!F %d %s\n", p_header->size, DebugGetCallerFile()) ;
-printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName()) ;
+        printf("!F %d %s\n", p_header->size, DebugGetCallerFile()) ;
+        printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName()) ;
 #endif
 
 #ifndef NDEBUG
@@ -613,18 +640,18 @@ printf("!F %d %s:%s\n", p_header->size, DebugGetCallerFile(), DebugGetCallerName
         memset(((T_byte8 *)p_header)+sizeof(T_memBlockHeader), 0xCE, p_header->size) ;
 #endif
 #ifndef NDEBUG
-    memset(p_header, 0xCD, sizeof(T_memBlockHeader) + p_header->size) ;
+        memset(p_header, 0xCD, sizeof(T_memBlockHeader) + p_header->size) ;
 #endif
         /* Ok, now we can actually free the block. */
-        free(p_header) ;
+        free(p_header);
 
         /* Note that memory *was* freed. */
-        answer = TRUE ;
+        answer = TRUE;
     }
 
-    DebugCheck(answer < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
-    return answer ;
+    DebugCheck(answer < BOOLEAN_UNKNOWN);
+    DebugEnd();
+    return answer;
 }
 
 #ifndef NDEBUG
@@ -879,9 +906,10 @@ T_void MemCheckData(T_void *p_data)
  *  @return Number bytes allocated
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 MemGetAllocated(T_void)
+T_word32
+MemGetAllocated(T_void)
 {
-    return G_sizeAllocated ;
+    return G_sizeAllocated;
 }
 
 /*-------------------------------------------------------------------------*
@@ -898,9 +926,10 @@ T_word32 MemGetAllocated(T_void)
  *      started.
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 MemGetMaxAllocated(T_void)
+T_word32
+MemGetMaxAllocated(T_void)
 {
-    return G_maxSizeAllocated ;
+    return G_maxSizeAllocated;
 }
 
 /*-------------------------------------------------------------------------*
@@ -915,15 +944,17 @@ T_word32 MemGetMaxAllocated(T_void)
  *  None really.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MemFlushDiscardable(T_void)
+T_void
+MemFlushDiscardable(T_void)
 {
-    DebugRoutine("MemFlushDiscardable") ;
+    DebugRoutine("MemFlushDiscardable");
 
 //puts("Flush START") ;
     /* Keep discarding memory until we no longer have anything to */
     /* discard. */
     while (IMemFindFreeSpace() == TRUE)
-        {}
+    {
+    }
 //puts("Flush END") ;
 
 /*
@@ -935,7 +966,7 @@ while (p_header)  {
 }
 printf("End of list\n\n") ;
 */
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #ifdef BORLAND_COMPILER
@@ -946,10 +977,11 @@ T_word32 FreeMemory(T_void)
 }
 #  endif
 #else
-T_word32 FreeMemory(T_void)
+T_word32
+FreeMemory(T_void)
 {
 #if defined(DOS32)
-	T_word32 memInfo[12] ;
+    T_word32 memInfo[12] ;
 
     union REGS regs ;
     struct SREGS sregs ;

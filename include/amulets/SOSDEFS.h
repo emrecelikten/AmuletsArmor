@@ -25,10 +25,10 @@
 #undef   _NULL
 #ifndef _TRUE
 enum
-      {
-         _FALSE,
-         _TRUE
-      };
+{
+    _FALSE,
+    _TRUE
+};
 #endif
 
 #define  _NULL  0
@@ -36,37 +36,59 @@ enum
 #ifndef  VOID
 #define  VOID           void
 #endif
-typedef  int            BOOL;
-typedef  unsigned int   UINT;
-typedef  unsigned char  BYTE;
-typedef  unsigned short WORD;
-typedef  unsigned int   W32;
-typedef  unsigned short W16;
+typedef int BOOL;
+typedef unsigned int UINT;
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+typedef unsigned int W32;
+typedef unsigned short W16;
 #ifndef  LONG
-typedef  signed long    LONG;
+typedef signed long LONG;
 #endif
-typedef  unsigned long  DWORD;
+typedef unsigned long DWORD;
 
-typedef  BYTE  *        PBYTE;
-typedef  char near *    PSTR;
-typedef  WORD  *        PWORD;
-typedef  unsigned short  * PSHORT;
-typedef  LONG  *        PLONG;
-typedef  VOID  *        PVOID;
+typedef BYTE *PBYTE;
+typedef char near
+*
+PSTR;
+typedef WORD *PWORD;
+typedef unsigned short *PSHORT;
+typedef LONG *PLONG;
+typedef VOID *PVOID;
 
-typedef  BYTE  far   *  LPBYTE;
-typedef  BYTE  far   *  LPSTR;
-typedef  WORD  far   *  LPWORD;
-typedef  W32   far   *  LPW32;
-typedef  LONG  far   *  LPLONG;
-typedef  VOID  far   *  LPVOID;
+typedef BYTE far
+*
+LPBYTE;
+typedef BYTE far
+*
+LPSTR;
+typedef WORD far
+*
+LPWORD;
+typedef W32 far
+*
+LPW32;
+typedef LONG far
+*
+LPLONG;
+typedef VOID far
+*
+LPVOID;
 
-typedef  BYTE  huge  *  HPBYTE;
-typedef  BYTE  huge  *  HPSTR;
-typedef  LONG  huge  *  HPLONG;
-typedef  VOID  huge  *  HPVOID;
+typedef BYTE huge
+*
+HPBYTE;
+typedef BYTE huge
+*
+HPSTR;
+typedef LONG huge
+*
+HPLONG;
+typedef VOID huge
+*
+HPVOID;
 
-typedef  unsigned       HANDLE;
+typedef unsigned HANDLE;
 
 #endif
 

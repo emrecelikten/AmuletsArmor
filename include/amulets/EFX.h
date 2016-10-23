@@ -7,7 +7,7 @@
 #include "DBLLINK.H"
 
 typedef T_doubleLinkListElement T_efxID;
-typedef T_void (*T_efxHandler)(T_efxID efxID) ;
+typedef T_void (*T_efxHandler)(T_efxID efxID);
 
 #define OBJECT_TYPE_TELEPORT           4091
 #define OBJECT_TYPE_WALL_HIT           4085
@@ -54,33 +54,36 @@ typedef enum
     EFX_UNKNOWN
 } E_efxType;
 
-
 typedef struct
 {
-    T_doubleLinkList        objectList;
-    T_word32                Xorigin;
-    T_word32                Yorigin;
-    T_word32                Zorigin;
-    T_word16                numberOf;
-    T_word32                reserved;
-    T_word16                duration;
-    T_efxHandler            updateCallback;
+    T_doubleLinkList objectList;
+    T_word32 Xorigin;
+    T_word32 Yorigin;
+    T_word32 Zorigin;
+    T_word16 numberOf;
+    T_word32 reserved;
+    T_word16 duration;
+    T_efxHandler updateCallback;
     T_doubleLinkListElement myID;
 } T_efxStruct;
 
+T_void
+EfxInit(T_void);
+T_void
+EfxFinish(T_void);
+T_void
+EfxUpdate(T_void);
 
-T_void EfxInit (T_void);
-T_void EfxFinish (T_void);
-T_void EfxUpdate (T_void);
+T_efxID
+EfxCreate(E_efxType type,        // type of effect
+          T_word32 Xorigin,     // x,y,z location of effect
+          T_word32 Yorigin,
+          T_word32 Zorigin,
+          T_word16 numberOf,    // number of objects to create
+          E_Boolean transparent, // should objects be transparent?
+          T_word32 extraData);  // xtra data for some efx
 
-T_efxID EfxCreate (E_efxType type,        // type of effect
-                   T_word32  Xorigin,     // x,y,z location of effect
-                   T_word32  Yorigin,
-                   T_word32  Zorigin,
-                   T_word16  numberOf,    // number of objects to create
-                   E_Boolean transparent, // should objects be transparent?
-                   T_word32  extraData);  // xtra data for some efx
-
-T_void EfxDestroy (T_efxID efxID);
+T_void
+EfxDestroy(T_efxID efxID);
 
 #endif

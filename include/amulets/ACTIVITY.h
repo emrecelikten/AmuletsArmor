@@ -7,14 +7,17 @@
 
 #include "GENERAL.H"
 
-typedef T_void *T_activitiesHandle ;
+typedef T_void *T_activitiesHandle;
 #define ACTIVITY_HANDLE_BAD SCRIPT_BAD
 
-T_activitiesHandle ActivitiesLoad(T_word32 number) ;
+T_activitiesHandle
+ActivitiesLoad(T_word32 number);
 
-T_void ActivitiesUnload(void) ;
+T_void
+ActivitiesUnload(void);
 
-T_void ActivitiesRun(T_word16 numberOfActivity) ;
+T_void
+ActivitiesRun(T_word16 numberOfActivity);
 
 #endif
 

@@ -10,25 +10,33 @@
 #define RESOURCE_BAD NULL
 #define RESOURCE_FILE_BAD ((T_word16)0xFFFF)
 
-typedef T_word16 T_resourceFile ;
+typedef T_word16 T_resourceFile;
 
-typedef T_void *T_resource ;
+typedef T_void *T_resource;
 
-T_resourceFile ResourceOpen(T_byte8 *p_filename) ;
+T_resourceFile
+ResourceOpen(T_byte8 *p_filename);
 
-T_void ResourceClose(T_resourceFile resourceFile) ;
+T_void
+ResourceClose(T_resourceFile resourceFile);
 
-T_resource ResourceFind(T_resourceFile resourceFile, T_byte8 *p_resourceName) ;
+T_resource
+ResourceFind(T_resourceFile resourceFile, T_byte8 *p_resourceName);
 
-T_void ResourceUnfind(T_resource res) ;
+T_void
+ResourceUnfind(T_resource res);
 
-T_void *ResourceLock(T_resource resource) ;
+T_void *
+ResourceLock(T_resource resource);
 
-T_void ResourceUnlock(T_resource resource) ;
+T_void
+ResourceUnlock(T_resource resource);
 
-T_word32 ResourceGetSize(T_resource resource) ;
+T_word32
+ResourceGetSize(T_resource resource);
 
-T_byte8 *ResourceGetName(T_void *p_data) ;
+T_byte8 *
+ResourceGetName(T_void *p_data);
 
 #ifndef NDEBUG
 T_void ResourceDumpIndex(T_resourceFile resourceFile) ;

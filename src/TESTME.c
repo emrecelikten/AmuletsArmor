@@ -10,7 +10,6 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
-#include <ctype.h>
 #if WIN32
 #include <conio.h>
 #include <SDL_net.h>
@@ -19,14 +18,9 @@
 #include "CMDQUEUE.H"
 #include "COLOR.H"
 #include "CONFIG.H"
-#include "FILE.H"
-#include "GENERAL.H"
-#include "KEYBOARD.H"
 #include "KEYMAP.H"
 #include "KEYSCAN.H"
 #include "MESSAGE.H"
-#include "MOUSEMOD.H"
-#include "PACKET.H"
 #include "PICS.H"
 #include "SOUND.H"
 #include "SMMAIN.H"
@@ -43,15 +37,18 @@
 
 #define CAP_TICK_RATE   1
 
-extern T_void PacketReceiveData(T_void *p_data, T_word16 size) ;
+extern T_void
+PacketReceiveData(T_void *p_data, T_word16 size);
 
-static T_void IShowScreenNextPage (E_mouseEvent event,
-                         T_word16 x,
-                         T_word16 y,
-                         T_buttonClick button);
-static E_Boolean G_mouseClicked=FALSE;
+static T_void
+IShowScreenNextPage(E_mouseEvent event,
+                    T_word16 x,
+                    T_word16 y,
+                    T_buttonClick button);
+static E_Boolean G_mouseClicked = FALSE;
 
-void HangUp(void)
+void
+HangUp(void)
 {
 }
 
@@ -75,79 +72,91 @@ void __interrupt __far NoBreak(void)
 }
 #endif
 
-void UpdateCmdqueue(void)
+void
+UpdateCmdqueue(void)
 {
-    TICKER_TIME_ROUTINE_PREPARE() ;
-    TICKER_TIME_ROUTINE_START() ;
-    DebugRoutine("UpdateCmdqueue") ;
+    TICKER_TIME_ROUTINE_PREPARE();
+    TICKER_TIME_ROUTINE_START();
+    DebugRoutine("UpdateCmdqueue");
 
-    CmdQUpdateAllReceives() ;
-    CmdQUpdateAllSends() ;
+    CmdQUpdateAllReceives();
+    CmdQUpdateAllSends();
 
-    DebugEnd() ;
-    TICKER_TIME_ROUTINE_ENDM("UpdateCmdqueue", 500) ;
+    DebugEnd();
+    TICKER_TIME_ROUTINE_ENDM("UpdateCmdqueue", 500);
 }
 
-static E_Boolean IShowScreen(
-                  T_byte8 *picName,
-                  T_viewPalette pal,
-                  T_word32 timeout,
-                  E_Boolean showTag,
-                  E_Boolean doFlash)
+static E_Boolean
+IShowScreen(
+    T_byte8 *picName,
+    T_viewPalette pal,
+    T_word32 timeout,
+    E_Boolean showTag,
+    E_Boolean doFlash)
 {
-    T_bitmap *p_bitmap=NULL ;
-    T_resource res ;
-    T_word32 time ;
-    E_Boolean bypassed = FALSE ;
+    T_bitmap *p_bitmap = NULL;
+    T_resource res;
+    T_word32 time;
+    E_Boolean bypassed = FALSE;
     static E_Boolean wasGamma = FALSE;
 
-    DebugRoutine("IShowScreen") ;
+    DebugRoutine("IShowScreen");
     MousePushEventHandler(IShowScreenNextPage);
 
-    time = TickerGet() + timeout ;
-    p_bitmap = (T_bitmap *)PictureLockData(picName, &res) ;
-    DebugCheck (p_bitmap!=NULL);
-    if (p_bitmap)  {
-        ViewSetPalette(pal) ;
+    time = TickerGet() + timeout;
+    p_bitmap = (T_bitmap *) PictureLockData(picName, &res);
+    DebugCheck (p_bitmap != NULL);
+    if (p_bitmap)
+    {
+        ViewSetPalette(pal);
         ColorStoreDefaultPalette();
         if (doFlash)
-            ColorAddGlobal(64, 64, 64) ;
+            ColorAddGlobal(64, 64, 64);
 //        else
 //            ColorAddGlobal(-64, -64, -64) ;
-        GrDrawBitmap(p_bitmap, 0, 0) ;
-        PictureUnlockAndUnfind(res) ;
+        GrDrawBitmap(p_bitmap, 0, 0);
+        PictureUnlockAndUnfind(res);
 
         if (showTag)
         {
             /* first time show version number */
-            GrSetCursorPosition (5,188);
-            GrDrawShadowedText (VERSION_TEXT,210,0);
+            GrSetCursorPosition(5, 188);
+            GrDrawShadowedText(VERSION_TEXT, 210, 0);
         }
-        KeyboardBufferOn() ;
+        KeyboardBufferOn();
         while (time > TickerGet())
         {
-            if (KeyboardBufferGet() != 0)  {
-                bypassed = TRUE ;
-                break ;
-            }
-            MouseUpdateEvents();
-            if (G_mouseClicked==TRUE) {
-                bypassed = TRUE ;
+            if (KeyboardBufferGet() != 0)
+            {
+                bypassed = TRUE;
                 break;
             }
-            ColorUpdate(1) ;
-            if (KeyboardGetScanCode(KEY_SCAN_CODE_ALT) == TRUE) {
-                if (KeyMapGetScan(KEYMAP_GAMMA_CORRECT) == TRUE)  {
-                    if (wasGamma == FALSE) {
+            MouseUpdateEvents();
+            if (G_mouseClicked == TRUE)
+            {
+                bypassed = TRUE;
+                break;
+            }
+            ColorUpdate(1);
+            if (KeyboardGetScanCode(KEY_SCAN_CODE_ALT) == TRUE)
+            {
+                if (KeyMapGetScan(KEYMAP_GAMMA_CORRECT) == TRUE)
+                {
+                    if (wasGamma == FALSE)
+                    {
                         MessagePrintf("Gamma level %d",
-                            ColorGammaAdjust()) ;
-                        ColorUpdate(1) ;
+                                      ColorGammaAdjust());
+                        ColorUpdate(1);
                         wasGamma = TRUE;
                     }
-                } else {
+                }
+                else
+                {
                     wasGamma = FALSE;
                 }
-            } else {
+            }
+            else
+            {
                 wasGamma = FALSE;
             }
         }
@@ -156,27 +165,27 @@ static E_Boolean IShowScreen(
     }
     MousePopEventHandler();
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bypassed ;
+    return bypassed;
 }
 
-
-static T_void IShowScreenNextPage (E_mouseEvent event,
-                         T_word16 x,
-                         T_word16 y,
-                         T_buttonClick button)
+static T_void
+IShowScreenNextPage(E_mouseEvent event,
+                    T_word16 x,
+                    T_word16 y,
+                    T_buttonClick button)
 {
     DebugRoutine ("IShowScreenNextPage");
 
-    if (button==MOUSE_BUTTON_LEFT &&
-        event==MOUSE_EVENT_START)
+    if (button == MOUSE_BUTTON_LEFT &&
+        event == MOUSE_EVENT_START)
     {
-        G_mouseClicked=TRUE;
+        G_mouseClicked = TRUE;
     }
     else
     {
-        G_mouseClicked=FALSE;
+        G_mouseClicked = FALSE;
     }
 
     DebugEnd();
@@ -231,46 +240,49 @@ T_void PullOut(T_void)
 #endif
 
 #ifdef SDL
-T_void game_main(T_word16 argc, char *argv[])
+T_void
+game_main(T_word16 argc, char *argv[])
 #else
 T_void main(T_word16 argc, char *argv[])
 #endif
 {
-    T_word32 i = 0 ;
-    T_directTalkHandle handle ;
-static T_word32 lastTick=0;
-extern void SleepMS(T_word32 sleepMS);
+    T_word32 i = 0;
+    T_directTalkHandle handle;
+    static T_word32 lastTick = 0;
+    extern void
+    SleepMS(T_word32 sleepMS);
     //    void (__interrupt __far *oldbreak)(); /* interrupt function pointer */
 
 #ifdef WIN32
     /* Redirect the standard output to a file */
-//    freopen("stdout.out", "w", stdout) ;
+  //    freopen("stdout.out", "w", stdout) ;
 #endif
-    TICKER_TIME_ROUTINE_PREPARE() ;
+    TICKER_TIME_ROUTINE_PREPARE();
 
-    DebugRoutine("main") ;
+    DebugRoutine("main");
 
-    ConfigOpen() ;
-    ConfigLoad() ;
+    ConfigOpen();
+    ConfigLoad();
 
-    puts("Amulets & Armor version 1.0 -- (C) 1996 United Software Artists") ;
-    puts("---------------------------------------------------------------") ;
+    puts("Amulets & Armor version 1.0 -- (C) 1996 United Software Artists");
+    puts("---------------------------------------------------------------");
 #ifdef COMPILE_OPTION_COPY_PROTECTION_ON
     CheckCopyProtection() ;
 #endif
 
-    SyncMemClear() ;
+    SyncMemClear();
 
     /* Do not allow CTRL-Break */
 //    oldbreak = _dos_getvect(0x23);
 //    _dos_setvect(0x23, NoBreak) ;
 //    NoBreakPart2() ;
 
-    if (MouseCheckInstalled() == FALSE)  {
-        puts("-- ERROR --------------------------------------") ;
-        puts("Amulets and Armor requires a mouse to play.") ;
-        puts("No mouse was detected on this computer.") ;
-        exit(1) ;
+    if (MouseCheckInstalled() == FALSE)
+    {
+        puts("-- ERROR --------------------------------------");
+        puts("Amulets and Armor requires a mouse to play.");
+        puts("No mouse was detected on this computer.");
+        exit(1);
     }
 
 #ifndef SDL
@@ -281,11 +293,14 @@ extern void SleepMS(T_word32 sleepMS);
     }
 
     sscanf(argv[1], "%lX", &handle) ;
-//    printf("DirectTalk Handle: 0x%08lX\n", handle) ;
+  //    printf("DirectTalk Handle: 0x%08lX\n", handle) ;
 #else
-    if (argc <= 1) {
+    if (argc <= 1)
+    {
         handle = 0;
-    } else if (argc == 2)  {
+    }
+    else if (argc == 2)
+    {
 #if WIN_IPX
         // An IP address is given.  Set it to connect there
         if(SDLNet_Init()==-1) {
@@ -300,22 +315,24 @@ extern void SleepMS(T_word32 sleepMS);
 #else
         handle = 0;
 #endif
-    } else {
-        puts("USAGE: GAME [<IP Address for network server>]") ;
-        DebugEnd() ;
-        exit(1) ;
+    }
+    else
+    {
+        puts("USAGE: GAME [<IP Address for network server>]");
+        DebugEnd();
+        exit(1);
     }
 #endif
 
     DirectTalkInit(
-         PacketReceiveData,
-         NULL,
-         NULL,
-         NULL,
-         handle) ;
+        PacketReceiveData,
+        NULL,
+        NULL,
+        NULL,
+        handle);
     /* Initialize the game. */
-    UpdateGameBegin() ;
-    DebugSaveVectorTable() ;
+    UpdateGameBegin();
+    DebugSaveVectorTable();
 
 #ifdef PULL_OUT
     PullOut() ;
@@ -330,71 +347,78 @@ extern void SleepMS(T_word32 sleepMS);
 //#endif
 
 //#ifdef NDEBUG
-    SoundPlayByNumber(3501, 0) ;
+    SoundPlayByNumber(3501, 0);
 //    if (IShowScreen("UI/SCREENS/USA1", VIEW_PALETTE_MAIN_TITLE, 14, FALSE, FALSE) == FALSE)  {
-        ColorUpdate(1) ;
+    ColorUpdate(1);
 //        delay(200) ;
-        SoundPlayByNumber(3501, 255) ;
-        //if (IShowScreen("UI/SCREENS/USA1", VIEW_PALETTE_MAIN_TITLE, 400, FALSE, TRUE) == FALSE)  {
-        if (IShowScreen("UI/SCREENS/COMPANY", VIEW_PALETTE_STANDARD, 400, TRUE, TRUE) == FALSE)  {
-            ColorFadeTo(0,0,0);
-            GrDrawRectangle(0, 0, SCREEN_SIZE_X-1, SCREEN_SIZE_Y-1, 0) ;
-            ColorUpdate(1) ;
-            ViewSetPalette(VIEW_PALETTE_STANDARD) ;
-            //if (IShowScreen("UI/SCREENS/USA2", VIEW_PALETTE_MAIN_TITLE, 250, FALSE, FALSE) == FALSE)  {
-            if (IShowScreen("UI/SCREENS/PRESENTS", VIEW_PALETTE_STANDARD, 250, TRUE, FALSE) == FALSE)  {
-                ColorFadeTo(0,0,0);
-                GrDrawRectangle(0, 0, SCREEN_SIZE_X-1, SCREEN_SIZE_Y-1, 0) ;
-                ColorUpdate(1) ;
-                ViewSetPalette(VIEW_PALETTE_STANDARD) ;
+    SoundPlayByNumber(3501, 255);
+    //if (IShowScreen("UI/SCREENS/USA1", VIEW_PALETTE_MAIN_TITLE, 400, FALSE, TRUE) == FALSE)  {
+    if (IShowScreen("UI/SCREENS/COMPANY", VIEW_PALETTE_STANDARD, 400, TRUE, TRUE) == FALSE)
+    {
+        ColorFadeTo(0, 0, 0);
+        GrDrawRectangle(0, 0, SCREEN_SIZE_X - 1, SCREEN_SIZE_Y - 1, 0);
+        ColorUpdate(1);
+        ViewSetPalette(VIEW_PALETTE_STANDARD);
+        //if (IShowScreen("UI/SCREENS/USA2", VIEW_PALETTE_MAIN_TITLE, 250, FALSE, FALSE) == FALSE)  {
+        if (IShowScreen("UI/SCREENS/PRESENTS", VIEW_PALETTE_STANDARD, 250, TRUE, FALSE) == FALSE)
+        {
+            ColorFadeTo(0, 0, 0);
+            GrDrawRectangle(0, 0, SCREEN_SIZE_X - 1, SCREEN_SIZE_Y - 1, 0);
+            ColorUpdate(1);
+            ViewSetPalette(VIEW_PALETTE_STANDARD);
 //                SoundPlayByNumber(3501, 255) ;
 //                if (IShowScreen("UI/SCREENS/BEGIN1", VIEW_PALETTE_STANDARD, 14, TRUE, TRUE) == FALSE)  {
-                    delay(350) ;
+            delay(350);
 //                    SoundPlayByNumber(3501, 255) ;
-                    if (IShowScreen("UI/SCREENS/BEGIN1", VIEW_PALETTE_STANDARD, 1000, TRUE, FALSE) == FALSE)  {
-                        ColorFadeTo(0,0,0);
-                        GrDrawRectangle(0, 0, SCREEN_SIZE_X-1, SCREEN_SIZE_Y-1, 0) ;
-                        ColorUpdate(1) ;
-                        ViewSetPalette(VIEW_PALETTE_STANDARD) ;
+            if (IShowScreen("UI/SCREENS/BEGIN1", VIEW_PALETTE_STANDARD, 1000, TRUE, FALSE) == FALSE)
+            {
+                ColorFadeTo(0, 0, 0);
+                GrDrawRectangle(0, 0, SCREEN_SIZE_X - 1, SCREEN_SIZE_Y - 1, 0);
+                ColorUpdate(1);
+                ViewSetPalette(VIEW_PALETTE_STANDARD);
 #                   ifdef COMPILE_OPTION_SHAREWARE_DEMO
-                        IShowScreen("UI/SCREENS/BEGIN2", VIEW_PALETTE_STANDARD, 350, TRUE, FALSE);
-                        ColorFadeTo(0,0,0);
+                IShowScreen("UI/SCREENS/BEGIN2", VIEW_PALETTE_STANDARD, 350, TRUE, FALSE);
+                ColorFadeTo(0,0,0);
 #                   endif
-                    }
-//                }
             }
+//                }
         }
+    }
 //    }
 //#endif
 
-    GrDrawRectangle(0, 0, SCREEN_SIZE_X-1, SCREEN_SIZE_Y-1, 0) ;
-    ColorUpdate(1) ;
-    ViewSetPalette(VIEW_PALETTE_STANDARD) ;
+    GrDrawRectangle(0, 0, SCREEN_SIZE_X - 1, SCREEN_SIZE_Y - 1, 0);
+    ColorUpdate(1);
+    ViewSetPalette(VIEW_PALETTE_STANDARD);
     ClientInit();
 
-    SMMainInit() ;
-    while (!SMMainIsDone())  {
-        if ((TickerGet() - lastTick) < CAP_TICK_RATE) {
+    SMMainInit();
+    while (!SMMainIsDone())
+    {
+        if ((TickerGet() - lastTick) < CAP_TICK_RATE)
+        {
 #ifdef WIN32
             SleepMS(1);
 #endif
-        } else {
+        }
+        else
+        {
             lastTick = TickerGet();
-            TICKER_TIME_ROUTINE_START() ;
-            DebugCompare("main") ;
-            UpdateCmdqueue() ;
-            DebugCompare("main") ;
-            UpdateOften() ;
-            DebugCompare("main") ;
-            SMMainUpdate() ;
-            DebugCompare("main") ;
-            TICKER_TIME_ROUTINE_ENDM("main", 500) ;
+            TICKER_TIME_ROUTINE_START();
+            DebugCompare("main");
+            UpdateCmdqueue();
+            DebugCompare("main");
+            UpdateOften();
+            DebugCompare("main");
+            SMMainUpdate();
+            DebugCompare("main");
+            TICKER_TIME_ROUTINE_ENDM("main", 500);
         }
     }
 
-    SMMainFinish() ;
+    SMMainFinish();
 
-    ClientFinish() ;
+    ClientFinish();
 
 #ifdef COMPILE_OPTION_SHAREWARE_DEMO
     ColorFadeTo(0,0,0);
@@ -408,15 +432,15 @@ extern void SleepMS(T_word32 sleepMS);
     ColorFadeTo(0,0,0);
 #endif
 
-    UpdateGameEnd() ;
+    UpdateGameEnd();
 
-    DirectTalkFinish(handle) ;
+    DirectTalkFinish(handle);
 
 //    _dos_setvect(0x23, oldbreak) ;
 
-    ConfigClose() ;
+    ConfigClose();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

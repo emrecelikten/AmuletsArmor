@@ -19,7 +19,6 @@
 #include "CRELOGIC.H"
 #include "DOOR.H"
 #include "MAP.H"
-#include "MEMORY.H"
 #include "MESSAGE.H"
 #include "OBJECT.H"
 #include "PLAYER.H"
@@ -32,7 +31,6 @@
 #include "STATS.H"
 #include "SYNCTIME.H"
 #include "TICKER.H"
-#include "VIEWFILE.H"
 
 #define MAX_PLAYERS 4
 #define SYNC_TIMING (70*1)
@@ -40,20 +38,22 @@
 
 #define SERVER_TIME_BETWEEN_OBJECT_UPDATES 7
 
-static E_Boolean G_serverInit = FALSE ;
+static E_Boolean G_serverInit = FALSE;
 
-E_Boolean G_serverActive = FALSE ;
+E_Boolean G_serverActive = FALSE;
 
-static T_word32 G_nextMap = 1 ;
+static T_word32 G_nextMap = 1;
 
-T_sword32 G_sourceX, G_sourceY, G_sourceZ ;
+T_sword32 G_sourceX, G_sourceY, G_sourceZ;
 
-static T_word32 G_serverID = 1 ;
+static T_word32 G_serverID = 1;
 
 /* Internal prototypes: */
-E_Boolean IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data) ;
+E_Boolean
+IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data);
 
-static T_void IServerCheckSectorSounds(T_void) ;
+static T_void
+IServerCheckSectorSounds(T_void);
 
 
 /*-------------------------------------------------------------------------*
@@ -67,14 +67,15 @@ static T_void IServerCheckSectorSounds(T_void) ;
  *  Must be called before all other ServerXXX commands.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerInit(T_void)
+T_void
+ServerInit(T_void)
 {
-    DebugRoutine("ServerInit") ;
-    DebugCheck(G_serverInit == FALSE) ;
+    DebugRoutine("ServerInit");
+    DebugCheck(G_serverInit == FALSE);
 
     /** Register my callback routines. **/
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -84,24 +85,26 @@ T_void ServerInit(T_void)
  *  ServerFinish cleans up the server.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerFinish(T_void)
+T_void
+ServerFinish(T_void)
 {
-    DebugRoutine("ServerFinish") ;
+    DebugRoutine("ServerFinish");
 //    DebugCheck(G_serverInit == TRUE) ;
 
-    G_serverInit = FALSE ;
+    G_serverInit = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* 03/22/96 */
-T_void ServerPlayerLeft(T_player player)
+T_void
+ServerPlayerLeft(T_player player)
 {
-    DebugRoutine("ServerPlayerLeft") ;
+    DebugRoutine("ServerPlayerLeft");
 
 //    StatsSaveCharacter(StatsGetActive()) ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -124,16 +127,17 @@ T_void ServerPlayerLeft(T_player player)
  *
  *  @return Created object
  *<!-----------------------------------------------------------------------*/
-T_3dObject *ServerProjectileAdd(
-        T_word16 objectType,
-        T_byte8 initialSpeed,
-        T_word16 angle,
-        T_sword16 x,
-        T_sword16 y,
-        T_sword16 z,
-        T_sword16 vz,
-        T_word16 target,
-        T_word16 ownerObjID)
+T_3dObject *
+ServerProjectileAdd(
+    T_word16 objectType,
+    T_byte8 initialSpeed,
+    T_word16 angle,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z,
+    T_sword16 vz,
+    T_word16 target,
+    T_word16 ownerObjID)
 {
     T_3dObject *p_obj;
     T_sword32 startX, startY;
@@ -143,44 +147,44 @@ T_3dObject *ServerProjectileAdd(
 //printf("SRProjectileAdd: called by %s\n", DebugGetCallerName()) ;
 
     /** Create a new object in my world. **/
-    p_obj = ObjectCreate ();
+    p_obj = ObjectCreate();
 
     /** Set its type according to the packet instructions. **/
-    ObjectSetType (p_obj, objectType);
+    ObjectSetType(p_obj, objectType);
 
     /** Set up its movement parameters. **/
-    ObjectSetX16(p_obj, x) ;
-    ObjectSetY16(p_obj, y) ;
-    ObjectSetZ16(p_obj, z) ;
-    ObjectSetAngle(p_obj, angle) ;
-    ObjectSetZVel(p_obj, (((T_sword32)vz)<<16)) ;
+    ObjectSetX16(p_obj, x);
+    ObjectSetY16(p_obj, y);
+    ObjectSetZ16(p_obj, z);
+    ObjectSetAngle(p_obj, angle);
+    ObjectSetZVel(p_obj, (((T_sword32) vz) << 16));
 
     /* Attach an owner ID */
-    ObjectSetOwnerID(p_obj, ownerObjID) ;
+    ObjectSetOwnerID(p_obj, ownerObjID);
 
-    startX = (x << 16) ;
-    startY = (y << 16) ;
+    startX = (x << 16);
+    startY = (y << 16);
 
     /** Did everything go alright? **/
     if (creationOK == TRUE)
     {
         /** Yes.  Now that it's ready, add it to the world. **/
-        ObjectAdd (p_obj);
+        ObjectAdd(p_obj);
         ObjectSetUpSectors(p_obj);
-        ObjectSetZ16(p_obj, z) ;
+        ObjectSetZ16(p_obj, z);
         ObjectSetAngularVelocity (
             p_obj,
             angle,
-            (T_word16)initialSpeed);
+            (T_word16) initialSpeed);
 
         /* Try setting up the target for this object. */
         if (target != 0)
-            ObjectSetTarget(p_obj, target) ;
+            ObjectSetTarget(p_obj, target);
     }
 
     DebugEnd ();
 
-    return p_obj ;
+    return p_obj;
 }
 
 
@@ -202,66 +206,69 @@ T_3dObject *ServerProjectileAdd(
  *  @return Created projectile, NULL for none
  *
  *<!-----------------------------------------------------------------------*/
-T_3dObject *ServerShootProjectile(
-          T_3dObject *p_objSource,
-          T_word16 angle,
-          T_word16 typeObj,
-          T_word16 initSpeed,
-          T_3dObject *p_target)
+T_3dObject *
+ServerShootProjectile(
+    T_3dObject *p_objSource,
+    T_word16 angle,
+    T_word16 typeObj,
+    T_word16 initSpeed,
+    T_3dObject *p_target)
 {
-    T_sword32 distance ;
-    T_sword32 x, y ;
-    T_sword16 tx, ty ;
+    T_sword32 distance;
+    T_sword32 x, y;
+    T_sword16 tx, ty;
     T_sword32 deltaHeight;
-    T_sword16 heightTarget ;
-    T_3dObject *p_obj ;
-    T_sword32 obj_x, obj_y, obj_z, obj_vz ;
+    T_sword16 heightTarget;
+    T_3dObject *p_obj;
+    T_sword32 obj_x, obj_y, obj_z, obj_vz;
     T_word16 obj_ownerObjID;
     T_word16 obj_target;
 
-    DebugRoutine("ServerShootProjectile") ;
-    DebugCheck(p_objSource != NULL) ;
+    DebugRoutine("ServerShootProjectile");
+    DebugCheck(p_objSource != NULL);
 //printf("ServerShootProj: called by %s\n", DebugGetCallerName()) ;
 
-    distance = (ObjectGetRadius(p_objSource) << 1) ;
+    distance = (ObjectGetRadius(p_objSource) << 1);
 
     ObjectGetForwardPosition(
-         p_objSource,
-         distance,
-         &x,
-         &y) ;
+        p_objSource,
+        distance,
+        &x,
+        &y);
 
-    obj_x = (x>>16) ;
-    obj_y = (y>>16) ;
-    obj_z = ObjectGetZ16(p_objSource) ;
-    obj_z += ((ObjectGetHeight(p_objSource)*2)/3) ;
-    obj_z -= 10 ;
-    obj_vz = 0 ;
+    obj_x = (x >> 16);
+    obj_y = (y >> 16);
+    obj_z = ObjectGetZ16(p_objSource);
+    obj_z += ((ObjectGetHeight(p_objSource) * 2) / 3);
+    obj_z -= 10;
+    obj_vz = 0;
 
     if (Collide3dObjectToXYCheckLineOfSightWithZ(
-                      p_objSource,
-                      obj_x,
-                      obj_y,
-                      obj_z) == TRUE)  {
-        obj_x = ObjectGetX16(p_objSource) ;
-        obj_y = ObjectGetY16(p_objSource) ;
+        p_objSource,
+        obj_x,
+        obj_y,
+        obj_z) == TRUE)
+    {
+        obj_x = ObjectGetX16(p_objSource);
+        obj_y = ObjectGetY16(p_objSource);
     }
 
-    obj_ownerObjID = ObjectGetServerId(p_objSource) ;
+    obj_ownerObjID = ObjectGetServerId(p_objSource);
 
-    if (p_target != NULL)  {
+    if (p_target != NULL)
+    {
         /** Target. **/
         obj_target = ObjectGetServerId (p_target);
 
         /* Find where the target is located. */
-        tx = ObjectGetX16(p_target) ;
-        ty = ObjectGetY16(p_target) ;
+        tx = ObjectGetX16(p_target);
+        ty = ObjectGetY16(p_target);
 
         /* Calculate the distance between here and there. */
-        distance = CalculateDistance(x >> 16, y >> 16, tx, ty) ;
+        distance = CalculateDistance(x >> 16, y >> 16, tx, ty);
 
         /* How high is the target? */
-        heightTarget = ObjectGetMiddleHeight(p_target)+10 ;
+        heightTarget = ObjectGetMiddleHeight(p_target) + 10;
 
         /* Calculate the steps necessary to draw a straight */
         /* line to the target. */
@@ -269,44 +276,47 @@ T_3dObject *ServerShootProjectile(
             deltaHeight =
                 (((T_sword32)
                     (heightTarget - obj_z
-                        /* ObjectGetZ16(p_objSource) */))<<16) / distance ;
+                        /* ObjectGetZ16(p_objSource) */)) << 16) / distance;
         else
-            deltaHeight = 0 ;
-        deltaHeight *= ((T_sword32)initSpeed) ;
+            deltaHeight = 0;
+        deltaHeight *= ((T_sword32) initSpeed);
 
         /* Don't allow more than 45 degrees up. */
         if (deltaHeight >= 0x400000)
-            deltaHeight = 0x400000 ;
+            deltaHeight = 0x400000;
 
         /* Don't allow more than 45 degrees down. */
         if (deltaHeight <= -0x400000)
-            deltaHeight = -0x400000 ;
+            deltaHeight = -0x400000;
 
-        obj_vz = ((T_sword16)(deltaHeight>>16)) ;
+        obj_vz = ((T_sword16) (deltaHeight >> 16));
 
         /* If the target is invisible or translucent, randomly turn a */
         /* little to make it harder to hit. */
-        if (ObjectIsStealthy(p_target))  {
-            angle += (RandomValue() & 0x3FF) - 0x200 ;
+        if (ObjectIsStealthy(p_target))
+        {
+            angle += (RandomValue() & 0x3FF) - 0x200;
         }
-    } else {
+    }
+    else
+    {
     }
 
     /* This is a cheat, send it to ourself! */
     p_obj = ServerProjectileAdd(
-                typeObj,
-                (T_byte8)initSpeed,
-                angle,
-                obj_x,
-                obj_y,
-                obj_z,
-                obj_vz,
-                obj_target,
-                obj_ownerObjID) ;
+        typeObj,
+        (T_byte8) initSpeed,
+        angle,
+        obj_x,
+        obj_y,
+        obj_z,
+        obj_vz,
+        obj_target,
+        obj_ownerObjID);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_obj ;
+    return p_obj;
 }
 
 /*-------------------------------------------------------------------------*
@@ -317,55 +327,57 @@ T_3dObject *ServerShootProjectile(
  *  the server actions in one time slice.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerUpdate(T_void)
+T_void
+ServerUpdate(T_void)
 {
-    static T_word32 lastCount = 0 ;
+    static T_word32 lastCount = 0;
     T_word32 delta;
     T_word16 lastbit = 0;
-    T_word32 time ;
-    TICKER_TIME_ROUTINE_PREPARE() ;
+    T_word32 time;
+    TICKER_TIME_ROUTINE_PREPARE();
 
-    TICKER_TIME_ROUTINE_START() ;
-    DebugRoutine("ServerUpdate") ;
-    INDICATOR_LIGHT(38, INDICATOR_GREEN) ;
+    TICKER_TIME_ROUTINE_START();
+    DebugRoutine("ServerUpdate");
+    INDICATOR_LIGHT(38, INDICATOR_GREEN);
 
     /* Don't do any actions if the server is in a state where the level */
     /* is not ready. */
-    if (G_serverActive == TRUE)  {
+    if (G_serverActive == TRUE)
+    {
         /* Server will now do one iteration of whatever needs to be done */
         /* by the server. */
 
         /** Keep track of the deltas. **/
         if (lastCount == 0)
         {
-           lastCount = SyncTimeGet ();
+            lastCount = SyncTimeGet();
         }
         else
         {
-           time = SyncTimeGet() ;
-           delta = time - lastCount + lastbit;
-           lastbit = delta & 1 ;
-           delta = delta + (delta >> 1) ;
-           lastCount = time ;
+            time = SyncTimeGet();
+            delta = time - lastCount + lastbit;
+            lastbit = delta & 1;
+            delta = delta + (delta >> 1);
+            lastCount = time;
 
-           /** Apply all velocities to the objects. **/
-           ObjectsUpdateMovement (delta);
+            /** Apply all velocities to the objects. **/
+            ObjectsUpdateMovement(delta);
         }
 
         /* See if any objects have caused sector sounds and send them. */
-        IServerCheckSectorSounds() ;
+        IServerCheckSectorSounds();
 
         /** Then, send out all necessary movement packets. **/
 //        CreaturesUpdate() ;
 //        ObjectGeneratorUpdate() ;
 
         /* Check for objects that need destroying. */
-        ServerDestroyDestroyObjects() ;
+        ServerDestroyDestroyObjects();
     }
 
-    DebugEnd() ;
-    INDICATOR_LIGHT(38, INDICATOR_RED) ;
-    TICKER_TIME_ROUTINE_END(stdout, "ServerUpdate", 500) ;
+    DebugEnd();
+    INDICATOR_LIGHT(38, INDICATOR_RED);
+    TICKER_TIME_ROUTINE_END(stdout, "ServerUpdate", 500);
 }
 
 /*-------------------------------------------------------------------------*
@@ -381,12 +393,13 @@ T_void ServerUpdate(T_void)
  *  @return next player.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 ServerGetNextPlayer(T_player lastPlayer)
+T_sword16
+ServerGetNextPlayer(T_player lastPlayer)
 {
-    T_player nextPlayer ;
-    T_3dObject *p_obj ;
+    T_player nextPlayer;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ServerGetNextPlayer") ;
+    DebugRoutine("ServerGetNextPlayer");
 
 /*
 printf("\nlastplayer: %d\n", lastPlayer) ;
@@ -396,32 +409,37 @@ for (p_obj=ObjectsGetFirst(); p_obj!=NULL; p_obj=ObjectGetNext(p_obj))
     printf("p_obj: %p (%d %d) attr: %04X\n", p_obj, ObjectGetServerId(p_obj), ObjectGetType(p_obj), ObjectGetAttributes(p_obj)) ;
 */
 
-    if (lastPlayer == PLAYER_BAD)  {
+    if (lastPlayer == PLAYER_BAD)
+    {
         /* Start at the beginning of the list. */
-        p_obj = ObjectsGetFirst() ;
-    } else {
+        p_obj = ObjectsGetFirst();
+    }
+    else
+    {
         /* Find where we were. */
-        p_obj = ObjectFind(lastPlayer) ;
+        p_obj = ObjectFind(lastPlayer);
         /* Skip immediately to the next one. */
         if (p_obj != NULL)
-            p_obj = ObjectGetNext(p_obj) ;
+            p_obj = ObjectGetNext(p_obj);
 
     }
 
     /* Loop until we find a player. */
-    while (p_obj != NULL)  {
+    while (p_obj != NULL)
+    {
 //if (ObjectIsPiecewise(p_obj))  {
 //    printf("piecewise p_obj: %p (%d %d) attr: %04X\n", p_obj, ObjectGetServerId(p_obj), ObjectGetType(p_obj), ObjectGetAttributes(p_obj)) ;
 //}
 //if (ObjectIsBodyPart(p_obj))  {
 //    printf("bodyPart p_obj: %p (%d %d) attr: %04X\n", p_obj, ObjectGetServerId(p_obj), ObjectGetType(p_obj), ObjectGetAttributes(p_obj)) ;
 //}
-        if ((ObjectIsPlayerHead(p_obj)) && (ObjectGetStance(p_obj) != STANCE_DIE))  {
+        if ((ObjectIsPlayerHead(p_obj)) && (ObjectGetStance(p_obj) != STANCE_DIE))
+        {
 //puts("found") ;
-            break ;
+            break;
         }
 
-        p_obj = ObjectGetNext(p_obj) ;
+        p_obj = ObjectGetNext(p_obj);
     }
 /*
 if (p_obj != NULL)  {
@@ -431,9 +449,9 @@ if (p_obj != NULL)  {
 */
     /* Get the id of this player (if there is one). */
     if (p_obj == NULL)
-        nextPlayer = PLAYER_BAD ;
+        nextPlayer = PLAYER_BAD;
     else
-        nextPlayer = ObjectGetServerId(p_obj) ;
+        nextPlayer = ObjectGetServerId(p_obj);
 
 /*
 if (nextPlayer == 0)  {
@@ -444,10 +462,10 @@ if (nextPlayer == 0)  {
 }
 */
 
-    DebugCheck(nextPlayer != 0) ;
-    DebugEnd() ;
+    DebugCheck(nextPlayer != 0);
+    DebugEnd();
 
-    return nextPlayer ;
+    return nextPlayer;
 }
 
 /*-------------------------------------------------------------------------*
@@ -462,19 +480,20 @@ if (nextPlayer == 0)  {
  *  @return Player's object, or NULL if not found
  *
  *<!-----------------------------------------------------------------------*/
-T_3dObject *ServerGetPlayerObject(T_word16 playerId)
+T_3dObject *
+ServerGetPlayerObject(T_word16 playerId)
 {
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ServerGetPlayerObject") ;
+    DebugRoutine("ServerGetPlayerObject");
 
     /** Just always return the object pointer. **/
 //    p_obj = players[playerId].p_obj ;
-    p_obj = ObjectFind(playerId) ;
+    p_obj = ObjectFind(playerId);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_obj ;
+    return p_obj;
 }
 
 /*-------------------------------------------------------------------------*
@@ -491,15 +510,16 @@ T_3dObject *ServerGetPlayerObject(T_word16 playerId)
  *  needed or not.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IServerCheckSectorSounds(T_void)
+static T_void
+IServerCheckSectorSounds(T_void)
 {
-    DebugRoutine("IServerCheckSectorSounds") ;
+    DebugRoutine("IServerCheckSectorSounds");
 
     /* Check all the objects.  Pass 0 since we don't have any */
     /* other data to pass. */
-    ObjectsDoToAll(IServerCheckSectorSoundsForObject, 0) ;
+    ObjectsDoToAll(IServerCheckSectorSoundsForObject, 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -516,40 +536,48 @@ static T_void IServerCheckSectorSounds(T_void)
  *  @param data -- This is currently always zero
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data)
+E_Boolean
+IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data)
 {
-    T_word16 i, sound1=0, sound2 ;
-    T_word16 sector ;
+    T_word16 i, sound1 = 0, sound2;
+    T_word16 sector;
 
-    DebugRoutine("IServerCheckSectorSoundsForObject") ;
-    DebugCheck(p_obj != NULL) ;
+    DebugRoutine("IServerCheckSectorSoundsForObject");
+    DebugCheck(p_obj != NULL);
 
     /* Only bother with objects that have moved. */
-    if (!ObjectIsBodyPart(p_obj))  {
+    if (!ObjectIsBodyPart(p_obj))
+    {
         /* Also, only bother with objects that are not flying. */
 //        if (ObjectIsAboveGround(p_obj) == FALSE)  {
-        if (ObjectGetZ16(p_obj) < MapGetFloorHeight(ObjectGetAreaSector(p_obj)))  {
+        if (ObjectGetZ16(p_obj) < MapGetFloorHeight(ObjectGetAreaSector(p_obj)))
+        {
             /* See if there are sounds on each of the sectors. */
-            sector = ObjectGetNthAreaSector(p_obj, 0) ;
-            sound1 = View3dGetSectorEnterSound(sector) ;
+            sector = ObjectGetNthAreaSector(p_obj, 0);
+            sound1 = View3dGetSectorEnterSound(sector);
 
             /* If this sound is zero, there is no need to go on. */
-            if (sound1)  {
+            if (sound1)
+            {
                 /* Loop through all the other sectors and see if they */
                 /* are the same sound.  Otherwise, stop immediately. */
-                for (i=1; i<ObjectGetNumAreaSectors(p_obj); i++)  {
+                for (i = 1; i < ObjectGetNumAreaSectors(p_obj); i++)
+                {
                     sound2 = View3dGetSectorEnterSound(
-                                 ObjectGetNthAreaSector(p_obj, i)) ;
-                    if (sound2 != sound1)  {
-                        sound1 = 0 ;
-                        break ;
+                        ObjectGetNthAreaSector(p_obj, i));
+                    if (sound2 != sound1)
+                    {
+                        sound1 = 0;
+                        break;
                     }
                 }
 
                 /* Are we in agreement? (sound1 will be non-zero if we are) */
-                if (sound1)  {
+                if (sound1)
+                {
                     /* Is this sound non-zero and different than last time? */
-                    if ((sound1) && (ObjectGetLastSound(p_obj) != sound1))  {
+                    if ((sound1) && (ObjectGetLastSound(p_obj) != sound1))
+                    {
                         /* Play the sound at this location. */
                         AreaSoundCreate(
                             ObjectGetX16(p_obj),
@@ -561,19 +589,21 @@ E_Boolean IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data)
                             AREA_SOUND_BAD,
                             NULL,
                             0,
-                            sound1) ;
+                            sound1);
 
                     }
                 }
             }
             /* Note that this is the last sound (even if zero). */
-            ObjectSetLastSound(p_obj, sound1) ;
-        } else {
-            ObjectSetLastSound(p_obj, 0) ;
+            ObjectSetLastSound(p_obj, sound1);
+        }
+        else
+        {
+            ObjectSetLastSound(p_obj, 0);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     return FALSE;
 }
@@ -604,7 +634,8 @@ E_Boolean IServerCheckSectorSoundsForObject(T_3dObject *p_obj, T_word32 data)
  *  @param startLocation -- Numerical start location.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerGotoPlace(T_word32 placeNumber, T_word16 startLocation)
+T_void
+ServerGotoPlace(T_word32 placeNumber, T_word16 startLocation)
 {
 //    T_packetShort packet ;
 //    T_gotoPlacePacket *p_packet ;
@@ -650,7 +681,8 @@ T_void ServerGotoPlace(T_word32 placeNumber, T_word16 startLocation)
  *  @param p_gotoPacket -- the goto place packet.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerReceiveGotoPlacePacket(T_packetEitherShortOrLong *p_gotoPacket)
+T_void
+ServerReceiveGotoPlacePacket(T_packetEitherShortOrLong *p_gotoPacket)
 {
 //    T_gotoPlacePacket *p_packet ;
 //
@@ -677,9 +709,10 @@ T_void ServerReceiveGotoPlacePacket(T_packetEitherShortOrLong *p_gotoPacket)
  *  @return Server id
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 ServerGetServerID(T_void)
+T_word32
+ServerGetServerID(T_void)
 {
-    return G_serverID ;
+    return G_serverID;
 }
 
 /*-------------------------------------------------------------------------*
@@ -691,9 +724,10 @@ T_word32 ServerGetServerID(T_void)
  *  @param newID -- Server id
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerSetServerID(T_word32 newID)
+T_void
+ServerSetServerID(T_word32 newID)
 {
-    G_serverID = newID ;
+    G_serverID = newID;
 }
 
 /*-------------------------------------------------------------------------*
@@ -710,99 +744,109 @@ T_void ServerSetServerID(T_word32 newID)
  *  @param p_packet -- request enter packet
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerReceiveRequestCharacterListPacket(
-           T_packetEitherShortOrLong *p_packet)
+T_void
+ServerReceiveRequestCharacterListPacket(
+    T_packetEitherShortOrLong *p_packet)
 {
-    T_statsSavedCharArray *p_charArray ;
+    T_statsSavedCharArray *p_charArray;
 
-    DebugRoutine("ServerReceiveRequestCharacterListPacket") ;
+    DebugRoutine("ServerReceiveRequestCharacterListPacket");
 
-    p_charArray = StatsGetSavedCharacterList() ;
+    p_charArray = StatsGetSavedCharacterList();
 
-    StatsSetSavedCharacterList(p_charArray) ;
+    StatsSetSavedCharacterList(p_charArray);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_ENTER_COMPLETE,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void ServerReceiveSyncPacket(T_packetEitherShortOrLong *p_packet)
+T_void
+ServerReceiveSyncPacket(T_packetEitherShortOrLong *p_packet)
 {
-    DebugRoutine("ServerReceiveSyncPacket") ;
+    DebugRoutine("ServerReceiveSyncPacket");
 
     /* For the self server, just send it back. */
 //    ServerSendToAll(p_packet) ;
-    CmdQSendPacket(p_packet, &p_packet->header.sender, 140, 0, NULL) ;
+    CmdQSendPacket(p_packet, &p_packet->header.sender, 140, 0, NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES: 05/15/96 -- Create an object anywhere in the world. */
-T_3dObject * ServerCreateObjectGlobal(
-           T_word16 objType,
-           T_sword16 x,
-           T_sword16 y,
-           T_sword16 z)
+T_3dObject *
+ServerCreateObjectGlobal(
+    T_word16 objType,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z)
 {
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ServerCreateObjectGlobal") ;
+    DebugRoutine("ServerCreateObjectGlobal");
 
-    p_obj = ObjectCreate() ;
-    if (p_obj)  {
+    p_obj = ObjectCreate();
+    if (p_obj)
+    {
         ObjectDeclareStatic(
             p_obj,
             x,
-            y) ;
-        ObjectSetType(p_obj, objType) ;
-        ObjectSetAngle(p_obj, 0) ;
-        ObjectSetUpSectors(p_obj) ;
-        ObjectForceUpdate(p_obj) ;
-        ObjectSetZ16(p_obj, z) ;
+            y);
+        ObjectSetType(p_obj, objType);
+        ObjectSetAngle(p_obj, 0);
+        ObjectSetUpSectors(p_obj);
+        ObjectForceUpdate(p_obj);
+        ObjectSetZ16(p_obj, z);
 
-        ObjectAdd(p_obj) ;
-    } else {
-        DebugCheck(FALSE) ;
+        ObjectAdd(p_obj);
+    }
+    else
+    {
+        DebugCheck(FALSE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_obj ;
+    return p_obj;
 }
 
 /* LES: 05/15/96 -- Create an object anywhere in the world. */
-T_3dObject * ServerCreateFakeObjectGlobal(
-           T_word16 objType,
-           T_sword16 x,
-           T_sword16 y,
-           T_sword16 z)
+T_3dObject *
+ServerCreateFakeObjectGlobal(
+    T_word16 objType,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z)
 {
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ServerCreateFakeObjectGlobal") ;
+    DebugRoutine("ServerCreateFakeObjectGlobal");
 
-    p_obj = ObjectCreateFake() ;
-    if (p_obj)  {
+    p_obj = ObjectCreateFake();
+    if (p_obj)
+    {
         ObjectDeclareStatic(
             p_obj,
             x,
-            y) ;
-        ObjectSetType(p_obj, objType) ;
-        ObjectSetAngle(p_obj, 0) ;
-        ObjectSetUpSectors(p_obj) ;
-        ObjectForceUpdate(p_obj) ;
-        ObjectSetZ16(p_obj, z) ;
+            y);
+        ObjectSetType(p_obj, objType);
+        ObjectSetAngle(p_obj, 0);
+        ObjectSetUpSectors(p_obj);
+        ObjectForceUpdate(p_obj);
+        ObjectSetZ16(p_obj, z);
 
 //        ObjectAdd(p_obj) ;
-    } else {
-        DebugCheck(FALSE) ;
+    }
+    else
+    {
+        DebugCheck(FALSE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_obj ;
+    return p_obj;
 }
 
 /*-------------------------------------------------------------------------*
@@ -822,75 +866,76 @@ T_3dObject * ServerCreateFakeObjectGlobal(
  *  @param initialSpeed -- How fast to shoot the missile
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerShootBasicProjectile(
-           T_word16 objectType,
-           T_sword32 x,
-           T_sword32 y,
-           T_sword32 z,
-           T_sword32 targetX,
-           T_sword32 targetY,
-           T_sword32 targetZ,
-           T_word16 initialSpeed)
+T_void
+ServerShootBasicProjectile(
+    T_word16 objectType,
+    T_sword32 x,
+    T_sword32 y,
+    T_sword32 z,
+    T_sword32 targetX,
+    T_sword32 targetY,
+    T_sword32 targetZ,
+    T_word16 initialSpeed)
 {
-    T_sword16 tx, ty ;
+    T_sword16 tx, ty;
     T_sword32 deltaHeight;
-    T_sword16 heightTarget ;
-    T_word16 angle ;
-    T_word16 distance ;
-    T_sword32 obj_x, obj_y, obj_z, obj_vz ;
+    T_sword16 heightTarget;
+    T_word16 angle;
+    T_word16 distance;
+    T_sword32 obj_x, obj_y, obj_z, obj_vz;
     T_word16 obj_ownerObjID;
     T_word16 obj_target;
 
-    DebugRoutine("ServerShootBasicProjectile") ;
+    DebugRoutine("ServerShootBasicProjectile");
 
-    obj_x = (x>>16) ;
-    obj_y = (y>>16) ;
-    obj_z = (z>>16) ;
+    obj_x = (x >> 16);
+    obj_y = (y >> 16);
+    obj_z = (z >> 16);
 
     angle = MathArcTangent(
-                (T_sword16)((targetX-x)>>16),
-                (T_sword16)((targetY-y)>>16)) ;
-    tx = (targetX >> 16) ;
-    ty = (targetY >> 16) ;
+        (T_sword16) ((targetX - x) >> 16),
+        (T_sword16) ((targetY - y) >> 16));
+    tx = (targetX >> 16);
+    ty = (targetY >> 16);
 
-    obj_ownerObjID = 0 ;
-    obj_target = 0 ;
+    obj_ownerObjID = 0;
+    obj_target = 0;
 
     /* Find where the target is located. */
-    tx = (targetX>>16) ;
-    ty = (targetY>>16) ;
+    tx = (targetX >> 16);
+    ty = (targetY >> 16);
 
     /* Calculate the distance between here and there. */
-    distance = CalculateDistance(x >> 16, y >> 16, tx, ty) ;
+    distance = CalculateDistance(x >> 16, y >> 16, tx, ty);
 
     /* How high is the target? */
-    heightTarget = (targetZ >> 16) ;
+    heightTarget = (targetZ >> 16);
 
     /* Calculate the steps necessary to draw a straight */
     /* line to the target. */
     if (distance != 0)
         deltaHeight =
             (((T_sword32)
-                (heightTarget - obj_z))<<16) / distance ;
+                (heightTarget - obj_z)) << 16) / distance;
     else
-        deltaHeight = 0 ;
-    deltaHeight *= 40 ;
+        deltaHeight = 0;
+    deltaHeight *= 40;
 
     /* Don't allow more than 45 degrees up. */
     if (deltaHeight >= 0x320000)
-        deltaHeight = 0x320000 ;
+        deltaHeight = 0x320000;
 
     /* Don't allow more than 45 degrees down. */
     if (deltaHeight <= -0x320000)
-        deltaHeight = -0x320000 ;
+        deltaHeight = -0x320000;
 
-    obj_vz = ((T_sword16)(deltaHeight>>16)) ;
+    obj_vz = ((T_sword16) (deltaHeight >> 16));
 
     /* This is a cheat, send it to ourself! */
-    ServerProjectileAdd(objectType, (T_byte8)initialSpeed, angle, obj_x, obj_y, obj_z, obj_vz,
-            obj_target, obj_ownerObjID);
+    ServerProjectileAdd(objectType, (T_byte8) initialSpeed, angle, obj_x, obj_y, obj_z, obj_vz,
+                        obj_target, obj_ownerObjID);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -902,27 +947,30 @@ T_void ServerShootBasicProjectile(
  *  there is, an appropriate packet is sent and the object is eliminated.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerDestroyDestroyObjects(T_void)
+T_void
+ServerDestroyDestroyObjects(T_void)
 {
-    T_3dObject *p_obj ;
-    T_3dObject *p_objNext ;
+    T_3dObject *p_obj;
+    T_3dObject *p_objNext;
 
-    DebugRoutine("ServerDestroyDestroyObjects") ;
+    DebugRoutine("ServerDestroyDestroyObjects");
 
-    p_obj = ObjectsGetFirst() ;
+    p_obj = ObjectsGetFirst();
     while ((ObjectsGetNumMarkedForDestroy() != 0) &&
-           (p_obj != NULL))  {
-        p_objNext = ObjectGetNext(p_obj) ;
+        (p_obj != NULL))
+    {
+        p_objNext = ObjectGetNext(p_obj);
 
-        if (ObjectIsMarkedForDestroy(p_obj))  {
-            ObjectRemove(p_obj) ;
-            ObjectDestroy(p_obj) ;
+        if (ObjectIsMarkedForDestroy(p_obj))
+        {
+            ObjectRemove(p_obj);
+            ObjectDestroy(p_obj);
         }
 
-        p_obj = p_objNext ;
+        p_obj = p_objNext;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -942,68 +990,84 @@ T_void ServerDestroyDestroyObjects(T_void)
  *  @param type -- Type of damage to do
  *
  *<!-----------------------------------------------------------------------*/
-T_void ServerDamageAtWithType(
-           T_sword16 x,
-           T_sword16 y,
-           T_sword16 z,
-           T_word16 radius,
-           T_word16 damage,
-           T_word16 ownerID,
-           T_byte8 type)
+T_void
+ServerDamageAtWithType(
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z,
+    T_word16 radius,
+    T_word16 damage,
+    T_word16 ownerID,
+    T_byte8 type)
 {
-    T_damageObjInfo damageInfo ;
-    T_word16 locked ;
+    T_damageObjInfo damageInfo;
+    T_word16 locked;
 
-    DebugRoutine("ServerDamageAtWithType") ;
+    DebugRoutine("ServerDamageAtWithType");
 
-    G_sourceX = (((T_sword32)x)<<16) ;
-    G_sourceY = (((T_sword32)y)<<16) ;
-    G_sourceZ = (((T_sword32)z)<<16) ;
+    G_sourceX = (((T_sword32) x) << 16);
+    G_sourceY = (((T_sword32) y) << 16);
+    G_sourceZ = (((T_sword32) z) << 16);
 
-    damageInfo.ownerID = ownerID ;
-    damageInfo.damage = damage ;
-    damageInfo.type = type ;
+    damageInfo.ownerID = ownerID;
+    damageInfo.damage = damage;
+    damageInfo.type = type;
 
-    if (type == (EFFECT_DAMAGE_SPECIAL | EFFECT_DAMAGE_SPECIAL_LOCK)) {
+    if (type == (EFFECT_DAMAGE_SPECIAL | EFFECT_DAMAGE_SPECIAL_LOCK))
+    {
         locked = ServerLockDoorsInArea(
-                     G_sourceX,
-                     G_sourceY,
-                     40) ;
-        if (ownerID == ObjectGetServerId(PlayerGetObject()))  {
-            if ((locked) && (locked != 0x100))  {
-                MessageAdd("Lock on door is increased") ;
-            } else {
-                MessageAdd("Cannot lock") ;
+            G_sourceX,
+            G_sourceY,
+            40);
+        if (ownerID == ObjectGetServerId(PlayerGetObject()))
+        {
+            if ((locked) && (locked != 0x100))
+            {
+                MessageAdd("Lock on door is increased");
+            }
+            else
+            {
+                MessageAdd("Cannot lock");
             }
         }
-    } else if (type == (EFFECT_DAMAGE_SPECIAL | EFFECT_DAMAGE_SPECIAL_UNLOCK))  {
+    }
+    else if (type == (EFFECT_DAMAGE_SPECIAL | EFFECT_DAMAGE_SPECIAL_UNLOCK))
+    {
         locked = ServerUnlockDoorsInArea(
             G_sourceX,
             G_sourceY,
-            40) ;
-        if (ownerID == ObjectGetServerId(PlayerGetObject()))  {
-            if ((locked == 0x100) || (locked == DOOR_ABSOLUTE_LOCK))  {
-                MessageAdd("Cannot unlock") ;
-            } else if ((locked) &&
+            40);
+        if (ownerID == ObjectGetServerId(PlayerGetObject()))
+        {
+            if ((locked == 0x100) || (locked == DOOR_ABSOLUTE_LOCK))
+            {
+                MessageAdd("Cannot unlock");
+            }
+            else if ((locked) &&
                 (locked != DOOR_ABSOLUTE_LOCK) &&
-                (locked != 0x100))  {
-                MessageAdd("Lock on door is decreased") ;
-            } else if (locked == 0)  {
-                SoundDing() ;
-                MessageAdd("Door is now unlocked") ;
+                (locked != 0x100))
+            {
+                MessageAdd("Lock on door is decreased");
+            }
+            else if (locked == 0)
+            {
+                SoundDing();
+                MessageAdd("Door is now unlocked");
             }
         }
-    } else {
+    }
+    else
+    {
         ObjectsDoToAllAtXYZRadius(
             x,
             y,
             z,
             radius,
             ServerDamageObjectXYZ,
-            (T_word32)(&damageInfo));
+            (T_word32) (&damageInfo));
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

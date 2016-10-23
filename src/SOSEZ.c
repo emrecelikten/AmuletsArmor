@@ -12,8 +12,6 @@
  *            Copyright (c) 1994-5,  HMI, Inc.  All Rights Reserved          *
  ****************************************************************************/
 
-#include "GENERAL.H"
-
 #ifdef USE_SOS_LIBRARY
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,199 +68,199 @@ VOID TickerInc(VOID);
 
 // W32  sosEZInitSystem( W32 wDDeviceID, W32 wMDeviceID )
 W32 cdecl sosEZInitSystem(W32 wDDeviceID, W32 wMDeviceID) {
-	// set up the digital driver
-	sDIGIDriver.wDriverRate = _SOSEZ_SAMPLE_RATE;
-	sDIGIDriver.wDMABufferSize = _SOSEZ_DMA_BUFFER;
+    // set up the digital driver
+    sDIGIDriver.wDriverRate = _SOSEZ_SAMPLE_RATE;
+    sDIGIDriver.wDMABufferSize = _SOSEZ_DMA_BUFFER;
 
-	// initialize the timer system
-	sosTIMERInitSystem(_TIMER_DOS_RATE, _SOS_DEBUG_NORMAL);
+    // initialize the timer system
+    sosTIMERInitSystem(_TIMER_DOS_RATE, _SOS_DEBUG_NORMAL);
 
-	sosTIMERRegisterEvent(70, TickerInc, &G_timerHandle);
+    sosTIMERRegisterEvent(70, TickerInc, &G_timerHandle);
 
-	// initialize the digital and midi systems
-	sosDIGIInitSystem(_NULL, _SOS_DEBUG_NORMAL);
-	sosMIDIInitSystem(_NULL, _SOS_DEBUG_NORMAL);
+    // initialize the digital and midi systems
+    sosDIGIInitSystem(_NULL, _SOS_DEBUG_NORMAL);
+    sosMIDIInitSystem(_NULL, _SOS_DEBUG_NORMAL);
 
-	// check to see if the midi device is to be initialized
-	if (wMDeviceID != -1) {
-		// initialize MIDI
-		sMIDIDriver.wID = wMDeviceID;
-		if (sosMIDIInitDriver(&sMIDIDriver, &hMIDIDriver)) {
-			// uninitialize digital system
-			sosDIGIUnInitDriver(hDIGIDriver, _TRUE, _TRUE);
+    // check to see if the midi device is to be initialized
+    if (wMDeviceID != -1) {
+        // initialize MIDI
+        sMIDIDriver.wID = wMDeviceID;
+        if (sosMIDIInitDriver(&sMIDIDriver, &hMIDIDriver)) {
+            // uninitialize digital system
+            sosDIGIUnInitDriver(hDIGIDriver, _TRUE, _TRUE);
 
-			// uninitialize digital system
-			sosDIGIUnInitSystem();
+            // uninitialize digital system
+            sosDIGIUnInitSystem();
 
-			// uninitialize system
-			sosMIDIUnInitSystem();
+            // uninitialize system
+            sosMIDIUnInitSystem();
 
-			// return
-			return (_SOSEZ_MIDI_INIT);
-		}
-	}
+            // return
+            return (_SOSEZ_MIDI_INIT);
+        }
+    }
 
-	// initialize the digital driver
-	if (wDDeviceID != -1) {
-		// initialize digital
-		sDIGIDriver.wID = wDDeviceID;
-		if (sosDIGIInitDriver(&sDIGIDriver, &hDIGIDriver)) {
-			// uninitialize digital system
-			sosDIGIUnInitSystem();
+    // initialize the digital driver
+    if (wDDeviceID != -1) {
+        // initialize digital
+        sDIGIDriver.wID = wDDeviceID;
+        if (sosDIGIInitDriver(&sDIGIDriver, &hDIGIDriver)) {
+            // uninitialize digital system
+            sosDIGIUnInitSystem();
 
-			// return
-			return (_SOSEZ_DIGI_INIT);
-		}
-	}
+            // return
+            return (_SOSEZ_DIGI_INIT);
+        }
+    }
 
-	// register digital timer event (mixer)
-	if (wDDeviceID != -1)
-		sosTIMERRegisterEvent(_SOSEZ_TIMER_RATE, sDIGIDriver.pfnMixFunction,
-				&hDIGITimer);
+    // register digital timer event (mixer)
+    if (wDDeviceID != -1)
+        sosTIMERRegisterEvent(_SOSEZ_TIMER_RATE, sDIGIDriver.pfnMixFunction,
+                &hDIGITimer);
 
-	// check driver type, if it is an OPL2/3 driver, we
-	// need to load the patch files for the driver.
-	if (wMDeviceID == _MIDI_FM
-			|| wMDeviceID == _MIDI_OPL3 && wMDeviceID != -1) {
-		// attempt to load melodic patch
-		if ((pMelodicPatch = sosEZLoadPatch("melodic.bnk")) == _NULL) {
-			// uninitialize system
-			sosEZUnInitSystem();
+    // check driver type, if it is an OPL2/3 driver, we
+    // need to load the patch files for the driver.
+    if (wMDeviceID == _MIDI_FM
+            || wMDeviceID == _MIDI_OPL3 && wMDeviceID != -1) {
+        // attempt to load melodic patch
+        if ((pMelodicPatch = sosEZLoadPatch("melodic.bnk")) == _NULL) {
+            // uninitialize system
+            sosEZUnInitSystem();
 
-			// return error
-			return (_SOSEZ_PATCH_MELODIC);
-		}
+            // return error
+            return (_SOSEZ_PATCH_MELODIC);
+        }
 
-		// attempt to load drum patch
-		if ((pDrumPatch = sosEZLoadPatch("drum.bnk")) == _NULL) {
-			// uninitialize system
-			sosEZUnInitSystem();
+        // attempt to load drum patch
+        if ((pDrumPatch = sosEZLoadPatch("drum.bnk")) == _NULL) {
+            // uninitialize system
+            sosEZUnInitSystem();
 
-			// return error
-			return (_SOSEZ_PATCH_DRUM);
-		}
+            // return error
+            return (_SOSEZ_PATCH_DRUM);
+        }
 
-		// set instrument data
-		if ((sosMIDISetInsData(hMIDIDriver, pMelodicPatch, 1))) {
-			// uninitialize system
-			sosEZUnInitSystem();
+        // set instrument data
+        if ((sosMIDISetInsData(hMIDIDriver, pMelodicPatch, 1))) {
+            // uninitialize system
+            sosEZUnInitSystem();
 
-			// return error
-			return (_SOSEZ_PATCH_INIT);
-		}
+            // return error
+            return (_SOSEZ_PATCH_INIT);
+        }
 
-		// set instrument data
-		if ((sosMIDISetInsData(hMIDIDriver, pDrumPatch, 1))) {
-			// uninitialize system
-			sosEZUnInitSystem();
+        // set instrument data
+        if ((sosMIDISetInsData(hMIDIDriver, pDrumPatch, 1))) {
+            // uninitialize system
+            sosEZUnInitSystem();
 
-			// return error
-			return (_SOSEZ_PATCH_INIT);
-		}
-	}
+            // return error
+            return (_SOSEZ_PATCH_INIT);
+        }
+    }
 
-	// return success
-	return (_SOSEZ_NO_ERROR);
+    // return success
+    return (_SOSEZ_NO_ERROR);
 }
 
 // W32  sosEZUnInitSystem( VOID )
 W32 cdecl sosEZUnInitSystem(VOID) {
-	// release timer event
-	sosTIMERRemoveEvent(hDIGITimer);
+    // release timer event
+    sosTIMERRemoveEvent(hDIGITimer);
 
-	// uninitialize digital driver
-	if (wDIGIDeviceID != -1)
-		sosDIGIUnInitDriver(hDIGIDriver, _TRUE, _TRUE);
+    // uninitialize digital driver
+    if (wDIGIDeviceID != -1)
+        sosDIGIUnInitDriver(hDIGIDriver, _TRUE, _TRUE);
 
-	// uninitialize midi driver
-	if (wMIDIDeviceID != -1)
-		sosMIDIUnInitDriver(hMIDIDriver, _TRUE);
+    // uninitialize midi driver
+    if (wMIDIDeviceID != -1)
+        sosMIDIUnInitDriver(hMIDIDriver, _TRUE);
 
-	// uninitialize midi system
-	sosMIDIUnInitSystem();
+    // uninitialize midi system
+    sosMIDIUnInitSystem();
 
-	// uninitialze digital system
-	sosDIGIUnInitSystem();
+    // uninitialze digital system
+    sosDIGIUnInitSystem();
 
-	// uninitialize timer system
-	sosTIMERUnInitSystem(0);
+    // uninitialize timer system
+    sosTIMERUnInitSystem(0);
 
-	// return success
-	return (_TRUE);
+    // return success
+    return (_TRUE);
 }
 
 // BOOL  sosEZGetConfig( PSTR szName )
 BOOL cdecl sosEZGetConfig(PSTR szName) {
-	_INI_INSTANCE sInstance;
-	BOOL wError;
+    _INI_INSTANCE sInstance;
+    BOOL wError;
 
-	// reset digital and MIDI driver structures
-	memset(&sDIGIDriver, 0, sizeof(_SOS_DIGI_DRIVER));
-	memset(&sMIDIDriver, 0, sizeof(_SOS_MIDI_DRIVER));
+    // reset digital and MIDI driver structures
+    memset(&sDIGIDriver, 0, sizeof(_SOS_DIGI_DRIVER));
+    memset(&sMIDIDriver, 0, sizeof(_SOS_MIDI_DRIVER));
 
-	// open .ini file
-	if (!hmiINIOpen(&sInstance, szName))
-		return (_FALSE);
+    // open .ini file
+    if (!hmiINIOpen(&sInstance, szName))
+        return (_FALSE);
 
-	// locate section for digital settings
-	if (!hmiINILocateSection(&sInstance, "DIGITAL")) {
-		// close file
-		hmiINIClose(&sInstance);
+    // locate section for digital settings
+    if (!hmiINILocateSection(&sInstance, "DIGITAL")) {
+        // close file
+        hmiINIClose(&sInstance);
 
-		// return error
-		return (_FALSE);
-	}
+        // return error
+        return (_FALSE);
+    }
 
-	// fetch device ID, Port, DMA, IRQ
-	wError = hmiINIGetItemDecimal(&sInstance, "DeviceID", &wDIGIDeviceID);
-	wError = hmiINIGetItemDecimal(&sInstance, "DevicePort",
-			&sDIGIDriver.sHardware.wPort);
-	wError = hmiINIGetItemDecimal(&sInstance, "DeviceDMA",
-			&sDIGIDriver.sHardware.wDMA);
-	wError = hmiINIGetItemDecimal(&sInstance, "DeviceIRQ",
-			&sDIGIDriver.sHardware.wIRQ);
+    // fetch device ID, Port, DMA, IRQ
+    wError = hmiINIGetItemDecimal(&sInstance, "DeviceID", &wDIGIDeviceID);
+    wError = hmiINIGetItemDecimal(&sInstance, "DevicePort",
+            &sDIGIDriver.sHardware.wPort);
+    wError = hmiINIGetItemDecimal(&sInstance, "DeviceDMA",
+            &sDIGIDriver.sHardware.wDMA);
+    wError = hmiINIGetItemDecimal(&sInstance, "DeviceIRQ",
+            &sDIGIDriver.sHardware.wIRQ);
 
-	// error
-	if (!wError) {
-		// close file
-		hmiINIClose(&sInstance);
+    // error
+    if (!wError) {
+        // close file
+        hmiINIClose(&sInstance);
 
-		// return error
-		return (_FALSE);
-	}
+        // return error
+        return (_FALSE);
+    }
 
-	// locate section for MIDI settings
-	if (!hmiINILocateSection(&sInstance, "MIDI")) {
-		// close file
-		hmiINIClose(&sInstance);
+    // locate section for MIDI settings
+    if (!hmiINILocateSection(&sInstance, "MIDI")) {
+        // close file
+        hmiINIClose(&sInstance);
 
-		// return error
-		return (_FALSE);
-	}
+        // return error
+        return (_FALSE);
+    }
 
-	// fetch device ID, Port, DMA, IRQ
-	wError = hmiINIGetItemDecimal(&sInstance, "DeviceID", &wMIDIDeviceID);
-	wError = hmiINIGetItemDecimal(&sInstance, "DevicePort",
-			&sMIDIDriver.sHardware.wPort);
+    // fetch device ID, Port, DMA, IRQ
+    wError = hmiINIGetItemDecimal(&sInstance, "DeviceID", &wMIDIDeviceID);
+    wError = hmiINIGetItemDecimal(&sInstance, "DevicePort",
+            &sMIDIDriver.sHardware.wPort);
 
-	// error
-	if (!wError) {
-		// close file
-		hmiINIClose(&sInstance);
+    // error
+    if (!wError) {
+        // close file
+        hmiINIClose(&sInstance);
 
-		// return error
-		return (_FALSE);
-	}
+        // return error
+        return (_FALSE);
+    }
 
-	// close file
-	hmiINIClose(&sInstance);
+    // close file
+    hmiINIClose(&sInstance);
 
-	/* If either device is turned off, don't do anything. */
-	if ((wMIDIDeviceID == 0xFFFFFFFF) || (wDIGIDeviceID == 0xFFFFFFFF)) {
-		return (_FALSE);
-	}
-	// return success
-	return (_TRUE);
+    /* If either device is turned off, don't do anything. */
+    if ((wMIDIDeviceID == 0xFFFFFFFF) || (wDIGIDeviceID == 0xFFFFFFFF)) {
+        return (_FALSE);
+    }
+    // return success
+    return (_TRUE);
 }
 
 // PSTR  sosEZLoadSample( PSTR szName )
@@ -366,7 +364,7 @@ _SOS_MIDI_SONG * sSong;
 
 // attempt to open file
 if ((hFile = open(szName, O_RDONLY | O_BINARY)) == -1)
-	return ((W32) -1);
+    return ((W32) -1);
 
 // seek to the end of the file to determine
 // the file length;
@@ -377,23 +375,23 @@ lseek(hFile, 0, SEEK_SET);
 
 // allocate memory for the file, init song structure and track map
 if ((pData = (PSTR) malloc(wSize + sizeof(_SOS_MIDI_SONG))) == _NULL) {
-	// close file
-	close(hFile);
+    // close file
+    close(hFile);
 
-	// return error
-	return ((W32) -1);
+    // return error
+    return ((W32) -1);
 }
 
 // read in file
 if (read(hFile, pData + sizeof(_SOS_MIDI_SONG), wSize) != wSize) {
-	// close file
-	close(hFile);
+    // close file
+    close(hFile);
 
-	// free memory
-	free(pData);
+    // free memory
+    free(pData);
 
-	// return error
-	return ((W32) -1);
+    // return error
+    return ((W32) -1);
 }
 
 // close file
@@ -410,11 +408,11 @@ sSong->pSong = (PSTR)(pData + sizeof(_SOS_MIDI_SONG));
 
 // initialize song
 if (sosMIDIInitSong(sSong, &hSong)) {
-	// free song memory
-	free(pData);
+    // free song memory
+    free(pData);
 
-	// return error
-	return ((W32) -1);
+    // return error
+    return ((W32) -1);
 }
 
 // save pointer to song memory area to free
@@ -433,7 +431,7 @@ W32 hFile;
 
 // attempt to open file
 if ((hFile = open(szName, O_RDONLY | O_BINARY)) == -1)
-	return (_NULL);
+    return (_NULL);
 
 // seek to the end of the file to determine
 // the file length;
@@ -444,23 +442,23 @@ lseek(hFile, 0, SEEK_SET);
 
 // allocate memory for the file, init song structure and track map
 if ((pData = (PSTR) malloc(wSize)) == _NULL) {
-	// close file
-	close(hFile);
+    // close file
+    close(hFile);
 
-	// return error
-	return (_NULL);
+    // return error
+    return (_NULL);
 }
 
 // read in file
 if (read(hFile, pData, wSize) != wSize) {
-	// close file
-	close(hFile);
+    // close file
+    close(hFile);
 
-	// free memory
-	free(pData);
+    // free memory
+    free(pData);
 
-	// return error
-	return (_NULL);
+    // return error
+    return (_NULL);
 }
 
 // close file

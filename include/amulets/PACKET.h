@@ -17,7 +17,8 @@
 
 #define MAX_MESSAGE_LEN      40
 
-typedef struct {
+typedef struct
+{
     T_byte8 prefix;
     T_byte8 packetLength;
     T_word32 id;
@@ -25,63 +26,70 @@ typedef struct {
     T_word16 checksum;
 } PACK T_packetHeader;
 
-typedef struct {
+typedef struct
+{
     T_packetHeader header;
     T_byte8 data[SHORT_PACKET_LENGTH];
 } PACK T_packetShort;
 
-typedef struct {
+typedef struct
+{
     T_packetHeader header;
     T_byte8 data[LONG_PACKET_LENGTH];
 } PACK T_packetLong;
 
-typedef struct {
+typedef struct
+{
     T_packetHeader header;
     T_byte8 data[LONG_PACKET_LENGTH];
 } PACK T_packetEitherShortOrLong;
 
 T_sword16
-PacketSendShort (T_packetShort *p_shortPacket);
+PacketSendShort(T_packetShort *p_shortPacket);
 
 T_sword16
-PacketSendLong (T_packetLong *p_longPacket);
+PacketSendLong(T_packetLong *p_longPacket);
 
 T_sword16
-PacketSendAnyLength (T_packetEitherShortOrLong *p_anyPacket);
+PacketSendAnyLength(T_packetEitherShortOrLong *p_anyPacket);
 
 T_sword16
-PacketSend (T_packetEitherShortOrLong *p_packet);
+PacketSend(T_packetEitherShortOrLong *p_packet);
 
 T_sword16
-PacketGet (T_packetLong *p_packet);
+PacketGet(T_packetLong *p_packet);
 
 T_void
-PacketSetId (T_packetEitherShortOrLong *p_packet, T_word32 packetID);
+PacketSetId(T_packetEitherShortOrLong *p_packet, T_word32 packetID);
 
 T_void
-PacketReceiveData (T_void *p_data, T_word16 size);
+PacketReceiveData(T_void *p_data, T_word16 size);
 
 /* !!! Needs to be moved! */
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_word16 player;
     T_word16 objectId;
 } PACK T_logoffPacket;
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_gameGroupID groupID;
     T_byte8 syncData[1];
 } PACK T_syncPacket;
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_word16 player;
     T_gameGroupID groupID;
     T_byte8 message[MAX_MESSAGE_LEN + 1];
 } PACK T_messagePacket;
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_word16 loginId;
     T_word16 objectId;
@@ -111,7 +119,8 @@ typedef T_byte8 E_changePasswordStatus;
 
 /* ------------------------------------------------------------------------ */
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_byte8 fromPlayer;
     T_byte8 toPlayer;
@@ -122,7 +131,8 @@ typedef struct {
 /* ------------------------------------------------------------------------ */
 
 /* Packet for town ui messages. */
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_byte8 name[30];
     T_byte8 msg[40];
@@ -143,7 +153,8 @@ typedef T_byte8 T_playerIDState;
 #define PLAYER_ID_STATE_JOINING_GAME         2
 #define PLAYER_ID_STATE_UNKNOWN              3
 
-typedef struct { //50 bytes
+typedef struct
+{ //50 bytes
     T_byte8 name[30];
     T_directTalkUniqueAddress uniqueAddress;
     T_playerIDLocation location;
@@ -155,14 +166,16 @@ typedef struct { //50 bytes
     T_byte8 level;
 } PACK T_playerIDSelf;
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_playerIDSelf id;
 } PACK T_playerIDSelfPacket;
 
 /* ------------------------------------------------------------------------ */
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_directTalkUniqueAddress uniqueAddress;
     T_gameGroupID groupID;
@@ -177,7 +190,8 @@ typedef T_byte8 E_respondJoin;
 #define GAME_RESPOND_JOIN_CANCELED   2
 #define GAME_RESPOND_JOIN_UNKNOWN    3
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_directTalkUniqueAddress uniqueAddress;
     T_gameGroupID groupID;
@@ -187,7 +201,8 @@ typedef struct {
 
 /* ------------------------------------------------------------------------ */
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_gameGroupID groupID;
     T_word16 adventure;
@@ -199,7 +214,8 @@ typedef struct {
 
 /* ------------------------------------------------------------------------ */
 
-typedef struct {
+typedef struct
+{
     T_byte8 command;
     T_byte8 commandBeingAcked;
     T_word32 packetIDBeingAcked;

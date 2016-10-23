@@ -28,15 +28,16 @@
 
 #define MEMORY_NOT_ENOUGH_LEVEL            ((T_word32)1200000)
 
-static E_Boolean G_configLoaded = FALSE ;
-static T_iniFile G_configINIFile = INIFILE_BAD ;
-static E_Boolean G_bobOffFlag = FALSE ;
+static E_Boolean G_configLoaded = FALSE;
+static T_iniFile G_configINIFile = INIFILE_BAD;
+static E_Boolean G_bobOffFlag = FALSE;
 static E_Boolean G_invertMouseY = FALSE;
 static T_word16 G_mouseTurnSpeed; // Value of 20 to 200
 static T_word16 G_keyboardTurnSpeed; // value of 20 to 200
 static E_Boolean G_dyingdropsitems = TRUE;
 
-T_word32 FreeMemory(T_void) ;
+T_word32
+FreeMemory(T_void);
 
 /*-------------------------------------------------------------------------*
  * Routine:  ConfigOpen
@@ -45,17 +46,18 @@ T_word32 FreeMemory(T_void) ;
  *  ConfigOpen opens up the config file for reading and changes.
  *
  *<!-----------------------------------------------------------------------*/
-T_iniFile ConfigOpen(T_void)
+T_iniFile
+ConfigOpen(T_void)
 {
-    DebugRoutine("ConfigOpen") ;
-    DebugCheck(G_configINIFile == INIFILE_BAD) ;
+    DebugRoutine("ConfigOpen");
+    DebugCheck(G_configINIFile == INIFILE_BAD);
 
-    G_configINIFile = INIFileOpen("config.ini") ;
-    DebugCheck(G_configINIFile != INIFILE_BAD) ;
+    G_configINIFile = INIFileOpen("config.ini");
+    DebugCheck(G_configINIFile != INIFILE_BAD);
 
-    KeyMapInitialize(G_configINIFile) ;
+    KeyMapInitialize(G_configINIFile);
 
-    DebugEnd() ;
+    DebugEnd();
 
     return G_configINIFile;
 }
@@ -67,18 +69,20 @@ T_iniFile ConfigOpen(T_void)
  *  ConfigClose closes the config file and writes out any changes.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ConfigClose(T_void)
+T_void
+ConfigClose(T_void)
 {
-    DebugRoutine("ConfigClose") ;
-    DebugCheck(G_configINIFile != INIFILE_BAD) ;
+    DebugRoutine("ConfigClose");
+    DebugCheck(G_configINIFile != INIFILE_BAD);
 
-    if (G_configINIFile != INIFILE_BAD)  {
-        KeyMapFinish() ;
-        INIFileClose("config.ini", G_configINIFile) ;
+    if (G_configINIFile != INIFILE_BAD)
+    {
+        KeyMapFinish();
+        INIFileClose("config.ini", G_configINIFile);
         G_configINIFile = INIFILE_BAD;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -90,124 +94,145 @@ T_void ConfigClose(T_void)
  *  graphic detail is to be shown.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ConfigLoad(T_void)
+T_void
+ConfigLoad(T_void)
 {
-    T_word32 memFree ;
-    T_word16 neededResolution ;
-    T_byte8 *p_stepdown ;
-    T_word16 stepdown = 0 ;
+    T_word32 memFree;
+    T_word16 neededResolution;
+    T_byte8 *p_stepdown;
+    T_word16 stepdown = 0;
 
-    DebugRoutine("ConfigLoad") ;
-    DebugCheck(G_configLoaded == FALSE) ;
+    DebugRoutine("ConfigLoad");
+    DebugCheck(G_configLoaded == FALSE);
 
     /* Get the amount of free memory as soon as we can. */
-    memFree = FreeMemory() ;
+    memFree = FreeMemory();
 
-    if (memFree < MEMORY_SOMEWHAT_LOW_LEVEL)  {
-    /* If you are low on memory, cut down the frames per player */
-        ObjTypeDeclareSomewhatLowOnMemory() ;
-        puts("Lowering piecewise animations") ;
+    if (memFree < MEMORY_SOMEWHAT_LOW_LEVEL)
+    {
+        /* If you are low on memory, cut down the frames per player */
+        ObjTypeDeclareSomewhatLowOnMemory();
+        puts("Lowering piecewise animations");
     }
     /* If you are low on memory, cut down the frames per player and creature */
-    if (memFree < MEMORY_NOT_ENOUGH_LEVEL)  {
-        puts("NOT ENOUGH MEMORY!!!\n") ;
-        puts("Sorry, you do not have enough memory available in either conventional") ;
-        puts("or expanded memory.  Please do not use SMARTDRV if you are using it.") ;
-        puts("Please remove any unneeded TSR's or memory eating devices.  You must") ;
-        puts("have at least 2500K free of expanded memory to run this program, ") ;
-        puts("and you should have at least 3000K to run it adequately.\n") ;
-        puts("PROGRAM ABORTED") ;
-        exit(1) ;
-    } else if (memFree < MEMORY_VERY_LOW_LEVEL)  {
-        puts("VERY LOW memory system!  Lowering graphical resolution ALOT.") ;
-        neededResolution = 2 ;
-    } else if (memFree < MEMORY_LOW_LEVEL)  {
-        puts("LOW memory system!  Lowering graphical resolution.") ;
-        neededResolution = 1 ;
-    } else {
-        puts("Ahhh ... plenty of memory to run in.") ;
-        neededResolution = 0 ;
+    if (memFree < MEMORY_NOT_ENOUGH_LEVEL)
+    {
+        puts("NOT ENOUGH MEMORY!!!\n");
+        puts("Sorry, you do not have enough memory available in either conventional");
+        puts("or expanded memory.  Please do not use SMARTDRV if you are using it.");
+        puts("Please remove any unneeded TSR's or memory eating devices.  You must");
+        puts("have at least 2500K free of expanded memory to run this program, ");
+        puts("and you should have at least 3000K to run it adequately.\n");
+        puts("PROGRAM ABORTED");
+        exit(1);
     }
-    p_stepdown = INIFileGet(G_configINIFile, "engine", "stepdown") ;
+    else if (memFree < MEMORY_VERY_LOW_LEVEL)
+    {
+        puts("VERY LOW memory system!  Lowering graphical resolution ALOT.");
+        neededResolution = 2;
+    }
+    else if (memFree < MEMORY_LOW_LEVEL)
+    {
+        puts("LOW memory system!  Lowering graphical resolution.");
+        neededResolution = 1;
+    }
+    else
+    {
+        puts("Ahhh ... plenty of memory to run in.");
+        neededResolution = 0;
+    }
+    p_stepdown = INIFileGet(G_configINIFile, "engine", "stepdown");
 //printf("INI got: '%s'\n", p_stepdown) ;
-    if (p_stepdown)  {
-        stepdown = sscanf(p_stepdown, "%d", &stepdown) ;
-stepdown = (*p_stepdown) - '0' ;
+    if (p_stepdown)
+    {
+        stepdown = sscanf(p_stepdown, "%d", &stepdown);
+        stepdown = (*p_stepdown) - '0';
 //printf("stepdown = %d\n", stepdown) ;
-    } else  {
-        stepdown = 0 ;
+    }
+    else
+    {
+        stepdown = 0;
     }
 
     if (neededResolution < stepdown)
-        neededResolution = stepdown ;
+        neededResolution = stepdown;
 
 //printf("Needed resolution: %d (%d)\n", neededResolution, stepdown) ;
-    ObjTypesSetResolution(neededResolution) ;
+    ObjTypesSetResolution(neededResolution);
 
-    G_configLoaded = TRUE ;
+    G_configLoaded = TRUE;
 
     ConfigReadOptions(G_configINIFile);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_iniFile ConfigGetINIFile(T_void)
+T_iniFile
+ConfigGetINIFile(T_void)
 {
-    return G_configINIFile ;
+    return G_configINIFile;
 }
 
-E_musicType ConfigGetMusicType(T_void)
+E_musicType
+ConfigGetMusicType(T_void)
 {
-    E_musicType type ;
+    E_musicType type;
 
-    DebugRoutine("ConfigGetMusicType") ;
+    DebugRoutine("ConfigGetMusicType");
 
-    type = atoi(INIFileGet(G_configINIFile, "options", "musicType")) ;
+    type = atoi(INIFileGet(G_configINIFile, "options", "musicType"));
 
-    DebugCheck(type < MUSIC_TYPE_UNKNOWN) ;
+    DebugCheck(type < MUSIC_TYPE_UNKNOWN);
 
     /* If a strange type, then don't do it. */
     if (type >= MUSIC_TYPE_UNKNOWN)
-        type = MUSIC_TYPE_NONE ;
+        type = MUSIC_TYPE_NONE;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return type ;
+    return type;
 }
 
-T_byte8 ConfigGetCDROMDrive(T_void)
+T_byte8
+ConfigGetCDROMDrive(T_void)
 {
-    return *INIFileGet(G_configINIFile, "cdrom", "drive") ;
+    return *INIFileGet(G_configINIFile, "cdrom", "drive");
 }
 
-E_Boolean ConfigGetBobOffFlag(T_void)
+E_Boolean
+ConfigGetBobOffFlag(T_void)
 {
-    return G_bobOffFlag ;
+    return G_bobOffFlag;
 }
 
-E_Boolean ConfigGetInvertMouseY(T_void)
+E_Boolean
+ConfigGetInvertMouseY(T_void)
 {
     return G_invertMouseY;
 }
 
 // Return a percentile of the turn rate (20% to 200%)
-T_word16 ConfigGetMouseTurnSpeed(T_void)
+T_word16
+ConfigGetMouseTurnSpeed(T_void)
 {
     return G_mouseTurnSpeed;
 }
 
 // Return a percentile of the turn rate (20% to 200%)
-T_word16 ConfigGetKeyboardTurnSpeed(T_void)
+T_word16
+ConfigGetKeyboardTurnSpeed(T_void)
 {
     return G_keyboardTurnSpeed;
 }
 
-E_Boolean ConfigDyingDropsItems(T_void)
+E_Boolean
+ConfigDyingDropsItems(T_void)
 {
     return G_dyingdropsitems;
 }
 
-void ConfigReadOptions(T_iniFile iniFile)
+void
+ConfigReadOptions(T_iniFile iniFile)
 {
     char *p_value;
 
@@ -215,60 +240,84 @@ void ConfigReadOptions(T_iniFile iniFile)
 
     /* Load the bob off flag */
     p_value = INIFileGet(iniFile, "options", "boboff");
-    if (p_value) {
-        if (atoi(p_value)==1)  {
-            G_bobOffFlag = TRUE ;
-        } else {
-            G_bobOffFlag = FALSE ;
+    if (p_value)
+    {
+        if (atoi(p_value) == 1)
+        {
+            G_bobOffFlag = TRUE;
         }
-    } else {
-        G_bobOffFlag = FALSE ;
+        else
+        {
+            G_bobOffFlag = FALSE;
+        }
+    }
+    else
+    {
+        G_bobOffFlag = FALSE;
     }
 
     p_value = INIFileGet(iniFile, "options", "invertmousey");
-    if (p_value) {
-        if (atoi(p_value)==1)  {
-            G_invertMouseY = TRUE ;
-        } else {
-            G_invertMouseY = FALSE ;
+    if (p_value)
+    {
+        if (atoi(p_value) == 1)
+        {
+            G_invertMouseY = TRUE;
         }
-    } else {
-        G_invertMouseY = FALSE ;
+        else
+        {
+            G_invertMouseY = FALSE;
+        }
+    }
+    else
+    {
+        G_invertMouseY = FALSE;
     }
 
     p_value = INIFileGet(iniFile, "options", "mouseturnspeed");
-    if (p_value) {
+    if (p_value)
+    {
         G_mouseTurnSpeed = atoi(p_value);
         if (G_mouseTurnSpeed < 20)
             G_mouseTurnSpeed = 20;
         if (G_mouseTurnSpeed > 200)
-             G_mouseTurnSpeed = 200;
-    } else {
+            G_mouseTurnSpeed = 200;
+    }
+    else
+    {
         // Use the default
         G_mouseTurnSpeed = 100;
     }
 
     p_value = INIFileGet(iniFile, "options", "keyturnspeed");
-    if (p_value) {
+    if (p_value)
+    {
         G_keyboardTurnSpeed = atoi(p_value);
         if (G_keyboardTurnSpeed < 20)
             G_keyboardTurnSpeed = 20;
         if (G_keyboardTurnSpeed > 200)
             G_keyboardTurnSpeed = 200;
-    } else {
+    }
+    else
+    {
         // Use the default
         G_keyboardTurnSpeed = 100;
     }
 
     p_value = INIFileGet(iniFile, "options", "dyingdropsitems");
-    if (p_value) {
-        if (atoi(p_value)==1)  {
-            G_dyingdropsitems = TRUE ;
-        } else {
-            G_dyingdropsitems = FALSE ;
+    if (p_value)
+    {
+        if (atoi(p_value) == 1)
+        {
+            G_dyingdropsitems = TRUE;
         }
-    } else {
-        G_dyingdropsitems = FALSE ;
+        else
+        {
+            G_dyingdropsitems = FALSE;
+        }
+    }
+    else
+    {
+        G_dyingdropsitems = FALSE;
     }
 
     DebugEnd();

@@ -11,9 +11,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
-#include <stdlib.h>
 #include "DEBUG.H"
-#include "MEMORY.H"
 #if defined(_DEBUG) && defined(WIN32)
 #include <crtdbg.h>
 #endif

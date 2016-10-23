@@ -22,48 +22,56 @@
 
 #define GROUP_FOCUS_BAD (-1)
 
-typedef struct {
-    T_UIObject list[MAX_UI_OBJECTS_IN_GROUP] ;
-    T_word16 numInList ;
-    T_sword16 activeObject ;
-    T_resource background ;
-    T_screen screen ;
-    T_word16 lastFocus ;
-} T_UIGroupStruct ;
+typedef struct
+{
+    T_UIObject list[MAX_UI_OBJECTS_IN_GROUP];
+    T_word16 numInList;
+    T_sword16 activeObject;
+    T_resource background;
+    T_screen screen;
+    T_word16 lastFocus;
+} T_UIGroupStruct;
 
-typedef struct {
-    T_word16 left ;
-    T_word16 top ;
-    T_word16 right ;
-    T_word16 bottom ;
-    T_uiEventHandler uiEventHandler ;
-} T_UIObjectStruct ;
+typedef struct
+{
+    T_word16 left;
+    T_word16 top;
+    T_word16 right;
+    T_word16 bottom;
+    T_uiEventHandler uiEventHandler;
+} T_UIObjectStruct;
 
 /* Keep track of which UI group is active: */
-static T_UIGroup G_ActiveUIGroup = UI_GROUP_BAD ;
+static T_UIGroup G_ActiveUIGroup = UI_GROUP_BAD;
 
 /* Internal prototypes: */
-static T_void IUIGroupMouseHandler(
-           E_mouseEvent event,
-           T_word16 x,
-           T_word16 y,
-           E_Boolean button) ;
+static T_void
+IUIGroupMouseHandler(
+    E_mouseEvent event,
+    T_word16 x,
+    T_word16 y,
+    E_Boolean button);
 
-static T_void IUIGroupKeyboardHandler(
-           E_keyboardEvent event,
-           T_word16 key) ;
+static T_void
+IUIGroupKeyboardHandler(
+    E_keyboardEvent event,
+    T_word16 key);
 
-static E_Boolean IUIObjectHandleEvent(
-                    T_UIObject object,
-                    E_UIEvent event,
-                    T_word16 data1,
-                    T_word16 data2) ;
+static E_Boolean
+IUIObjectHandleEvent(
+    T_UIObject object,
+    E_UIEvent event,
+    T_word16 data1,
+    T_word16 data2);
 
-static T_void IUIObjectDestroy(T_UIObject obj) ;
+static T_void
+IUIObjectDestroy(T_UIObject obj);
 
-static E_Boolean IUIObjectIsInside(T_UIObject obj, T_word16 x, T_word16 y) ;
+static E_Boolean
+IUIObjectIsInside(T_UIObject obj, T_word16 x, T_word16 y);
 
-static T_void IUIGroupChangeFocus(T_sword16 indexObject) ;
+static T_void
+IUIGroupChangeFocus(T_sword16 indexObject);
 
 /*-------------------------------------------------------------------------*
  * Routine:  UISetActiveGroup
@@ -79,26 +87,30 @@ static T_void IUIGroupChangeFocus(T_sword16 indexObject) ;
  *      UI_GROUP_BAD for none.
  *
  *<!-----------------------------------------------------------------------*/
-T_void UISetActiveGroup(T_UIGroup group)
+T_void
+UISetActiveGroup(T_UIGroup group)
 {
-    DebugRoutine("UISetActiveGroup") ;
+    DebugRoutine("UISetActiveGroup");
     /* I can't think of any DebugChecks that I can do at this point. */
 
     /* Make the given group the active group. */
-    G_ActiveUIGroup = group ;
+    G_ActiveUIGroup = group;
 
     /* Check to see that the group is not UI_GROUP_BAD. */
-    if (group != UI_GROUP_BAD)  {
+    if (group != UI_GROUP_BAD)
+    {
         /* Turn on the keyboard and mouse handlers. */
-        KeyboardSetEventHandler(IUIGroupKeyboardHandler) ;
-        MouseSetEventHandler(IUIGroupMouseHandler) ;
-    } else {
+        KeyboardSetEventHandler(IUIGroupKeyboardHandler);
+        MouseSetEventHandler(IUIGroupMouseHandler);
+    }
+    else
+    {
         /* Turn off the keyboard and mouse handlers. */
-        KeyboardSetEventHandler(NULL) ;
-        MouseSetEventHandler(NULL) ;
+        KeyboardSetEventHandler(NULL);
+        MouseSetEventHandler(NULL);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -117,24 +129,25 @@ T_void UISetActiveGroup(T_UIGroup group)
  *  @param object -- Object to add
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIGroupAttachUIObject(T_UIGroup group, T_UIObject object)
+T_void
+UIGroupAttachUIObject(T_UIGroup group, T_UIObject object)
 {
-    T_UIGroupStruct *p_group ;
+    T_UIGroupStruct *p_group;
 
-    DebugRoutine("UIGroupAttachUIGroup") ;
-    DebugCheck(group != UI_GROUP_BAD) ;
-    DebugCheck(object != UI_GROUP_BAD) ;
+    DebugRoutine("UIGroupAttachUIGroup");
+    DebugCheck(group != UI_GROUP_BAD);
+    DebugCheck(object != UI_GROUP_BAD);
 
     /* Get pointer to UI group structure. */
-    p_group = group ;
+    p_group = group;
 
     /* Make sure we have not gone over the limit. */
-    DebugCheck(p_group->numInList != MAX_UI_OBJECTS_IN_GROUP) ;
+    DebugCheck(p_group->numInList != MAX_UI_OBJECTS_IN_GROUP);
 
     /* Add the object to the group list and increment the count. */
-    p_group->list[p_group->numInList++] = object ;
+    p_group->list[p_group->numInList++] = object;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -152,38 +165,42 @@ T_void UIGroupAttachUIObject(T_UIGroup group, T_UIObject object)
  *      memory.
  *
  *<!-----------------------------------------------------------------------*/
-T_UIGroup UIGroupCreate(T_void)
+T_UIGroup
+UIGroupCreate(T_void)
 {
-    T_UIGroupStruct *p_group ;
+    T_UIGroupStruct *p_group;
 
-    DebugRoutine("UIGroupCreate") ;
+    DebugRoutine("UIGroupCreate");
 
     /* Allocate the memory for a group. */
-    p_group = MemAlloc(sizeof(T_UIGroupStruct)) ;
+    p_group = MemAlloc(sizeof(T_UIGroupStruct));
 
     /* Check to see if it was allocated. */
-    if (p_group == NULL)  {
+    if (p_group == NULL)
+    {
         /* If it was not allocated, make sure we return a BAD */
-        p_group = UI_GROUP_BAD ;
-    } else {
+        p_group = UI_GROUP_BAD;
+    }
+    else
+    {
         /* If it was allocated, initialize the structure data. */
         /* Declare the group to be empty. */
-        p_group->numInList = 0 ;
+        p_group->numInList = 0;
 
         /* Declare the active object to be none. */
-        p_group->activeObject = GROUP_FOCUS_BAD ;
+        p_group->activeObject = GROUP_FOCUS_BAD;
 
         /* Make the background image undeclared. */
-        p_group->background = RESOURCE_BAD ;
+        p_group->background = RESOURCE_BAD;
 
         /* Make the screen for this group undeclared. */
-        p_group->screen = SCREEN_BAD ;
+        p_group->screen = SCREEN_BAD;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return whatever was/wasn't allocated. */
-    return ((T_UIGroup)p_group) ;
+    return ((T_UIGroup) p_group);
 }
 
 /*-------------------------------------------------------------------------*
@@ -201,29 +218,30 @@ T_UIGroup UIGroupCreate(T_void)
  *  @param group -- Group you want destroyed
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIGroupDestroy(T_UIGroup group)
+T_void
+UIGroupDestroy(T_UIGroup group)
 {
-    T_UIGroupStruct *p_group ;
-    T_word16 i ;
+    T_UIGroupStruct *p_group;
+    T_word16 i;
 
-    DebugRoutine("UIGroupDestroy") ;
-    DebugCheck(group != UI_GROUP_BAD) ;
-    DebugCheck(group != G_ActiveUIGroup) ;
+    DebugRoutine("UIGroupDestroy");
+    DebugCheck(group != UI_GROUP_BAD);
+    DebugCheck(group != G_ActiveUIGroup);
 
     /* Get structure pointer to group. */
-    p_group = group ;
+    p_group = group;
 
     /* Loop through all the objects in the group list and destroy */
     /* all those objects. */
-    for (i=0; i<p_group->numInList; i++)
+    for (i = 0; i < p_group->numInList; i++)
         /* Then we will actually free up the memory used by that object. */
-        IUIObjectDestroy(p_group->list[i]) ;
+        IUIObjectDestroy(p_group->list[i]);
 
     /* Now that all the objects underneath are destroyed, */
     /* Destroy our self. */
-    MemFree(p_group) ;
+    MemFree(p_group);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -238,51 +256,53 @@ T_void UIGroupDestroy(T_UIGroup group)
  *  this command.
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIGroupDraw(T_void)
+T_void
+UIGroupDraw(T_void)
 {
-    T_UIGroupStruct *p_group ;
-    T_bitmap *p_background ;
-    T_word16 i ;
+    T_UIGroupStruct *p_group;
+    T_bitmap *p_background;
+    T_word16 i;
 
-    DebugRoutine("UIGroupDraw") ;
-    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD) ;
+    DebugRoutine("UIGroupDraw");
+    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD);
 
     /* Get a pointer to the structure of the active group. */
-    p_group = G_ActiveUIGroup ;
+    p_group = G_ActiveUIGroup;
 
     /* Make sure the screen is declared. */
-    DebugCheck(p_group->screen != SCREEN_BAD) ;
+    DebugCheck(p_group->screen != SCREEN_BAD);
 
     /* Make this screen the active screen. */
-    GrScreenSet(p_group->screen) ;
+    GrScreenSet(p_group->screen);
 
     /* Hide the mouse from everything we draw. */
-    MouseHide() ;
+    MouseHide();
 
     /* Start by drawing a black background over everything. */
-    GrDrawRectangle(0, 0, SCREEN_SIZE_X-1, SCREEN_SIZE_Y-1, COLOR_BLACK) ;
+    GrDrawRectangle(0, 0, SCREEN_SIZE_X - 1, SCREEN_SIZE_Y - 1, COLOR_BLACK);
 
     /* Check to see if we have a background resource. */
-    if (p_group->background != RESOURCE_BAD)  {
+    if (p_group->background != RESOURCE_BAD)
+    {
         /* Let's bring in the background. */
-        p_background = ResourceLock(p_group->background) ;
+        p_background = ResourceLock(p_group->background);
 
         /* Draw it in the upper left hand corner. */
-        GrDrawBitmap(p_background, 0, 0) ;
+        GrDrawBitmap(p_background, 0, 0);
 
         /* Unlock the resource. */
-        ResourceUnlock(p_group->background) ;
+        ResourceUnlock(p_group->background);
     }
 
     /* Now let's draw each of the objects underneath this UI Group. */
     /* To do so, requires that we send a draw event to each object. */
-    for (i=0; i<p_group->numInList; i++)
-        IUIObjectHandleEvent(p_group->list[i], UI_EVENT_DRAW, 0, 0) ;
+    for (i = 0; i < p_group->numInList; i++)
+        IUIObjectHandleEvent(p_group->list[i], UI_EVENT_DRAW, 0, 0);
 
     /* Done drawing, let the mouse appear again. */
-    MouseShow() ;
+    MouseShow();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -300,21 +320,22 @@ T_void UIGroupDraw(T_void)
  *  @param screen -- Screen to use
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIGroupSetScreen(T_UIGroup group, T_screen screen)
+T_void
+UIGroupSetScreen(T_UIGroup group, T_screen screen)
 {
-    T_UIGroupStruct *p_group ;
+    T_UIGroupStruct *p_group;
 
-    DebugRoutine("UIGroupSetScreen") ;
-    DebugCheck(group != UI_GROUP_BAD) ;
-    DebugCheck(screen != SCREEN_BAD) ;
+    DebugRoutine("UIGroupSetScreen");
+    DebugCheck(group != UI_GROUP_BAD);
+    DebugCheck(screen != SCREEN_BAD);
 
     /* Get a pointer to the ui group structure. */
-    p_group = group ;
+    p_group = group;
 
     /* Change the screen. */
-    p_group->screen = screen ;
+    p_group->screen = screen;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -332,21 +353,22 @@ T_void UIGroupSetScreen(T_UIGroup group, T_screen screen)
  *  @param background -- Background resource to use
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIGroupSetBackground(T_UIGroup group, T_resource background)
+T_void
+UIGroupSetBackground(T_UIGroup group, T_resource background)
 {
-    T_UIGroupStruct *p_group ;
+    T_UIGroupStruct *p_group;
 
-    DebugRoutine("UIGroupSetScreen") ;
-    DebugCheck(group != UI_GROUP_BAD) ;
-    DebugCheck(background != RESOURCE_BAD) ;
+    DebugRoutine("UIGroupSetScreen");
+    DebugCheck(group != UI_GROUP_BAD);
+    DebugCheck(background != RESOURCE_BAD);
 
     /* Get a pointer to the ui group structure. */
-    p_group = group ;
+    p_group = group;
 
     /* Change the background. */
-    p_group->background = background ;
+    p_group->background = background;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -366,35 +388,39 @@ T_void UIGroupSetBackground(T_UIGroup group, T_resource background)
  *      allocate enough memory.
  *
  *<!-----------------------------------------------------------------------*/
-T_UIObject UIObjectCreate(T_word16 size)
+T_UIObject
+UIObjectCreate(T_word16 size)
 {
-    T_UIObjectStruct *p_object ;
+    T_UIObjectStruct *p_object;
 
-    DebugRoutine("UIObjectCreate") ;
+    DebugRoutine("UIObjectCreate");
 
     /* Allocate the memory for the structure and the add on */
-    p_object = MemAlloc(sizeof(T_UIObjectStruct) + size) ;
+    p_object = MemAlloc(sizeof(T_UIObjectStruct) + size);
 
     /* Check to see if we were able to allocate the memory. */
-    if (p_object == NULL)  {
+    if (p_object == NULL)
+    {
         /* No good, we'll have to return a bad object. */
-        p_object = UI_OBJECT_BAD ;
-    } else {
+        p_object = UI_OBJECT_BAD;
+    }
+    else
+    {
         /* We got our memory, let's initialize it. */
         /* Let's make sure there is not an event handler for the object. */
-        p_object->uiEventHandler = NULL ;
+        p_object->uiEventHandler = NULL;
         /* Since we don't know the size of the object, let's give it */
         /* an very small size.  This will make the object practically */
         /* unselectable. */
-        p_object->left = 1 ;
-        p_object->top = 1 ;
-        p_object->right = 1 ;
-        p_object->bottom = 1 ;
+        p_object->left = 1;
+        p_object->top = 1;
+        p_object->right = 1;
+        p_object->bottom = 1;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_UIObject)(((T_UIObjectStruct *)p_object)+1)) ;
+    return ((T_UIObject) (((T_UIObjectStruct *) p_object) + 1));
 }
 
 /*-------------------------------------------------------------------------*
@@ -419,32 +445,33 @@ T_UIObject UIObjectCreate(T_word16 size)
  *  @param bottom -- Bottom edge of object
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIObjectSetArea(
-           T_UIObject object,
-           T_word16 left,
-           T_word16 top,
-           T_word16 right,
-           T_word16 bottom)
+T_void
+UIObjectSetArea(
+    T_UIObject object,
+    T_word16 left,
+    T_word16 top,
+    T_word16 right,
+    T_word16 bottom)
 {
-    T_UIObjectStruct *p_object ;
+    T_UIObjectStruct *p_object;
 
-    DebugRoutine("UIObjectSetArea") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
-    DebugCheck(right < SCREEN_SIZE_X) ;
-    DebugCheck(left < right) ;
-    DebugCheck(bottom < SCREEN_SIZE_Y) ;
-    DebugCheck(top < bottom ) ;
+    DebugRoutine("UIObjectSetArea");
+    DebugCheck(object != UI_OBJECT_BAD);
+    DebugCheck(right < SCREEN_SIZE_X);
+    DebugCheck(left < right);
+    DebugCheck(bottom < SCREEN_SIZE_Y);
+    DebugCheck(top < bottom);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Set the object's bounds: */
-    p_object->left = left ;
-    p_object->right = right ;
-    p_object->top = top ;
-    p_object->bottom = bottom ;
+    p_object->left = left;
+    p_object->right = right;
+    p_object->top = top;
+    p_object->bottom = bottom;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -461,22 +488,23 @@ T_void UIObjectSetArea(
  *  @param uiEventHandler -- Routine to handle UI events.
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIObjectSetEventHandler(
-           T_UIObject object,
-           T_uiEventHandler uiEventHandler)
+T_void
+UIObjectSetEventHandler(
+    T_UIObject object,
+    T_uiEventHandler uiEventHandler)
 {
-    T_UIObjectStruct *p_object ;
+    T_UIObjectStruct *p_object;
 
-    DebugRoutine("UIObjectSetEventHandler") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("UIObjectSetEventHandler");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Set the object's ui event handler: */
-    p_object->uiEventHandler = uiEventHandler ;
+    p_object->uiEventHandler = uiEventHandler;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -488,24 +516,25 @@ T_void UIObjectSetEventHandler(
  *  @param object -- Object to get left of
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 UIObjectGetLeftPosition(T_UIObject object)
+T_word16
+UIObjectGetLeftPosition(T_UIObject object)
 {
-    T_UIObjectStruct *p_object ;
-    T_word16 left ;
+    T_UIObjectStruct *p_object;
+    T_word16 left;
 
-    DebugRoutine("UIObjectGetLeftPosition") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("UIObjectGetLeftPosition");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Get the left side */
-    left = p_object->left ;
+    left = p_object->left;
 
-    DebugCheck(left < SCREEN_SIZE_X) ;
-    DebugEnd() ;
+    DebugCheck(left < SCREEN_SIZE_X);
+    DebugEnd();
 
-    return left ;
+    return left;
 }
 
 /*-------------------------------------------------------------------------*
@@ -517,24 +546,25 @@ T_word16 UIObjectGetLeftPosition(T_UIObject object)
  *  @param object -- Object to get top of
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 UIObjectGetTopPosition(T_UIObject object)
+T_word16
+UIObjectGetTopPosition(T_UIObject object)
 {
-    T_UIObjectStruct *p_object ;
-    T_word16 top ;
+    T_UIObjectStruct *p_object;
+    T_word16 top;
 
-    DebugRoutine("UIObjectGetTopPosition") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("UIObjectGetTopPosition");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Get the top side */
-    top = p_object->top ;
+    top = p_object->top;
 
-    DebugCheck(top < SCREEN_SIZE_Y) ;
-    DebugEnd() ;
+    DebugCheck(top < SCREEN_SIZE_Y);
+    DebugEnd();
 
-    return top ;
+    return top;
 }
 
 /*-------------------------------------------------------------------------*
@@ -546,24 +576,25 @@ T_word16 UIObjectGetTopPosition(T_UIObject object)
  *  @param object -- Object to get right of
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 UIObjectGetRightPosition(T_UIObject object)
+T_word16
+UIObjectGetRightPosition(T_UIObject object)
 {
-    T_UIObjectStruct *p_object ;
-    T_word16 right ;
+    T_UIObjectStruct *p_object;
+    T_word16 right;
 
-    DebugRoutine("UIObjectGetRightPosition") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("UIObjectGetRightPosition");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Get the left side */
-    right = p_object->right ;
+    right = p_object->right;
 
-    DebugCheck(right < SCREEN_SIZE_X) ;
-    DebugEnd() ;
+    DebugCheck(right < SCREEN_SIZE_X);
+    DebugEnd();
 
-    return right ;
+    return right;
 }
 
 /*-------------------------------------------------------------------------*
@@ -576,24 +607,25 @@ T_word16 UIObjectGetRightPosition(T_UIObject object)
  *  @param object -- Object to get bottom of
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 UIObjectGetBottomPosition(T_UIObject object)
+T_word16
+UIObjectGetBottomPosition(T_UIObject object)
 {
-    T_UIObjectStruct *p_object ;
-    T_word16 bottom ;
+    T_UIObjectStruct *p_object;
+    T_word16 bottom;
 
-    DebugRoutine("UIObjectGetBottomPosition") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("UIObjectGetBottomPosition");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object's structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Get the bottom side */
-    bottom = p_object->bottom ;
+    bottom = p_object->bottom;
 
-    DebugCheck(bottom < SCREEN_SIZE_Y) ;
-    DebugEnd() ;
+    DebugCheck(bottom < SCREEN_SIZE_Y);
+    DebugEnd();
 
-    return bottom ;
+    return bottom;
 }
 
 
@@ -609,89 +641,91 @@ T_word16 UIObjectGetBottomPosition(T_UIObject object)
  *  mouse events to appropriate UI events (including focus events).
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IUIGroupMouseHandler(
-                  E_mouseEvent event,
-                  T_word16 x,
-                  T_word16 y,
-                  E_Boolean button)
+static T_void
+IUIGroupMouseHandler(
+    E_mouseEvent event,
+    T_word16 x,
+    T_word16 y,
+    E_Boolean button)
 {
-    T_sword16 indexObject ;
-    T_UIGroupStruct *p_group ;
-    T_UIObject object ;
-    E_UIEvent uiEvent ;
+    T_sword16 indexObject;
+    T_UIGroupStruct *p_group;
+    T_UIObject object;
+    E_UIEvent uiEvent;
 
-    DebugRoutine("IUIGroupMouseHandler") ;
-    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD) ;
-    DebugCheck(event < MOUSE_EVENT_UNKNOWN) ;
+    DebugRoutine("IUIGroupMouseHandler");
+    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD);
+    DebugCheck(event < MOUSE_EVENT_UNKNOWN);
 
     /* Get a pointer to the currently active ui group. */
-    p_group = G_ActiveUIGroup ;
+    p_group = G_ActiveUIGroup;
 
     /* If we are IDLE, MOVEing, or doing a START, we need to know */
     /* where the object under the cursor is. */
     if ((event == MOUSE_EVENT_START) ||
         (event == MOUSE_EVENT_MOVE) ||
-        (event == MOUSE_EVENT_IDLE))  {
+        (event == MOUSE_EVENT_IDLE))
+    {
         /* First we will have to check for lost/gained focuses. */
         /* Find who the mouse is currently over. */
-        for (indexObject = 0; indexObject<p_group->numInList; indexObject++)  {
+        for (indexObject = 0; indexObject < p_group->numInList; indexObject++)
+        {
             /* Get an object out of the list. */
-            object = p_group->list[indexObject] ;
+            object = p_group->list[indexObject];
 
             /* Check if the mouse is inside the object.  If it is */
             /* break out of this loop. */
             if (IUIObjectIsInside(object, x, y) == TRUE)
-                break ;
+                break;
         }
 
         /* Check to see if the mouse was over anything  */
-        if (indexObject == p_group->numInList)  {
+        if (indexObject == p_group->numInList)
+        {
             /* Not over anything, just note that none was selected. */
-            object = UI_OBJECT_BAD ;
-            indexObject = GROUP_FOCUS_BAD ;
+            object = UI_OBJECT_BAD;
+            indexObject = GROUP_FOCUS_BAD;
         }
-    } else {
+    }
+    else
+    {
         /* None of the above, assume that we are over the object */
         /* that is active.  Why?  So it let's go. */
-        indexObject = p_group->activeObject ;
-        object = p_group->list[indexObject] ;
+        indexObject = p_group->activeObject;
+        object = p_group->list[indexObject];
     }
 
     /* However only move and start mouse events actually change */
     /* the focus. */
     if ((event == MOUSE_EVENT_START) || (event == MOUSE_EVENT_MOVE))
-        IUIGroupChangeFocus(indexObject) ;
+        IUIGroupChangeFocus(indexObject);
 
     /* Now we want to handle the rest mouse events. */
     /* But these events are only useful if we are over a UI object. */
-    if (indexObject != GROUP_FOCUS_BAD)  {
+    if (indexObject != GROUP_FOCUS_BAD)
+    {
         /* Translate the mouse events: */
-        switch(event)  {
-            case MOUSE_EVENT_START:
-                uiEvent = UI_EVENT_MOUSE_START ;
-                break ;
-            case MOUSE_EVENT_END:
-                uiEvent = UI_EVENT_MOUSE_END ;
-                break ;
-            case MOUSE_EVENT_MOVE:
-                uiEvent = UI_EVENT_MOUSE_MOVE ;
-                break ;
-            case MOUSE_EVENT_DRAG:
-                uiEvent = UI_EVENT_MOUSE_DRAG ;
-                break ;
-            case MOUSE_EVENT_IDLE:
-                uiEvent = UI_EVENT_MOUSE_IDLE ;
-                break ;
-            case MOUSE_EVENT_HELD:
-                uiEvent = UI_EVENT_MOUSE_HELD ;
-                break ;
+        switch (event)
+        {
+            case MOUSE_EVENT_START:uiEvent = UI_EVENT_MOUSE_START;
+                break;
+            case MOUSE_EVENT_END:uiEvent = UI_EVENT_MOUSE_END;
+                break;
+            case MOUSE_EVENT_MOVE:uiEvent = UI_EVENT_MOUSE_MOVE;
+                break;
+            case MOUSE_EVENT_DRAG:uiEvent = UI_EVENT_MOUSE_DRAG;
+                break;
+            case MOUSE_EVENT_IDLE:uiEvent = UI_EVENT_MOUSE_IDLE;
+                break;
+            case MOUSE_EVENT_HELD:uiEvent = UI_EVENT_MOUSE_HELD;
+                break;
         }
 
         /* Send out the message to the active focus. */
-        IUIObjectHandleEvent(object, uiEvent, x, y) ;
+        IUIObjectHandleEvent(object, uiEvent, x, y);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -706,100 +740,109 @@ static T_void IUIGroupMouseHandler(
  *  @param key -- Key to process
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IUIGroupKeyboardHandler(
-                  E_keyboardEvent event,
-                  T_word16 key)
+static T_void
+IUIGroupKeyboardHandler(
+    E_keyboardEvent event,
+    T_word16 key)
 {
-    T_UIObject object ;
-    E_UIEvent uiEvent ;
-    T_sword16 focus ;
-    T_UIGroupStruct *p_group ;
-    E_Boolean usedKey ;
+    T_UIObject object;
+    E_UIEvent uiEvent;
+    T_sword16 focus;
+    T_UIGroupStruct *p_group;
+    E_Boolean usedKey;
 
-    DebugRoutine("IUIGroupKeyboardHandler") ;
-    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD) ;
-    DebugCheck(event < KEYBOARD_EVENT_UNKNOWN) ;
+    DebugRoutine("IUIGroupKeyboardHandler");
+    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD);
+    DebugCheck(event < KEYBOARD_EVENT_UNKNOWN);
 
     /* Get a pointer to the currently active ui group. */
-    p_group = G_ActiveUIGroup ;
+    p_group = G_ActiveUIGroup;
 
     /* If there are no members in this group, we don't even */
     /* do anything.  In the debugging version, I see no reason to let */
     /* this occur. */
-    DebugCheck(p_group->numInList != 0) ;
-    if (p_group->numInList != 0)  {
+    DebugCheck(p_group->numInList != 0);
+    if (p_group->numInList != 0)
+    {
         /* Before we do anything, see if this is a TAB/SHIFT-TAB situation. */
-        if (KeyboardGetScanCode(KEY_SCAN_CODE_TAB)==TRUE)  {
+        if (KeyboardGetScanCode(KEY_SCAN_CODE_TAB) == TRUE)
+        {
             /* TAB ... hmmm, we need to change the current focus. */
             /* What is the original focus. */
-            focus = p_group->activeObject ;
+            focus = p_group->activeObject;
 
             /* Check to see if that is a valid focus.  If it doesn't appear */
             /* to be one, let us use the last one we used before. */
             if (focus == GROUP_FOCUS_BAD)
-                focus = p_group->lastFocus ;
+                focus = p_group->lastFocus;
 
             /* Are doing a SHIFT-TAB? */
-            if ((KeyboardGetScanCode(KEY_SCAN_CODE_LEFT_SHIFT)==TRUE) ||
-                (KeyboardGetScanCode(KEY_SCAN_CODE_RIGHT_SHIFT)==TRUE))  {
-               /* It's a SHIFT-TAB, move backwards through the list. */
-               focus-- ;
+            if ((KeyboardGetScanCode(KEY_SCAN_CODE_LEFT_SHIFT) == TRUE) ||
+                (KeyboardGetScanCode(KEY_SCAN_CODE_RIGHT_SHIFT) == TRUE))
+            {
+                /* It's a SHIFT-TAB, move backwards through the list. */
+                focus--;
 
-               /* Make sure we check to roll around. */
-               if (focus == -1)
-                   focus = p_group->numInList-1 ;
-            } else {
-               /* We are doing a plain TAB, need to move forwards */
-               /* in the list. */
-               focus++ ;
+                /* Make sure we check to roll around. */
+                if (focus == -1)
+                    focus = p_group->numInList - 1;
+            }
+            else
+            {
+                /* We are doing a plain TAB, need to move forwards */
+                /* in the list. */
+                focus++;
 
-               /* Make sure we check for roll around. */
-               if (focus == p_group->numInList)
-                   focus = 0 ;
+                /* Make sure we check for roll around. */
+                if (focus == p_group->numInList)
+                    focus = 0;
             }
 
             /* Change to this new focus. */
-            IUIGroupChangeFocus(focus) ;
+            IUIGroupChangeFocus(focus);
 
             /* Now, to make sure we don't have the TAB in the buffer, */
             /* we will remove it.  (Note that this works even if the */
             /* buffer is turned off). */
-            KeyboardBufferGet() ;
-        } else {
+            KeyboardBufferGet();
+        }
+        else
+        {
             /* Not a TAB key combination.  Let's see if we have an */
             /* active focus. */
-            object = p_group->list[p_group->activeObject] ;
+            object = p_group->list[p_group->activeObject];
 
-            if (object != UI_OBJECT_BAD)  {
+            if (object != UI_OBJECT_BAD)
+            {
                 /* Yes, there is an active object. */
                 /* We need to send it an appropriate message. */
                 /* Choose the type of message to send. */
-                switch(event)  {
-                    case KEYBOARD_EVENT_PRESS:
-                        uiEvent = UI_EVENT_KEY_START ;
-                        break ;
-                    case KEYBOARD_EVENT_RELEASE:
-                        uiEvent = UI_EVENT_KEY_END ;
-                        break ;
-                    case KEYBOARD_EVENT_BUFFERED:
-                        uiEvent = UI_EVENT_KEY_BUFFERED ;
-                        break ;
+                switch (event)
+                {
+                    case KEYBOARD_EVENT_PRESS:uiEvent = UI_EVENT_KEY_START;
+                        break;
+                    case KEYBOARD_EVENT_RELEASE:uiEvent = UI_EVENT_KEY_END;
+                        break;
+                    case KEYBOARD_EVENT_BUFFERED:uiEvent = UI_EVENT_KEY_BUFFERED;
+                        break;
                 }
                 /* Send out the message to the active focus. */
-                usedKey = IUIObjectHandleEvent(object, uiEvent, key, 0) ;
-            } else {
+                usedKey = IUIObjectHandleEvent(object, uiEvent, key, 0);
+            }
+            else
+            {
                 /* Note that the key was not used. */
-                usedKey = FALSE ;
+                usedKey = FALSE;
             }
 
             /* If the key was never used */
             /* remove it from the keyboard buffer. */
             if (usedKey == FALSE)
-                KeyboardBufferGet() ;
+                KeyboardBufferGet();
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -819,32 +862,34 @@ static T_void IUIGroupKeyboardHandler(
  *  @return Flag to tell if event was processed.
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IUIObjectHandleEvent(
-                    T_UIObject object,
-                    E_UIEvent event,
-                    T_word16 data1,
-                    T_word16 data2)
+static E_Boolean
+IUIObjectHandleEvent(
+    T_UIObject object,
+    E_UIEvent event,
+    T_word16 data1,
+    T_word16 data2)
 {
-    T_UIObjectStruct *p_object ;
-    E_Boolean returnStatus ;
+    T_UIObjectStruct *p_object;
+    E_Boolean returnStatus;
 
-    DebugRoutine("IUIObjectHandleEvent") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
-    DebugCheck(event < UI_EVENT_UNKNOWN) ;
+    DebugRoutine("IUIObjectHandleEvent");
+    DebugCheck(object != UI_OBJECT_BAD);
+    DebugCheck(event < UI_EVENT_UNKNOWN);
 
     /* Get a pointer to the object structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Check to see if this object has a UI handler. */
-    if (p_object->uiEventHandler != NULL)  {
+    if (p_object->uiEventHandler != NULL)
+    {
         /* If there exists an event, go ahead and pass the event along. */
-        returnStatus = p_object->uiEventHandler(object, event, data1, data2) ;
+        returnStatus = p_object->uiEventHandler(object, event, data1, data2);
     }
 
-    DebugCheck(returnStatus < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(returnStatus < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return returnStatus ;
+    return returnStatus;
 }
 
 /*-------------------------------------------------------------------------*
@@ -862,24 +907,25 @@ static E_Boolean IUIObjectHandleEvent(
  *  done something very wrong or against protocol.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IUIObjectDestroy(T_UIObject object)
+static T_void
+IUIObjectDestroy(T_UIObject object)
 {
-    T_UIObjectStruct *p_object ;
+    T_UIObjectStruct *p_object;
 
-    DebugRoutine("IUIObjectDestroy") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("IUIObjectDestroy");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* First, send a destroy message to the object before actually */
     /* destorying it. */
-    IUIObjectHandleEvent(object, UI_EVENT_DESTROY, 0, 0) ;
+    IUIObjectHandleEvent(object, UI_EVENT_DESTROY, 0, 0);
 
     /* Get a pointer to the object structure. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Ok, now we can destroy the object.  This is done by freeing it. */
-    MemFree(p_object) ;
+    MemFree(p_object);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -898,28 +944,29 @@ static T_void IUIObjectDestroy(T_UIObject object)
  *      FALSE = coordinate is outside
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IUIObjectIsInside(T_UIObject object, T_word16 x, T_word16 y)
+static E_Boolean
+IUIObjectIsInside(T_UIObject object, T_word16 x, T_word16 y)
 {
-    E_Boolean inside ;
-    T_UIObjectStruct *p_object ;
+    E_Boolean inside;
+    T_UIObjectStruct *p_object;
 
-    DebugRoutine("IUIObjectIsInside") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
+    DebugRoutine("IUIObjectIsInside");
+    DebugCheck(object != UI_OBJECT_BAD);
 
     /* Get a pointer to the object. */
-    p_object = ((T_UIObjectStruct *)object)-1 ;
+    p_object = ((T_UIObjectStruct *) object) - 1;
 
     /* Assume that we are inside.  However, if any of the following */
     /* conditions fail, we are outside. */
-    inside = TRUE ;
+    inside = TRUE;
     if ((x < p_object->left) || (x > p_object->right) ||
-            (y < p_object->top) || (y > p_object->bottom))
-        inside = FALSE ;
+        (y < p_object->top) || (y > p_object->bottom))
+        inside = FALSE;
 
-    DebugCheck(inside < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(inside < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return inside ;
+    return inside;
 }
 
 /*-------------------------------------------------------------------------*
@@ -932,46 +979,50 @@ static E_Boolean IUIObjectIsInside(T_UIObject object, T_word16 x, T_word16 y)
  *  @param indexObject -- Number of item in current group
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IUIGroupChangeFocus(T_sword16 indexObject)
+static T_void
+IUIGroupChangeFocus(T_sword16 indexObject)
 {
-    T_UIGroupStruct *p_group ;
+    T_UIGroupStruct *p_group;
 
-    DebugRoutine("IUIGroupChangeFocus") ;
-    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD) ;
+    DebugRoutine("IUIGroupChangeFocus");
+    DebugCheck(G_ActiveUIGroup != UI_GROUP_BAD);
 
     /* Get a pointer to the currently active ui group. */
-    p_group = G_ActiveUIGroup ;
-    DebugCheck(indexObject < p_group->numInList) ;
+    p_group = G_ActiveUIGroup;
+    DebugCheck(indexObject < p_group->numInList);
 
     /* Check if the new focus is different from the old one */
     /* (even if the "new focus" or "old focus" is invalid). */
-    if (indexObject != p_group->activeObject)  {
+    if (indexObject != p_group->activeObject)
+    {
         /* Different focus, let's change. */
         /* Check if there was an old focus */
-        if (p_group->activeObject != GROUP_FOCUS_BAD)  {
+        if (p_group->activeObject != GROUP_FOCUS_BAD)
+        {
             /* There was an old focus, therefore, send it a */
             /* focus lost event message. */
             IUIObjectHandleEvent(
                 p_group->list[p_group->activeObject],
-                UI_EVENT_LOST_FOCUS, 0, 0) ;
+                UI_EVENT_LOST_FOCUS, 0, 0);
         }
 
         /* Check to see if we have a new focus. */
-        if (indexObject != GROUP_FOCUS_BAD)  {
+        if (indexObject != GROUP_FOCUS_BAD)
+        {
             /* Since we do, send it a focus gained message. */
             IUIObjectHandleEvent(
                 p_group->list[indexObject],
-                UI_EVENT_GAINED_FOCUS, 0, 0) ;
+                UI_EVENT_GAINED_FOCUS, 0, 0);
 
             /* Also note that this is the last valid focus. */
-            p_group->lastFocus = indexObject ;
+            p_group->lastFocus = indexObject;
         }
         /* No matter where we are, */
         /* declare this object as the active object. */
-        p_group->activeObject = indexObject ;
+        p_group->activeObject = indexObject;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

@@ -14,12 +14,10 @@
 #include "3D_COLLI.H"
 #include "3D_IO.H"
 #include "3D_TRIG.H"
-#include "3D_VIEW.H"
 #include "CLIENT.H"
 #include "COLOR.H"
 #include "CONFIG.H"
 #include "CSYNCPCK.H"
-#include "EFFECT.H"
 #include "MAP.H"
 #include "OBJECT.H"
 #include "PICS.H"
@@ -31,53 +29,54 @@
 #include "TICKER.H"
 
 /* Keep track of this module's initialization */
-static E_Boolean G_init = FALSE ;
+static E_Boolean G_init = FALSE;
 
 //static T_objMoveStruct G_playerMove ;
-static T_3dObject *G_playerObject = NULL ;
-static T_3dObject G_playerRealObject ;
-static T_3dObject G_playerFakeObject ;
-static T_objTypeInstance G_playerRealObjType = OBJECT_TYPE_INSTANCE_BAD ;
-static T_objTypeInstance G_playerFakeObjType = OBJECT_TYPE_INSTANCE_BAD ;
+static T_3dObject *G_playerObject = NULL;
+static T_3dObject G_playerRealObject;
+static T_3dObject G_playerFakeObject;
+static T_objTypeInstance G_playerRealObjType = OBJECT_TYPE_INSTANCE_BAD;
+static T_objTypeInstance G_playerFakeObjType = OBJECT_TYPE_INSTANCE_BAD;
 
-static E_Boolean G_playerIsFake = FALSE ;
+static E_Boolean G_playerIsFake = FALSE;
 #define G_playerMove (G_playerObject->objMove)
 
-static T_sword32 G_lastPlayerX ;
-static T_sword32 G_lastPlayerY ;
+static T_sword32 G_lastPlayerX;
+static T_sword32 G_lastPlayerY;
 
 #define easyabs(x) (((-x)<0)?(-(x)):(x))
 
-static T_word16 G_playerBodyParts[MAX_BODY_PARTS] ;
+static T_word16 G_playerBodyParts[MAX_BODY_PARTS];
 
-static T_word16 G_bob = 0 ;
+static T_word16 G_bob = 0;
 
-static T_word16 G_turnLeftFraction = PLAYER_MOVE_NONE ;
-static T_word16 G_turnRightFraction = PLAYER_MOVE_NONE ;
-static T_word16 G_slideLeftFraction = PLAYER_MOVE_NONE ;
-static T_word16 G_slideRightFraction = PLAYER_MOVE_NONE ;
-static T_word16 G_moveForwardFraction = PLAYER_MOVE_NONE ;
-static T_word16 G_moveBackwardFraction = PLAYER_MOVE_NONE ;
+static T_word16 G_turnLeftFraction = PLAYER_MOVE_NONE;
+static T_word16 G_turnRightFraction = PLAYER_MOVE_NONE;
+static T_word16 G_slideLeftFraction = PLAYER_MOVE_NONE;
+static T_word16 G_slideRightFraction = PLAYER_MOVE_NONE;
+static T_word16 G_moveForwardFraction = PLAYER_MOVE_NONE;
+static T_word16 G_moveBackwardFraction = PLAYER_MOVE_NONE;
 
-static T_sword32 G_turnLeftTotal = 0 ;
-static T_sword32 G_turnRightTotal = 0 ;
-static T_sword32 G_slideLeftTotal = 0 ;
-static T_sword32 G_slideRightTotal = 0 ;
-static T_sword32 G_moveForwardTotal = 0 ;
-static T_sword32 G_moveBackwardTotal = 0 ;
+static T_sword32 G_turnLeftTotal = 0;
+static T_sword32 G_turnRightTotal = 0;
+static T_sword32 G_slideLeftTotal = 0;
+static T_sword32 G_slideRightTotal = 0;
+static T_sword32 G_moveForwardTotal = 0;
+static T_sword32 G_moveBackwardTotal = 0;
 
-static E_Boolean G_playerIsMakingSound = FALSE ;
+static E_Boolean G_playerIsMakingSound = FALSE;
 
 /* Last sector the player was in. */
-static T_word16 G_lastSector = 0 ;
+static T_word16 G_lastSector = 0;
 
 /* Keep track of whether or not the player is stealthy and when */
 /* to check next. */
-static E_Boolean G_playerIsStealthy = FALSE ;
-static T_word32 G_nextStealthCheck = 0 ;
-static T_void IPlayerUpdateStealth(T_void) ;
+static E_Boolean G_playerIsStealthy = FALSE;
+static T_word32 G_nextStealthCheck = 0;
+static T_void
+IPlayerUpdateStealth(T_void);
 
-static E_Boolean G_playerTeleported = TRUE ;
+static E_Boolean G_playerTeleported = TRUE;
 
 /*-------------------------------------------------------------------------*
  * Routine:  PlayerInitFirst
@@ -87,19 +86,20 @@ static E_Boolean G_playerTeleported = TRUE ;
  *  change from level to level.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerInitFirst(T_void)
+T_void
+PlayerInitFirst(T_void)
 {
-    T_word16 i ;
+    T_word16 i;
 
-    DebugRoutine("PlayerInitFirst") ;
+    DebugRoutine("PlayerInitFirst");
 
     /* Initialize the player's body parts to the normal set. */
     /* Really this should load the body parts from either the disk */
     /* or the server. */
-    for (i=0; i<MAX_BODY_PARTS; i++)
-        G_playerBodyParts[i] = 520 + i ;
+    for (i = 0; i < MAX_BODY_PARTS; i++)
+        G_playerBodyParts[i] = 520 + i;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -109,48 +109,49 @@ T_void PlayerInitFirst(T_void)
  *  PlayerInit sets up the player's position information.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerInit(T_3dObject *p_obj)
+T_void
+PlayerInit(T_3dObject *p_obj)
 {
-    DebugRoutine("PlayerInit") ;
-    DebugCheck(G_init == FALSE) ;
+    DebugRoutine("PlayerInit");
+    DebugCheck(G_init == FALSE);
 
-    G_init = TRUE ;
+    G_init = TRUE;
 
 //printf("PlayerInit by %s: objectId: %d\n", DebugGetCallerName(), ObjectGetServerId(p_obj)) ;
-    ObjectRemoveAttributes(p_obj, OBJECT_ATTR_BODY_PART) ;
-    G_playerObject = p_obj ;
-    G_playerFakeObject = *p_obj ;
-    G_playerRealObject = *p_obj ;
-    G_playerFakeObjType = ObjTypeCreate(ObjectGetType(p_obj), p_obj) ;
-    G_playerRealObjType = ObjTypeCreate(ObjectGetType(p_obj), G_playerRealObjType) ;
+    ObjectRemoveAttributes(p_obj, OBJECT_ATTR_BODY_PART);
+    G_playerObject = p_obj;
+    G_playerFakeObject = *p_obj;
+    G_playerRealObject = *p_obj;
+    G_playerFakeObjType = ObjTypeCreate(ObjectGetType(p_obj), p_obj);
+    G_playerRealObjType = ObjTypeCreate(ObjectGetType(p_obj), G_playerRealObjType);
 
     /* Won't need this object type declaration because */
     /* FakeObjType and RealObjType hold the ones we'll be using */
-    ObjectSetType(p_obj, 0) ;
+    ObjectSetType(p_obj, 0);
 //    ObjTypeDestroy(p_obj->p_objType) ;
-    ObjectSetServerId(&G_playerRealObject, 100+ObjectGetServerId(p_obj)) ;
+    ObjectSetServerId(&G_playerRealObject, 100 + ObjectGetServerId(p_obj));
 //printf("Real Object = 100 + %d = %d\n", ObjectGetServerId(p_obj), ObjectGetServerId(&G_playerRealObject));
 
-    G_lastPlayerX = G_lastPlayerY = 0 ;
+    G_lastPlayerX = G_lastPlayerY = 0;
 
     /* Is this needed? */
-    ObjMoveSetZ(&G_playerMove, 700) ;
+    ObjMoveSetZ(&G_playerMove, 700);
 
-    PlayerMoveNone() ;
+    PlayerMoveNone();
 
-    PlayerSetRealMode() ;
-    PlayerSetFakeMode() ;
+    PlayerSetRealMode();
+    PlayerSetFakeMode();
 
     /* Initialize the "do not make the sound of 2 voices" variable. */
-    G_playerIsMakingSound = FALSE ;
+    G_playerIsMakingSound = FALSE;
 
     /* Make sure to check the next stealth check. */
-    G_nextStealthCheck = 0 ;
+    G_nextStealthCheck = 0;
 
     /* Teleport into the game. */
-    G_playerTeleported = TRUE ;
+    G_playerTeleported = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -160,18 +161,19 @@ T_void PlayerInit(T_3dObject *p_obj)
  *  PlayerFinish closes out anything that the player position was using.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerFinish(T_void)
+T_void
+PlayerFinish(T_void)
 {
-    DebugRoutine("PlayerFinish") ;
-    DebugCheck(G_init == TRUE) ;
+    DebugRoutine("PlayerFinish");
+    DebugCheck(G_init == TRUE);
 
-    G_init = FALSE ;
-    ObjTypeDestroy(G_playerRealObjType) ;
-    ObjTypeDestroy(G_playerFakeObjType) ;
-    G_playerRealObjType = OBJECT_TYPE_INSTANCE_BAD ;
-    G_playerFakeObjType = OBJECT_TYPE_INSTANCE_BAD ;
-    G_playerObject->p_objType = NULL ;
-    ObjectDestroy(G_playerObject) ;
+    G_init = FALSE;
+    ObjTypeDestroy(G_playerRealObjType);
+    ObjTypeDestroy(G_playerFakeObjType);
+    G_playerRealObjType = OBJECT_TYPE_INSTANCE_BAD;
+    G_playerFakeObjType = OBJECT_TYPE_INSTANCE_BAD;
+    G_playerObject->p_objType = NULL;
+    ObjectDestroy(G_playerObject);
 
     /** Set the player object's type to zero to unlock the picture resources. **/
 //printf("Player object: %d\n", ObjectGetServerId(G_playerObject)) ;
@@ -179,7 +181,7 @@ T_void PlayerFinish(T_void)
 //fflush(stdout) ;
 //    ObjectSetType (G_playerObject, 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -191,13 +193,14 @@ T_void PlayerFinish(T_void)
  *  @return X location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 PlayerGetX(T_void)
+T_sword32
+PlayerGetX(T_void)
 {
-    T_sword32 x ;
+    T_sword32 x;
 
-    x = ObjMoveGetX(&G_playerMove) ;
+    x = ObjMoveGetX(&G_playerMove);
 
-    return x ;
+    return x;
 }
 
 /*-------------------------------------------------------------------------*
@@ -209,9 +212,10 @@ T_sword32 PlayerGetX(T_void)
  *  @return Y location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 PlayerGetY(T_void)
+T_sword32
+PlayerGetY(T_void)
 {
-    return ObjMoveGetY(&G_playerMove) ;
+    return ObjMoveGetY(&G_playerMove);
 }
 
 /*-------------------------------------------------------------------------*
@@ -223,9 +227,10 @@ T_sword32 PlayerGetY(T_void)
  *  @return Z location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 PlayerGetZ(T_void)
+T_sword32
+PlayerGetZ(T_void)
 {
-    return ObjMoveGetZ(&G_playerMove) ;
+    return ObjMoveGetZ(&G_playerMove);
 }
 
 /*-------------------------------------------------------------------------*
@@ -237,7 +242,8 @@ T_sword32 PlayerGetZ(T_void)
  *  @return facing angle of player
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetAngle(T_void)
+T_word16
+PlayerGetAngle(T_void)
 {
     return ObjMoveGetAngle(&G_playerMove);
 }
@@ -252,18 +258,19 @@ T_word16 PlayerGetAngle(T_void)
  *  @return sector being stood on.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetAreaSector(T_void)
+T_word16
+PlayerGetAreaSector(T_void)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("PlayerGetAreaSector") ;
+    DebugRoutine("PlayerGetAreaSector");
 
-    sector = ObjMoveGetAreaSector(&G_playerMove) ;
+    sector = ObjMoveGetAreaSector(&G_playerMove);
 
-    DebugCheck(sector < G_Num3dSectors) ;
-    DebugEnd() ;
+    DebugCheck(sector < G_Num3dSectors);
+    DebugEnd();
 
-    return sector ;
+    return sector;
 }
 
 /*-------------------------------------------------------------------------*
@@ -276,18 +283,19 @@ T_word16 PlayerGetAreaSector(T_void)
  *  @return sector under center of player.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetCenterSector(T_void)
+T_word16
+PlayerGetCenterSector(T_void)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("PlayerGetCenterSector") ;
+    DebugRoutine("PlayerGetCenterSector");
 
-    sector = ObjMoveGetCenterSector(&G_playerMove) ;
+    sector = ObjMoveGetCenterSector(&G_playerMove);
 
-    DebugCheck(sector < G_Num3dSectors) ;
-    DebugEnd() ;
+    DebugCheck(sector < G_Num3dSectors);
+    DebugEnd();
 
-    return sector ;
+    return sector;
 }
 
 /*-------------------------------------------------------------------------*
@@ -299,12 +307,13 @@ T_word16 PlayerGetCenterSector(T_void)
  *  @param x -- new X location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetX(T_sword32 x)
+T_void
+PlayerSetX(T_sword32 x)
 {
     /* Note that this is the last location. */
-    G_lastPlayerX = x ;
+    G_lastPlayerX = x;
 
-    ObjMoveSetX(&G_playerMove, x) ;
+    ObjMoveSetX(&G_playerMove, x);
 }
 
 /*-------------------------------------------------------------------------*
@@ -316,12 +325,13 @@ T_void PlayerSetX(T_sword32 x)
  *  @param y -- new Y location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetY(T_sword32 y)
+T_void
+PlayerSetY(T_sword32 y)
 {
     /* Note the last player Y location. */
-    G_lastPlayerY = y ;
+    G_lastPlayerY = y;
 
-    ObjMoveSetY(&G_playerMove, y) ;
+    ObjMoveSetY(&G_playerMove, y);
 }
 
 /*-------------------------------------------------------------------------*
@@ -333,9 +343,10 @@ T_void PlayerSetY(T_sword32 y)
  *  @param z -- new Z location of player
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetZ(T_sword32 z)
+T_void
+PlayerSetZ(T_sword32 z)
 {
-    ObjMoveSetZ(&G_playerMove, z) ;
+    ObjMoveSetZ(&G_playerMove, z);
 }
 
 /*-------------------------------------------------------------------------*
@@ -347,9 +358,10 @@ T_void PlayerSetZ(T_sword32 z)
  *  @param angle -- new angle of the player
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetAngle(T_word16 angle)
+T_void
+PlayerSetAngle(T_word16 angle)
 {
-    ObjMoveSetAngle(&G_playerMove, angle) ;
+    ObjMoveSetAngle(&G_playerMove, angle);
 }
 
 /*-------------------------------------------------------------------------*
@@ -360,26 +372,27 @@ T_void PlayerSetAngle(T_word16 angle)
  *  sector and related sector information (like height).
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerUpdatePosInfo(T_void)
+T_void
+PlayerUpdatePosInfo(T_void)
 {
-    DebugRoutine("PlayerUpdatePosInfo") ;
+    DebugRoutine("PlayerUpdatePosInfo");
 
     /* Tug the player just a tiny bit in the x direction. */
 //    G_playerMove.XV++ ;
 
     /* Record where we were. */
-    G_lastPlayerX = PlayerGetX() ;
-    G_lastPlayerY = PlayerGetY() ;
+    G_lastPlayerX = PlayerGetX();
+    G_lastPlayerY = PlayerGetY();
 
 //printf("Player set up over %d, %d\n", PlayerGetX16(), PlayerGetY16()) ;
 //    ObjMoveUpdate(&G_playerMove, 0) ;
-    ObjMoveSetUpSectors(&G_playerObject->objMove) ;
-    ObjectUnlinkCollisionLink(G_playerObject) ;
+    ObjMoveSetUpSectors(&G_playerObject->objMove);
+    ObjectUnlinkCollisionLink(G_playerObject);
 
     /* Tug the player back the other way a bit. */
 //    G_playerMove.XV-- ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -390,18 +403,19 @@ T_void PlayerUpdatePosInfo(T_void)
  *  (and probably falling).
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean PlayerIsAboveGround(T_void)
+E_Boolean
+PlayerIsAboveGround(T_void)
 {
-    E_Boolean isAbove ;
+    E_Boolean isAbove;
 
-    DebugRoutine("PlayerIsAboveGround") ;
+    DebugRoutine("PlayerIsAboveGround");
 
-    isAbove = ObjMoveIsAboveGround(&G_playerMove) ;
+    isAbove = ObjMoveIsAboveGround(&G_playerMove);
 
-    DebugCheck(isAbove < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(isAbove < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return isAbove ;
+    return isAbove;
 }
 
 /*-------------------------------------------------------------------------*
@@ -414,27 +428,29 @@ E_Boolean PlayerIsAboveGround(T_void)
  *  @param jumpPower -- Jump by how much
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerJump(T_word16 jumpPower)
+T_void
+PlayerJump(T_word16 jumpPower)
 {
-    E_Boolean isFlying ;
-    E_Boolean isAboveGround ;
+    E_Boolean isFlying;
+    E_Boolean isAboveGround;
 
-    DebugRoutine("PlayerJump") ;
+    DebugRoutine("PlayerJump");
 
-    isFlying = EffectPlayerEffectIsActive (PLAYER_EFFECT_FLY) ;
-    isAboveGround = PlayerIsAboveGround() ;
+    isFlying = EffectPlayerEffectIsActive(PLAYER_EFFECT_FLY);
+    isAboveGround = PlayerIsAboveGround();
 
-    if (!isAboveGround)  {
+    if (!isAboveGround)
+    {
         /* Move feet off of floor */
-        PlayerSetZ(PlayerGetZ()+1) ;
+        PlayerSetZ(PlayerGetZ() + 1);
 
         /* Accelerate the Z velocity by the given jump power. */
-        ObjMoveAccelXYZ(&G_playerMove, 0, 0, jumpPower) ;
+        ObjMoveAccelXYZ(&G_playerMove, 0, 0, jumpPower);
 
-        if (rand()%2==0)
+        if (rand() % 2 == 0)
         {
             /* play a jump 'exertion' sound */
-            PlayerMakeSoundGlobal(SOUND_PLAYER_JUMP_SET+(rand()%3),500);
+            PlayerMakeSoundGlobal(SOUND_PLAYER_JUMP_SET + (rand() % 3), 500);
         }
 /*
         switch (StatsGetPlayerClassType())
@@ -471,11 +487,13 @@ T_void PlayerJump(T_word16 jumpPower)
             break;
         }
 */
-    } else if (isFlying)  {
-        ObjMoveAccelXYZ(&G_playerMove, 0, 0, (jumpPower>>2)+(jumpPower>>3)) ;
+    }
+    else if (isFlying)
+    {
+        ObjMoveAccelXYZ(&G_playerMove, 0, 0, (jumpPower >> 2) + (jumpPower >> 3));
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -487,13 +505,14 @@ T_void PlayerJump(T_word16 jumpPower)
  *  @param maxVelocity -- Jump by how much
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetMaxVelocity(T_sword32 maxVelocity)
+T_void
+PlayerSetMaxVelocity(T_sword32 maxVelocity)
 {
-    DebugRoutine("PlayerSetMaxVelocity") ;
+    DebugRoutine("PlayerSetMaxVelocity");
 
-    ObjMoveSetMaxVelocity(&G_playerMove, maxVelocity) ;
+    ObjMoveSetMaxVelocity(&G_playerMove, maxVelocity);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -506,105 +525,121 @@ T_void PlayerSetMaxVelocity(T_sword32 maxVelocity)
  *  @param delta -- Number of timer ticks that have passed.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerUpdate(T_word32 delta)
+T_void
+PlayerUpdate(T_word32 delta)
 {
-    T_sword16 walkingHeight ;
-    T_sword32 oopsX, oopsY, oopsZ ;
-    T_word16 oldAngle ;
+    T_sword16 walkingHeight;
+    T_sword32 oopsX, oopsY, oopsZ;
+    T_word16 oldAngle;
 
-    DebugRoutine("PlayerUpdate") ;
+    DebugRoutine("PlayerUpdate");
 //printf("PlayerUpdate (%08lX, %08lX, %04X)\n>>>\n", PlayerGetX(), PlayerGetY(), PlayerGetZ16()) ;
 
-    ObjectForceUpdate(G_playerObject) ;
-    ObjMoveUpdate(&G_playerObject->objMove, 0) ;
+    ObjectForceUpdate(G_playerObject);
+    ObjMoveUpdate(&G_playerObject->objMove, 0);
 
-    if (G_playerObject->inWorld != TRUE)  {
+    if (G_playerObject->inWorld != TRUE)
+    {
         /* If we are not in the world, don't update */
-        DebugEnd() ;
-        return ;
+        DebugEnd();
+        return;
     }
 
     /* Update the player's animation. */
-    ObjectUpdateAnimation(G_playerObject, SyncTimeGet()) ;
+    ObjectUpdateAnimation(G_playerObject, SyncTimeGet());
 
-    ObjectUnlinkCollisionLink(G_playerObject) ;
+    ObjectUnlinkCollisionLink(G_playerObject);
     /* Allow the player to dip. */
-    ObjectClearMoveFlags(G_playerObject, OBJMOVE_FLAG_DO_NOT_SINK) ;
+    ObjectClearMoveFlags(G_playerObject, OBJMOVE_FLAG_DO_NOT_SINK);
 
     /* Are we water walking and in water? */
     if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_WATER_WALK)) &&
-        (MapGetSectorType(PlayerGetAreaSector()) == SECTOR_TYPE_WATER))  {
+        (MapGetSectorType(PlayerGetAreaSector()) == SECTOR_TYPE_WATER))
+    {
         /* Yes, don't sink and don't flow */
-        ObjectSetMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK) ;
-        ObjectDoesNotFlow(PlayerGetObject()) ;
-    /* Are we lava walking and in lava? */
-    } else if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_LAVA_WALK)) &&
-        (MapGetSectorType(PlayerGetAreaSector()) == SECTOR_TYPE_LAVA))  {
+        ObjectSetMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK);
+        ObjectDoesNotFlow(PlayerGetObject());
+        /* Are we lava walking and in lava? */
+    }
+    else if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_LAVA_WALK)) &&
+        (MapGetSectorType(PlayerGetAreaSector()) == SECTOR_TYPE_LAVA))
+    {
         /* Yes, don't sink and don't flow */
-        ObjectSetMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK) ;
-        ObjectDoesNotFlow(PlayerGetObject()) ;
-    } else {
+        ObjectSetMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK);
+        ObjectDoesNotFlow(PlayerGetObject());
+    }
+    else
+    {
         /* Yes, sink and flow */
-        ObjectClearMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK) ;
-        ObjectDoesFlow(PlayerGetObject()) ;
+        ObjectClearMoveFlags(PlayerGetObject(), OBJMOVE_FLAG_DO_NOT_SINK);
+        ObjectDoesFlow(PlayerGetObject());
     }
 
     /* Make sure we are above the walking ground level. */
     walkingHeight = MapGetWalkingFloorHeight(&G_playerObject->objMove,
-            PlayerGetAreaSector());
+                                             PlayerGetAreaSector());
     if (PlayerGetZ16() < walkingHeight)
-        PlayerSetZ16(walkingHeight) ;
+        PlayerSetZ16(walkingHeight);
 
     /* TESTING:  Ignore this feature on the player. */
-    if (ObjectIsMarkedMakeImpassibleWhenFree(G_playerObject))  {
-        ObjectMakeImpassable(G_playerObject) ;
-        ObjectMakeSolid(G_playerObject) ;
+    if (ObjectIsMarkedMakeImpassibleWhenFree(G_playerObject))
+    {
+        ObjectMakeImpassable(G_playerObject);
+        ObjectMakeSolid(G_playerObject);
     }
 
-    ObjectAddAttributes(G_playerObject, OBJECT_ATTR_SLIDE_ONLY) ;
+    ObjectAddAttributes(G_playerObject, OBJECT_ATTR_SLIDE_ONLY);
 
     /** What if delta is too big? **/
     /** I'll break it up into pieces. **/
     if (delta > 20)
     {
-        PlayerUpdate (delta >> 1);
-        PlayerUpdate ((delta >> 1) + (delta & 1));
+        PlayerUpdate(delta >> 1);
+        PlayerUpdate((delta >> 1) + (delta & 1));
     }
 
     /* Record where we were. */
-    G_lastPlayerX = PlayerGetX() ;
-    G_lastPlayerY = PlayerGetY() ;
+    G_lastPlayerX = PlayerGetX();
+    G_lastPlayerY = PlayerGetY();
 
     /* Are we feather falling? */
-    if (EffectPlayerEffectIsActive (PLAYER_EFFECT_FEATHER_FALL) != FALSE)  {
+    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_FEATHER_FALL) != FALSE)
+    {
         /* Need to clip Z velocity. */
-        if (ObjectGetZVel(PlayerGetObject())<-15000)
-          ObjectSetZVel (PlayerGetObject(),-15000);
+        if (ObjectGetZVel(PlayerGetObject()) < -15000)
+            ObjectSetZVel (PlayerGetObject(), -15000);
 
     }
 
-    ObjectNormalGravity(PlayerGetObject()) ;
-    if (EffectPlayerEffectIsActive (PLAYER_EFFECT_FLY) != FALSE)  {
+    ObjectNormalGravity(PlayerGetObject());
+    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_FLY) != FALSE)
+    {
         /* Need to clip Z velocity. */
-        if (ObjectGetZVel(PlayerGetObject())>15000)
-          ObjectSetZVel (PlayerGetObject(),15000);
+        if (ObjectGetZVel(PlayerGetObject()) > 15000)
+            ObjectSetZVel (PlayerGetObject(), 15000);
 
-    } else {
+    }
+    else
+    {
         /* Resist gravity only works when fly is off */
         /* Are we under the effect of a low gravity spell? */
-        if (EffectPlayerEffectIsActive(PLAYER_EFFECT_LOW_GRAVITY))  {
+        if (EffectPlayerEffectIsActive(PLAYER_EFFECT_LOW_GRAVITY))
+        {
             /* Low gravity in effect */
-            ObjectLowGravity(PlayerGetObject()) ;
+            ObjectLowGravity(PlayerGetObject());
         }
     }
 
     /* Are we under the effect of a sticky feet spell? */
-    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_STICKY_FEET))  {
+    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_STICKY_FEET))
+    {
         /* sticky feet in effect */
-        ObjectForceNormalFriction(PlayerGetObject()) ;
-    } else {
+        ObjectForceNormalFriction(PlayerGetObject());
+    }
+    else
+    {
         /* Just regular friction */
-        ObjectRegularFriction(PlayerGetObject()) ;
+        ObjectRegularFriction(PlayerGetObject());
     }
 
 #if 0
@@ -623,88 +658,97 @@ T_void PlayerUpdate(T_word32 delta)
         PlayerGetX(),
         PlayerGetY(),
         PlayerGetZ())) ||
-       (ObjectIsBeingCrushed(G_playerObject)))  {
-        oopsX = PlayerGetX() ;
-        oopsY = PlayerGetY() ;
-        oopsZ = PlayerGetZ() ;
+        (ObjectIsBeingCrushed(G_playerObject)))
+    {
+        oopsX = PlayerGetX();
+        oopsY = PlayerGetY();
+        oopsZ = PlayerGetZ();
         /* Move the player back to the last gauranteed good move */
         /* to ensure that he is not inside something. */
         /* But keep the correct angle */
-        oldAngle = PlayerGetAngle() ;
-        G_playerObject->objMove = *(ClientSyncGetLastGoodMove()) ;
-        PlayerSetAngle(oldAngle) ;
+        oldAngle = PlayerGetAngle();
+        G_playerObject->objMove = *(ClientSyncGetLastGoodMove());
+        PlayerSetAngle(oldAngle);
 
         /* Try to move in a straight line from the last good location */
         /* to where we were. */
         Collide3dMoveToXYZ(
-              G_playerObject,
-              oopsX,
-              oopsY,
-              oopsZ) ;
-    } else {
-        if ((EffectPlayerEffectIsActive (PLAYER_EFFECT_FLY)==TRUE) &&
+            G_playerObject,
+            oopsX,
+            oopsY,
+            oopsZ);
+    }
+    else
+    {
+        if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_FLY) == TRUE) &&
             (PlayerIsAboveGround()))
-            ObjMoveAccelXYZ(&G_playerMove, 0, 0, 800 * delta) ;
+            ObjMoveAccelXYZ(&G_playerMove, 0, 0, 800 * delta);
 
-        ObjectForceUpdate(PlayerGetObject()) ;
-        ObjectAddAttributes(PlayerGetObject(), OBJECT_ATTR_SLIDE_ONLY) ;
-        ObjMoveUpdate(&G_playerObject->objMove, delta) ;
+        ObjectForceUpdate(PlayerGetObject());
+        ObjectAddAttributes(PlayerGetObject(), OBJECT_ATTR_SLIDE_ONLY);
+        ObjMoveUpdate(&G_playerObject->objMove, delta);
     }
 
-    G_turnLeftTotal += ((delta * G_turnLeftFraction)<<8) +
-                       ((delta * G_turnLeftFraction)<<7) ;
-    G_turnRightTotal += ((delta * G_turnRightFraction)<<8) +
-                        ((delta * G_turnRightFraction)<<7) ;
-    G_slideLeftTotal += (delta * G_slideLeftFraction) ;
-    G_slideRightTotal += (delta * G_slideRightFraction) ;
-    G_moveForwardTotal += (delta * G_moveForwardFraction) ;
-    G_moveBackwardTotal += (delta * G_moveBackwardFraction) ;
+    G_turnLeftTotal += ((delta * G_turnLeftFraction) << 8) +
+        ((delta * G_turnLeftFraction) << 7);
+    G_turnRightTotal += ((delta * G_turnRightFraction) << 8) +
+        ((delta * G_turnRightFraction) << 7);
+    G_slideLeftTotal += (delta * G_slideLeftFraction);
+    G_slideRightTotal += (delta * G_slideRightFraction);
+    G_moveForwardTotal += (delta * G_moveForwardFraction);
+    G_moveBackwardTotal += (delta * G_moveBackwardFraction);
 
-    if (G_turnLeftTotal >= 0x100)  {
+    if (G_turnLeftTotal >= 0x100)
+    {
         PlayerSetAngle(
             PlayerGetAngle() +
-            (G_turnLeftTotal >> 8)) ;
-        G_turnLeftTotal &= 0xFF ;
+                (G_turnLeftTotal >> 8));
+        G_turnLeftTotal &= 0xFF;
     }
 
-    if (G_turnRightTotal >= 0x100)  {
+    if (G_turnRightTotal >= 0x100)
+    {
         PlayerSetAngle(
             PlayerGetAngle() -
-            (G_turnRightTotal >> 8)) ;
-        G_turnRightTotal &= 0xFF ;
+                (G_turnRightTotal >> 8));
+        G_turnRightTotal &= 0xFF;
     }
 
-    if (G_moveForwardTotal >= 0x100)  {
+    if (G_moveForwardTotal >= 0x100)
+    {
         PlayerAccelDirection(
             PlayerGetAngle(),
-            (G_moveForwardTotal >> 8)) ;
-        PlayerSetStance(STANCE_WALK) ;
-        G_moveForwardTotal &= 0xFF ;
+            (G_moveForwardTotal >> 8));
+        PlayerSetStance(STANCE_WALK);
+        G_moveForwardTotal &= 0xFF;
     }
 
-    if (G_moveBackwardTotal >= 0x100)  {
+    if (G_moveBackwardTotal >= 0x100)
+    {
         PlayerAccelDirection(
             PlayerGetAngle(),
-            -(G_moveBackwardTotal >> 9)) ;
-        PlayerSetStance(STANCE_WALK) ;
-        G_moveBackwardTotal &= 0xFF ;
+            -(G_moveBackwardTotal >> 9));
+        PlayerSetStance(STANCE_WALK);
+        G_moveBackwardTotal &= 0xFF;
     }
 
-    if (G_slideLeftTotal >= 0x100)  {
+    if (G_slideLeftTotal >= 0x100)
+    {
     }
 
-    if (ObjectIsMarkedMakeImpassibleWhenFree(G_playerObject))  {
-        ObjectMakeImpassable(G_playerObject) ;
-        ObjectMakeSolid(G_playerObject) ;
+    if (ObjectIsMarkedMakeImpassibleWhenFree(G_playerObject))
+    {
+        ObjectMakeImpassable(G_playerObject);
+        ObjectMakeSolid(G_playerObject);
     }
 
     /* All fractional movement goes to zero. */
-    G_turnLeftFraction = PLAYER_MOVE_NONE ;
-    G_turnRightFraction = PLAYER_MOVE_NONE ;
-    G_slideLeftFraction = PLAYER_MOVE_NONE ;
-    G_slideRightFraction = PLAYER_MOVE_NONE ;
-    G_moveForwardFraction = PLAYER_MOVE_NONE ;
-    G_moveBackwardFraction = PLAYER_MOVE_NONE ;
+    G_turnLeftFraction = PLAYER_MOVE_NONE;
+    G_turnRightFraction = PLAYER_MOVE_NONE;
+    G_slideLeftFraction = PLAYER_MOVE_NONE;
+    G_slideRightFraction = PLAYER_MOVE_NONE;
+    G_moveForwardFraction = PLAYER_MOVE_NONE;
+    G_moveBackwardFraction = PLAYER_MOVE_NONE;
 
 /*
 foundVoid = Collide3dGetSectorsInBox(
@@ -722,14 +766,14 @@ for (i=0; i<numSectors; i++)  {
     /* Check to see if we are being crushed! */
     if (ObjectIsBeingCrushed(G_playerObject))
 //        StatsChangePlayerHealth(delta * -10) ;
-        StatsTakeDamage (EFFECT_DAMAGE_NORMAL,(delta*30));
+        StatsTakeDamage(EFFECT_DAMAGE_NORMAL, (delta * 30));
 
-    IPlayerUpdateStealth() ;
-    ObjectUnlinkCollisionLink(G_playerObject) ;
+    IPlayerUpdateStealth();
+    ObjectUnlinkCollisionLink(G_playerObject);
 
 //puts("<<<\n") ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -742,21 +786,22 @@ for (i=0; i<numSectors; i++)  {
  *  @return distance traveled in unaccurate terms.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetTravelDistance(T_void)
+T_word16
+PlayerGetTravelDistance(T_void)
 {
-    T_word16 distance ;
+    T_word16 distance;
 
-    DebugRoutine("PlayerGetTravelDistance") ;
+    DebugRoutine("PlayerGetTravelDistance");
 
     distance = CalculateDistance(
-                   G_lastPlayerX >> 16,
-                   G_lastPlayerY >> 16,
-                   PlayerGetX() >> 16,
-                   PlayerGetY() >> 16) ;
+        G_lastPlayerX >> 16,
+        G_lastPlayerY >> 16,
+        PlayerGetX() >> 16,
+        PlayerGetY() >> 16);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return distance ;
+    return distance;
 }
 
 /*-------------------------------------------------------------------------*
@@ -766,13 +811,14 @@ T_word16 PlayerGetTravelDistance(T_void)
  *  PlayerStopMoving causes the player to come to a complete halt.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerStopMoving(T_void)
+T_void
+PlayerStopMoving(T_void)
 {
-    DebugRoutine("PlayerStopMoving") ;
+    DebugRoutine("PlayerStopMoving");
 
-    ObjMoveStopMoving(&G_playerMove) ;
+    ObjMoveStopMoving(&G_playerMove);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -782,13 +828,14 @@ T_void PlayerStopMoving(T_void)
  *  PlayerAccelXYZ gives the player a push in a given direction.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerAccelXYZ(T_sword32 accelX, T_sword32 accelY, T_sword32 accelZ)
+T_void
+PlayerAccelXYZ(T_sword32 accelX, T_sword32 accelY, T_sword32 accelZ)
 {
-    DebugRoutine("PlayerAccelXYZ") ;
+    DebugRoutine("PlayerAccelXYZ");
 
-    ObjMoveAccelXYZ(&G_playerMove, accelX, accelY, accelZ) ;
+    ObjMoveAccelXYZ(&G_playerMove, accelX, accelY, accelZ);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -801,24 +848,28 @@ T_void PlayerAccelXYZ(T_sword32 accelX, T_sword32 accelY, T_sword32 accelZ)
  *  @return Friction under player.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetFriction(T_void)
+T_word16
+PlayerGetFriction(T_void)
 {
-    T_word16 friction ;
+    T_word16 friction;
 
-    DebugRoutine("PlayerGetFriction") ;
+    DebugRoutine("PlayerGetFriction");
 
     /* Are we under the effect of a sticky feet spell? */
-    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_STICKY_FEET))  {
+    if (EffectPlayerEffectIsActive(PLAYER_EFFECT_STICKY_FEET))
+    {
         /* sticky feet in effect */
-        friction = OBJMOVE_NORMAL_FRICTION ;
-    } else {
+        friction = OBJMOVE_NORMAL_FRICTION;
+    }
+    else
+    {
         /* Just regular friction */
-        friction = ObjMoveGetFriction(&G_playerMove) ;
+        friction = ObjMoveGetFriction(&G_playerMove);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return friction ;
+    return friction;
 }
 
 /*-------------------------------------------------------------------------*
@@ -831,18 +882,19 @@ T_word16 PlayerGetFriction(T_void)
  *  @return number of area sectors
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetNumAreaSectors(T_void)
+T_word16
+PlayerGetNumAreaSectors(T_void)
 {
-    T_word16 num ;
+    T_word16 num;
 
-    DebugRoutine("PlayerGetNumAreaSectors") ;
+    DebugRoutine("PlayerGetNumAreaSectors");
 
 //    num = ObjMoveGetNumAreaSectors(&G_playerMove) ;
-    num = ObjectGetNumAreaSectors(G_playerObject) ;
+    num = ObjectGetNumAreaSectors(G_playerObject);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return num ;
+    return num;
 }
 
 
@@ -856,18 +908,19 @@ T_word16 PlayerGetNumAreaSectors(T_void)
  *  @return Sector in list
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetNthAreaSector(T_word16 n)
+T_word16
+PlayerGetNthAreaSector(T_word16 n)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("PlayerGetNthAreaSector") ;
+    DebugRoutine("PlayerGetNthAreaSector");
 
 //    sector = ObjMoveGetNthAreaSector(&G_playerMove, n) ;
-    sector = ObjectGetNthAreaSector(G_playerObject, n) ;
+    sector = ObjectGetNthAreaSector(G_playerObject, n);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return sector ;
+    return sector;
 }
 
 /*-------------------------------------------------------------------------*
@@ -881,15 +934,16 @@ T_word16 PlayerGetNthAreaSector(T_word16 n)
  *  @param accel -- Acceleration amount
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerAccelDirection(T_word16 direction, T_sword16 accel)
+T_void
+PlayerAccelDirection(T_word16 direction, T_sword16 accel)
 {
-    T_sword32 xAccel, yAccel ;
+    T_sword32 xAccel, yAccel;
 
     DebugRoutine ("PlayerAccelDirection");
 
-    xAccel = (MathCosineLookup(direction)*accel*PlayerGetFriction())>>3;
-    yAccel = (MathSineLookup(direction)*accel*PlayerGetFriction())>>3;
-    PlayerAccelXYZ(xAccel, yAccel, 0) ;
+    xAccel = (MathCosineLookup(direction) * accel * PlayerGetFriction()) >> 3;
+    yAccel = (MathSineLookup(direction) * accel * PlayerGetFriction()) >> 3;
+    PlayerAccelXYZ(xAccel, yAccel, 0);
 
 //if (PlayerIsAboveGround() == FALSE)
 //  G_bob += accel ;
@@ -906,52 +960,62 @@ T_void PlayerAccelDirection(T_word16 direction, T_sword16 accel)
  *  is done, the view stays like it normally does.
  *
  *<!-----------------------------------------------------------------------*/
-static T_sword32 G_eyeBall = 0 ;
-static T_word32 G_lastEyed = 0 ;
+static T_sword32 G_eyeBall = 0;
+static T_word32 G_lastEyed = 0;
 
-T_void PlayerSetCameraView(T_void)
+T_void
+PlayerSetCameraView(T_void)
 {
-    T_sword16 bobHeight ;
-    T_sword32 bobHeight32 ;
-    T_word16 sector ;
-    T_sword16 ceiling ;
-    T_sword16 floor ;
-    T_sword16 eyeLevel ;
-    T_sword32 eyeLevel32 ;
-    T_word16 num ;
-    T_word16 i ;
-    T_sword32 diff ;
-    T_sword32 delta ;
-    T_sword32 step ;
+    T_sword16 bobHeight;
+    T_sword32 bobHeight32;
+    T_word16 sector;
+    T_sword16 ceiling;
+    T_sword16 floor;
+    T_sword16 eyeLevel;
+    T_sword32 eyeLevel32;
+    T_word16 num;
+    T_word16 i;
+    T_sword32 diff;
+    T_sword32 delta;
+    T_sword32 step;
 
-    DebugRoutine("PlayerSetCameraView") ;
+    DebugRoutine("PlayerSetCameraView");
 
     if (PlayerIsAboveGround() == FALSE)
 
-    if (!ClientIsPaused())
-        G_bob+=PlayerGetTravelDistance();
+        if (!ClientIsPaused())
+            G_bob += PlayerGetTravelDistance();
 
-    if (ConfigGetBobOffFlag())  {
-        bobHeight = 0 ;
-        bobHeight32 = 0 ;
-    } else {
-        bobHeight = (4 * MathSineLookup(G_bob << 9)) >> 15 ;
-        bobHeight32 = (4 * MathSineLookup(G_bob << 9)) << 1 ;
+    if (ConfigGetBobOffFlag())
+    {
+        bobHeight = 0;
+        bobHeight32 = 0;
     }
-    ObjectSetClimbHeight(PlayerGetObject(), StatsGetClimbHeight()) ;
+    else
+    {
+        bobHeight = (4 * MathSineLookup(G_bob << 9)) >> 15;
+        bobHeight32 = (4 * MathSineLookup(G_bob << 9)) << 1;
+    }
+    ObjectSetClimbHeight(PlayerGetObject(), StatsGetClimbHeight());
 
-    if (ClientIsDead())  {
+    if (ClientIsDead())
+    {
         eyeLevel = PlayerGetZ16() + 30;
-        eyeLevel32 = PlayerGetZ() + (30<<16) ;
-    } else {
-        eyeLevel = PlayerGetZ16() + StatsGetTallness() + bobHeight ;
-        eyeLevel32 = PlayerGetZ() + (StatsGetTallness() << 16) + bobHeight32 ;
+        eyeLevel32 = PlayerGetZ() + (30 << 16);
+    }
+    else
+    {
+        eyeLevel = PlayerGetZ16() + StatsGetTallness() + bobHeight;
+        eyeLevel32 = PlayerGetZ() + (StatsGetTallness() << 16) + bobHeight32;
     }
 
-    if ((G_lastEyed > TickerGet()) || (G_lastEyed == 0))  {
+    if ((G_lastEyed > TickerGet()) || (G_lastEyed == 0))
+    {
         /* Reset everything. */
-        G_eyeBall = eyeLevel32 ;
-    } else {
+        G_eyeBall = eyeLevel32;
+    }
+    else
+    {
         /* Follow the eye to where it needs to go. */
 #if 0
         delta = TickerGet() - G_lastEyed ;
@@ -965,7 +1029,7 @@ T_void PlayerSetCameraView(T_void)
         if (diff == 0)
             step = 0 ;
 
-MessagePrintf("delta: %d, diff: %d, step: %d, eye: %d\n", delta, diff>>16, step, G_eyeBall>>16) ;
+  MessagePrintf("delta: %d, diff: %d, step: %d, eye: %d\n", delta, diff>>16, step, G_eyeBall>>16) ;
         if ((eyeLevel32 > G_eyeBall) && ((G_eyeBall + step) > eyeLevel32))
             G_eyeBall = eyeLevel32 ;
         else if ((eyeLevel32 < G_eyeBall) && ((G_eyeBall + step) < eyeLevel32))
@@ -973,23 +1037,23 @@ MessagePrintf("delta: %d, diff: %d, step: %d, eye: %d\n", delta, diff>>16, step,
         else
             G_eyeBall += step ;
 #endif
-        delta = TickerGet() - G_lastEyed ;
+        delta = TickerGet() - G_lastEyed;
         if (delta > 19)
-            delta = 19 ;
-        diff = eyeLevel32 - G_eyeBall ;
+            delta = 19;
+        diff = eyeLevel32 - G_eyeBall;
         if (delta == 0)
-            step = 0 ;
+            step = 0;
         else
-            step = (7 * diff) / (20 - delta) ;
+            step = (7 * diff) / (20 - delta);
         if (step < 0)
-            step *= 2 ;
+            step *= 2;
 
         if ((eyeLevel32 > G_eyeBall) && ((G_eyeBall + step) > eyeLevel32))
-            G_eyeBall = eyeLevel32 ;
+            G_eyeBall = eyeLevel32;
         else if ((eyeLevel32 < G_eyeBall) && ((G_eyeBall + step) < eyeLevel32))
-            G_eyeBall = eyeLevel32 ;
+            G_eyeBall = eyeLevel32;
         else
-            G_eyeBall += step ;
+            G_eyeBall += step;
     }
 
 #if 0
@@ -1014,36 +1078,40 @@ MessagePrintf("delta: %d, diff: %d, step: %d, eye: %d\n", delta, diff>>16, step,
     }
 #endif
     /* Make sure we are below the ceiling and above the floor. */
-    eyeLevel = G_eyeBall >> 16 ;
-    num = PlayerGetNumAreaSectors() ;
-    for (i=0; i<num; i++)  {
-        sector = PlayerGetNthAreaSector(i) ;
-        ceiling = MapGetCeilingHeight(sector) ;
-        floor = MapGetFloorHeight(sector) ;
+    eyeLevel = G_eyeBall >> 16;
+    num = PlayerGetNumAreaSectors();
+    for (i = 0; i < num; i++)
+    {
+        sector = PlayerGetNthAreaSector(i);
+        ceiling = MapGetCeilingHeight(sector);
+        floor = MapGetFloorHeight(sector);
 
-        if (eyeLevel+3 >= ceiling)  {
-            eyeLevel = ceiling-3 ;
-            G_eyeBall = eyeLevel<<16 ;
+        if (eyeLevel + 3 >= ceiling)
+        {
+            eyeLevel = ceiling - 3;
+            G_eyeBall = eyeLevel << 16;
         }
-        if (eyeLevel-3 <= floor)  {
-            eyeLevel = floor+3 ;
-            G_eyeBall = eyeLevel<<16 ;
+        if (eyeLevel - 3 <= floor)
+        {
+            eyeLevel = floor + 3;
+            G_eyeBall = eyeLevel << 16;
         }
-        if (eyeLevel >= ceiling)  {
-            eyeLevel = ceiling ;
-            G_eyeBall = eyeLevel<<16 ;
+        if (eyeLevel >= ceiling)
+        {
+            eyeLevel = ceiling;
+            G_eyeBall = eyeLevel << 16;
         }
     }
 
-    G_lastEyed = TickerGet() ;
+    G_lastEyed = TickerGet();
 
     View3dSetView(
         PlayerGetX16(),
         PlayerGetY16(),
         G_eyeBall,
-        PlayerGetAngle()) ;
+        PlayerGetAngle());
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1059,26 +1127,30 @@ MessagePrintf("delta: %d, diff: %d, step: %d, eye: %d\n", delta, diff>>16, step,
  *  @param angle -- Angle to face when moved.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerTeleport(T_sword16 x, T_sword16 y, T_word16 angle)
+T_void
+PlayerTeleport(T_sword16 x, T_sword16 y, T_word16 angle)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("PlayerTeleport") ;
+    DebugRoutine("PlayerTeleport");
 
-    sector = View3dFindSectorNum(x, y) ;
-    if (sector != 0xFFFF)  {
+    sector = View3dFindSectorNum(x, y);
+    if (sector != 0xFFFF)
+    {
 //printf("Player teleporting to %d %d\n", x, y) ;
-        ObjectTeleport(G_playerObject, x, y) ;
-        G_lastEyed = 0 ;
+        ObjectTeleport(G_playerObject, x, y);
+        G_lastEyed = 0;
 //puts("Player set angle") ; fflush(stdout) ;
-        PlayerSetAngle(angle) ;
-        PlayerUpdatePosInfo() ;
-        PlayerSetCameraView() ;
+        PlayerSetAngle(angle);
+        PlayerUpdatePosInfo();
+        PlayerSetCameraView();
 
         /* If we actually teleported, note it. */
         if ((PlayerGetX16() == x) && (PlayerGetY16() == y))
-            PlayerTeleported() ;
-    } else {
+            PlayerTeleported();
+    }
+    else
+    {
 #ifndef NDEBUG
         printf("Bad sector to teleport to! %d %d\n", x, y) ;
 #endif
@@ -1086,7 +1158,7 @@ T_void PlayerTeleport(T_sword16 x, T_sword16 y, T_word16 angle)
 
     ColorAddGlobal(63, 63, 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1096,13 +1168,14 @@ T_void PlayerTeleport(T_sword16 x, T_sword16 y, T_word16 angle)
  *  PlayerGetObject tells what the player object is.
  *
  *<!-----------------------------------------------------------------------*/
-T_3dObject *PlayerGetObject(T_void)
+T_3dObject *
+PlayerGetObject(T_void)
 {
 #ifdef SERVER_ONLY
     DebugCheck(FALSE) ;
     return NULL ;
 #endif
-    return G_playerObject ;
+    return G_playerObject;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1116,13 +1189,14 @@ T_3dObject *PlayerGetObject(T_void)
  *  @param dz -- Z External velocity
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerAddExternalVelocity(T_sword32 dx, T_sword32 dy, T_sword32 dz)
+T_void
+PlayerAddExternalVelocity(T_sword32 dx, T_sword32 dy, T_sword32 dz)
 {
     ObjMoveAddExternalVelocity(
         &G_playerObject->objMove,
         dx,
         dy,
-        dz) ;
+        dz);
 }
 
 /*-------------------------------------------------------------------------*
@@ -1134,17 +1208,18 @@ T_void PlayerAddExternalVelocity(T_sword32 dx, T_sword32 dy, T_sword32 dz)
  *  @return stance number
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetStance(T_void)
+T_word16
+PlayerGetStance(T_void)
 {
-    T_word16 stance ;
-    DebugRoutine("PlayerGetStance") ;
+    T_word16 stance;
+    DebugRoutine("PlayerGetStance");
 
-    stance = ObjectGetStance(PlayerGetObject()) ;
+    stance = ObjectGetStance(PlayerGetObject());
 
-    DebugCheck(stance < STANCE_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(stance < STANCE_UNKNOWN);
+    DebugEnd();
 
-    return stance ;
+    return stance;
 }
 
 
@@ -1158,25 +1233,28 @@ T_word16 PlayerGetStance(T_void)
  *  @param stance -- stance number
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetStance(T_word16 stance)
+T_void
+PlayerSetStance(T_word16 stance)
 {
-    DebugRoutine("PlayerSetStance") ;
-    DebugCheck(stance < STANCE_UNKNOWN) ;
+    DebugRoutine("PlayerSetStance");
+    DebugCheck(stance < STANCE_UNKNOWN);
 
     /* Only do if we are in the game. */
-    if (ClientIsInView())  {
+    if (ClientIsInView())
+    {
         /* Are we allowed to change the stance yet? Always show attack stances. */
         if ((PlayerGetStance() == STANCE_STAND) ||
             (PlayerGetStance() == STANCE_WALK) ||
             (stance == STANCE_DIE) ||
-            ((PlayerGetStance() == STANCE_DIE) && (!ClientIsDead())))  {
+            ((PlayerGetStance() == STANCE_DIE) && (!ClientIsDead())))
+        {
 //printf("PlayerSetStance %d\n", stance) ;
             /* Set the new stance. */
-            ObjectSetStance(PlayerGetObject(), stance) ;
+            ObjectSetStance(PlayerGetObject(), stance);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1190,23 +1268,25 @@ T_void PlayerSetStance(T_word16 stance)
  *  @param newPart -- Number of new part
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSetBodyPart(
-           T_bodyPartLocation location,
-           T_word16 newPart)
+T_void
+PlayerSetBodyPart(
+    T_bodyPartLocation location,
+    T_word16 newPart)
 {
-    DebugRoutine("PlayerSetBodyPart") ;
-    DebugCheck(location < BODY_PART_LOCATION_UNKNOWN) ;
+    DebugRoutine("PlayerSetBodyPart");
+    DebugCheck(location < BODY_PART_LOCATION_UNKNOWN);
 
-    if (G_playerBodyParts[location] != newPart)  {
-        G_playerBodyParts[location] = newPart ;
+    if (G_playerBodyParts[location] != newPart)
+    {
+        G_playerBodyParts[location] = newPart;
 
 //printf("PlayerSetBodyPart: %d %d\n", location, newPart) ;
         ClientSyncSendActionChangeSelf(
             location,
-            newPart) ;
+            newPart);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1221,18 +1301,19 @@ T_void PlayerSetBodyPart(
  *  @return body type
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetBodyPart(T_bodyPartLocation location)
+T_word16
+PlayerGetBodyPart(T_bodyPartLocation location)
 {
-    T_word16 part ;
+    T_word16 part;
 
-    DebugRoutine("PlayerChangeBodyPart") ;
-    DebugCheck(location < BODY_PART_LOCATION_UNKNOWN) ;
+    DebugRoutine("PlayerChangeBodyPart");
+    DebugCheck(location < BODY_PART_LOCATION_UNKNOWN);
 
-    part = G_playerBodyParts[location] ;
+    part = G_playerBodyParts[location];
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return part ;
+    return part;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1246,10 +1327,11 @@ T_word16 PlayerGetBodyPart(T_bodyPartLocation location)
  *  @param y -- Y Location on the screen
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerDraw(T_word16 x, T_word16 y)
+T_void
+PlayerDraw(T_word16 x, T_word16 y)
 {
-    T_word16 i ;
-    T_bitmap *p_pic ;
+    T_word16 i;
+    T_bitmap *p_pic;
     static T_byte8 reorder[MAX_BODY_PARTS] = {
         BODY_PART_LOCATION_CHEST,
         BODY_PART_LOCATION_HEAD,
@@ -1258,29 +1340,31 @@ T_void PlayerDraw(T_word16 x, T_word16 y)
         BODY_PART_LOCATION_RIGHT_ARM,
         BODY_PART_LOCATION_WEAPON,
         BODY_PART_LOCATION_SHIELD,
-    } ;
-    T_byte8 name[80] ;
-    T_resource res ;
+    };
+    T_byte8 name[80];
+    T_resource res;
 
-    DebugRoutine("PlayerDraw") ;
+    DebugRoutine("PlayerDraw");
 
-    for (i=0; i<MAX_BODY_PARTS; i++)  {
-        if (G_playerBodyParts[i])   {
-            sprintf(name, "OBJS/%05d/32000", G_playerBodyParts[i] & 0x0FFF) ;
+    for (i = 0; i < MAX_BODY_PARTS; i++)
+    {
+        if (G_playerBodyParts[i])
+        {
+            sprintf(name, "OBJS/%05d/32000", G_playerBodyParts[i] & 0x0FFF);
 //printf("Drawing body part %s at %d\n", name, i) ; fflush(stdout) ;
-            p_pic = (T_bitmap *)PictureLockData(name, &res) ;
-            DebugCheck(p_pic != NULL) ;
+            p_pic = (T_bitmap *) PictureLockData(name, &res);
+            DebugCheck(p_pic != NULL);
 //printf("Size (%d, %d)\n", p_pic->sizex, p_pic->sizey) ; fflush(stdout) ;
             GrDrawCompressedBitmapAndClipAndColor(
                 p_pic,
-                x+32-(p_pic->sizey>>1),
-                y+64-p_pic->sizex,
-                G_playerBodyParts[i]>>12) ;
-            PictureUnlockAndUnfind(res) ;
+                x + 32 - (p_pic->sizey >> 1),
+                y + 64 - p_pic->sizex,
+                G_playerBodyParts[i] >> 12);
+            PictureUnlockAndUnfind(res);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1295,16 +1379,18 @@ T_void PlayerDraw(T_word16 x, T_word16 y)
  *  @param angle -- Angle to face when moved.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerTeleportAlways(T_sword16 x, T_sword16 y, T_word16 angle)
+T_void
+PlayerTeleportAlways(T_sword16 x, T_sword16 y, T_word16 angle)
 {
-    T_word16 sector ;
-    T_sword16 height ;
+    T_word16 sector;
+    T_sword16 height;
 
-    DebugRoutine("PlayerTeleportAlways") ;
+    DebugRoutine("PlayerTeleportAlways");
 
 //printf("Teleport always to %d %d\n", x, y) ;
-    sector = View3dFindSectorNum(x, y) ;
-    if (sector != 0xFFFF)  {
+    sector = View3dFindSectorNum(x, y);
+    if (sector != 0xFFFF)
+    {
         /* Get the height of the sector. */
         height = G_3dSectorArray[sector].floorHt;
 
@@ -1313,26 +1399,28 @@ T_void PlayerTeleportAlways(T_sword16 x, T_sword16 y, T_word16 angle)
             y,
             40,
             PlayerGetZ16(),
-            PlayerGetZ16() + ObjectGetHeight(PlayerGetObject())) ;
+            PlayerGetZ16() + ObjectGetHeight(PlayerGetObject()));
 
-        G_lastEyed = 0 ;
-        ObjectTeleportAlways(G_playerObject, x, y) ;
-        PlayerSetAngle(angle) ;
-        PlayerSetZ16(height) ;
+        G_lastEyed = 0;
+        ObjectTeleportAlways(G_playerObject, x, y);
+        PlayerSetAngle(angle);
+        PlayerSetZ16(height);
 
         /* Go directly to jail, do not pass GO ... */
-        PlayerSetCameraView() ;
+        PlayerSetCameraView();
 
-        sector = PlayerGetAreaSector() ;
-        G_lastSector = sector ;
+        sector = PlayerGetAreaSector();
+        G_lastSector = sector;
 //printf("TeleportAlways: Player at %d %d\n", PlayerGetX16(), PlayerGetY16()) ;
-    } else {
+    }
+    else
+    {
 #ifndef NDEBUG
         printf("TeleportALways: Bad sector to teleport to! %d %d\n", x, y) ;
 #endif
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1344,16 +1432,17 @@ T_void PlayerTeleportAlways(T_sword16 x, T_sword16 y, T_word16 angle)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerTurnLeft(T_word16 fraction)
+T_void
+PlayerTurnLeft(T_word16 fraction)
 {
-    DebugRoutine("PlayerTurnLeft") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerTurnLeft");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_turnLeftFraction = fraction ;
+    G_turnLeftFraction = fraction;
     if (fraction == 0)
-        G_turnLeftTotal = 0 ;
+        G_turnLeftTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1365,16 +1454,17 @@ T_void PlayerTurnLeft(T_word16 fraction)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerTurnRight(T_word16 fraction)
+T_void
+PlayerTurnRight(T_word16 fraction)
 {
-    DebugRoutine("PlayerTurnRight") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerTurnRight");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_turnRightFraction = fraction ;
+    G_turnRightFraction = fraction;
     if (fraction == 0)
-        G_turnRightTotal = 0 ;
+        G_turnRightTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1386,16 +1476,17 @@ T_void PlayerTurnRight(T_word16 fraction)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSlideLeft(T_word16 fraction)
+T_void
+PlayerSlideLeft(T_word16 fraction)
 {
-    DebugRoutine("PlayerSlideLeft") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerSlideLeft");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_slideLeftFraction = fraction ;
+    G_slideLeftFraction = fraction;
     if (fraction == 0)
-        G_slideLeftTotal = 0 ;
+        G_slideLeftTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1407,16 +1498,17 @@ T_void PlayerSlideLeft(T_word16 fraction)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerSlideRight(T_word16 fraction)
+T_void
+PlayerSlideRight(T_word16 fraction)
 {
-    DebugRoutine("PlayerSlideRight") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerSlideRight");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_slideRightFraction = fraction ;
+    G_slideRightFraction = fraction;
     if (fraction == 0)
-        G_slideRightTotal = 0 ;
+        G_slideRightTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1428,16 +1520,17 @@ T_void PlayerSlideRight(T_word16 fraction)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerMoveForward(T_word16 fraction)
+T_void
+PlayerMoveForward(T_word16 fraction)
 {
-    DebugRoutine("PlayerMoveForward") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerMoveForward");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_moveForwardFraction = fraction ;
+    G_moveForwardFraction = fraction;
     if (fraction == 0)
-        G_moveForwardTotal = 0 ;
+        G_moveForwardTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1449,16 +1542,17 @@ T_void PlayerMoveForward(T_word16 fraction)
  *  @param fraction -- fractional amount allowed
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerMoveBackward(T_word16 fraction)
+T_void
+PlayerMoveBackward(T_word16 fraction)
 {
-    DebugRoutine("PlayerMoveBackward") ;
-    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM) ;
+    DebugRoutine("PlayerMoveBackward");
+    DebugCheck(fraction < PLAYER_MOVE_MAXIMUM);
 
-    G_moveBackwardFraction = fraction ;
+    G_moveBackwardFraction = fraction;
     if (fraction == 0)
-        G_moveBackwardTotal = 0 ;
+        G_moveBackwardTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1468,25 +1562,26 @@ T_void PlayerMoveBackward(T_word16 fraction)
  *  PlayerMoveNone cancels all declared movement for this frame.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerMoveNone(T_void)
+T_void
+PlayerMoveNone(T_void)
 {
-    DebugRoutine("PlayerMoveNone") ;
+    DebugRoutine("PlayerMoveNone");
 
-    G_turnLeftFraction = PLAYER_MOVE_NONE ;
-    G_turnRightFraction = PLAYER_MOVE_NONE ;
-    G_slideLeftFraction = PLAYER_MOVE_NONE ;
-    G_slideRightFraction = PLAYER_MOVE_NONE ;
-    G_moveForwardFraction = PLAYER_MOVE_NONE ;
-    G_moveBackwardFraction = PLAYER_MOVE_NONE ;
+    G_turnLeftFraction = PLAYER_MOVE_NONE;
+    G_turnRightFraction = PLAYER_MOVE_NONE;
+    G_slideLeftFraction = PLAYER_MOVE_NONE;
+    G_slideRightFraction = PLAYER_MOVE_NONE;
+    G_moveForwardFraction = PLAYER_MOVE_NONE;
+    G_moveBackwardFraction = PLAYER_MOVE_NONE;
 
-    G_turnLeftTotal = 0 ;
-    G_turnRightTotal = 0 ;
-    G_slideLeftTotal = 0 ;
-    G_slideRightTotal = 0 ;
-    G_moveForwardTotal = 0 ;
-    G_moveBackwardTotal = 0 ;
+    G_turnLeftTotal = 0;
+    G_turnRightTotal = 0;
+    G_slideLeftTotal = 0;
+    G_slideRightTotal = 0;
+    G_moveForwardTotal = 0;
+    G_moveBackwardTotal = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1496,14 +1591,16 @@ T_void PlayerMoveNone(T_void)
  *  PlayerMoveNone cancels all declared movement for this frame.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PlayerGetLastSector(T_void)
+T_word16
+PlayerGetLastSector(T_void)
 {
-    return G_lastSector ;
+    return G_lastSector;
 }
 
-T_void PlayerSetLastSector(T_word16 lastSector)
+T_void
+PlayerSetLastSector(T_word16 lastSector)
 {
-    G_lastSector = lastSector ;
+    G_lastSector = lastSector;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1516,182 +1613,204 @@ T_void PlayerSetLastSector(T_word16 lastSector)
  *  @param distance -- How far to jump forward
  *
  *<!-----------------------------------------------------------------------*/
-T_void PlayerJumpForward(T_word16 distance)
+T_void
+PlayerJumpForward(T_word16 distance)
 {
-    T_sword32 newX, newY, newZ ;
+    T_sword32 newX, newY, newZ;
 
-    newZ = PlayerGetZ() ;
+    newZ = PlayerGetZ();
     ObjectGetForwardPosition(
         PlayerGetObject(),
         distance,
         &newX,
-        &newY) ;
+        &newY);
     Collide3dMoveToXYZ(
         PlayerGetObject(),
         newX,
         newY,
-        newZ) ;
-    newZ = PlayerGetZ() ;
-    ObjectSetUpSectors(PlayerGetObject()) ;
-    ObjectUnlinkCollisionLink(G_playerObject) ;
-    PlayerSetZ(newZ) ;
-    ObjectForceUpdate(PlayerGetObject()) ;
-    ObjectSetMovedFlag(PlayerGetObject()) ;
-    ObjectUpdateZVel(PlayerGetObject(), 1) ;
+        newZ);
+    newZ = PlayerGetZ();
+    ObjectSetUpSectors(PlayerGetObject());
+    ObjectUnlinkCollisionLink(G_playerObject);
+    PlayerSetZ(newZ);
+    ObjectForceUpdate(PlayerGetObject());
+    ObjectSetMovedFlag(PlayerGetObject());
+    ObjectUpdateZVel(PlayerGetObject(), 1);
 }
 
-E_Boolean PlayerInFakeMode(T_void)
+E_Boolean
+PlayerInFakeMode(T_void)
 {
     return G_playerIsFake;
 }
 
-T_void PlayerSetRealMode(T_void)
+T_void
+PlayerSetRealMode(T_void)
 {
-    DebugRoutine("PlayerSetRealMode") ;
+    DebugRoutine("PlayerSetRealMode");
 
 //printf("SetRealMode by %s\n", DebugGetCallerName()) ;  fflush(stdout) ;
 //    DebugCheck(G_playerIsFake) ;
-    if (G_playerIsFake)  {
-        DebugCheck(G_playerObject != NULL) ;
-        if (G_playerObject != NULL)  {
-            G_playerFakeObject.objMove = G_playerObject->objMove ;
-            G_playerObject->objMove = G_playerRealObject.objMove ;
-            G_playerObject->objServerId = G_playerRealObject.objServerId ;
-DebugCheck(G_playerObject->objServerId != 0) ;
-            G_playerObject->p_objType = G_playerRealObjType ;
-            G_playerIsFake = FALSE ;
+    if (G_playerIsFake)
+    {
+        DebugCheck(G_playerObject != NULL);
+        if (G_playerObject != NULL)
+        {
+            G_playerFakeObject.objMove = G_playerObject->objMove;
+            G_playerObject->objMove = G_playerRealObject.objMove;
+            G_playerObject->objServerId = G_playerRealObject.objServerId;
+            DebugCheck(G_playerObject->objServerId != 0);
+            G_playerObject->p_objType = G_playerRealObjType;
+            G_playerIsFake = FALSE;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void PlayerSetFakeMode(T_void)
+T_void
+PlayerSetFakeMode(T_void)
 {
-    DebugRoutine("PlayerSetFakeMode") ;
+    DebugRoutine("PlayerSetFakeMode");
 
-    DebugCheck(!G_playerIsFake) ;
-    if (!G_playerIsFake)  {
-        DebugCheck(G_playerObject != NULL) ;
-        if (G_playerObject != NULL)  {
-            G_playerRealObject.objMove = G_playerObject->objMove ;
-            G_playerObject->objMove = G_playerFakeObject.objMove ;
-            G_playerObject->objServerId = G_playerFakeObject.objServerId ;
-DebugCheck(G_playerObject->objServerId != 0) ;
-            G_playerObject->p_objType = G_playerFakeObjType ;
-            G_playerIsFake = TRUE ;
+    DebugCheck(!G_playerIsFake);
+    if (!G_playerIsFake)
+    {
+        DebugCheck(G_playerObject != NULL);
+        if (G_playerObject != NULL)
+        {
+            G_playerRealObject.objMove = G_playerObject->objMove;
+            G_playerObject->objMove = G_playerFakeObject.objMove;
+            G_playerObject->objServerId = G_playerFakeObject.objServerId;
+            DebugCheck(G_playerObject->objServerId != 0);
+            G_playerObject->p_objType = G_playerFakeObjType;
+            G_playerIsFake = TRUE;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void PlayerFakeOverwriteCurrent(T_void)
+T_void
+PlayerFakeOverwriteCurrent(T_void)
 {
-    DebugRoutine("PlayerFakeOverwriteCurrent") ;
+    DebugRoutine("PlayerFakeOverwriteCurrent");
 
 //printf("FakeOverwriteCurrent by %s\n", DebugGetCallerName()) ;  fflush(stdout) ;
-    DebugCheck(G_playerObject != NULL) ;
+    DebugCheck(G_playerObject != NULL);
 //    G_playerObject->objMove = G_playerFakeObject.objMove ;
-    G_playerRealObject.objMove = G_playerObject->objMove ;
+    G_playerRealObject.objMove = G_playerObject->objMove;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void IPlayerStoppedMakingSound(T_void *p_data)
+T_void
+IPlayerStoppedMakingSound(T_void *p_data)
 {
-    G_playerIsMakingSound = FALSE ;
+    G_playerIsMakingSound = FALSE;
 }
 
 /* Play a sound locally, but don't play it if we are still playing */
 /* another voicing. */
-T_void PlayerMakeSoundLocal(T_word16 soundNum)
+T_void
+PlayerMakeSoundLocal(T_word16 soundNum)
 {
-    DebugRoutine("PlayerMakeSoundLocal") ;
+    DebugRoutine("PlayerMakeSoundLocal");
 
     /* Don't do anything if we are already making a sound. */
-    if (G_playerIsMakingSound == FALSE)  {
-        G_playerIsMakingSound = TRUE ;
+    if (G_playerIsMakingSound == FALSE)
+    {
+        G_playerIsMakingSound = TRUE;
         SoundPlayByNumberWithCallback(
             soundNum,
             255,
             IPlayerStoppedMakingSound,
-            NULL) ;
+            NULL);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* Make a sound by send a create sound action to all the other players. */
 /* In this case, it is declared to be a "voicing" which means that */
 /* when the sound is to be played, it will be played with */
 /* PlayerMakeSoundLocal and not to be doubly played. */
-T_void PlayerMakeSoundGlobal(T_word16 soundNum, T_word16 radius)
+T_void
+PlayerMakeSoundGlobal(T_word16 soundNum, T_word16 radius)
 {
-    DebugRoutine("PlayerMakeSoundGlobal") ;
+    DebugRoutine("PlayerMakeSoundGlobal");
 
     /* Don't do anything if we are already making a sound. */
-    if (G_playerIsMakingSound == FALSE)  {
-        ClientSyncSendActionAreaSound(soundNum, radius, TRUE) ;
+    if (G_playerIsMakingSound == FALSE)
+    {
+        ClientSyncSendActionAreaSound(soundNum, radius, TRUE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-E_Boolean PlayerIsStealthy(T_void)
+E_Boolean
+PlayerIsStealthy(T_void)
 {
-    return G_playerIsStealthy ;
+    return G_playerIsStealthy;
 }
 
-static T_void IPlayerUpdateStealth(T_void)
+static T_void
+IPlayerUpdateStealth(T_void)
 {
-    T_word16 stealthLevel ;
+    T_word16 stealthLevel;
 
     /* Update our stealth checks. */
-    if (TickerGet() >= G_nextStealthCheck)  {
+    if (TickerGet() >= G_nextStealthCheck)
+    {
         /* Are we moving or standing still? */
         if ((ObjectGetXVel(G_playerObject) != 0) ||
             (ObjectGetYVel(G_playerObject) != 0) ||
-            (ObjectGetZVel(G_playerObject) != 0))  {
+            (ObjectGetZVel(G_playerObject) != 0))
+        {
             /* Moving around. */
             /* Check again in a second. */
-            G_nextStealthCheck = TickerGet() + 70 ;
-        } else {
+            G_nextStealthCheck = TickerGet() + 70;
+        }
+        else
+        {
             /* Standing still. */
             /* Check again in three seconds. */
-            G_nextStealthCheck = TickerGet() + 210 ;
+            G_nextStealthCheck = TickerGet() + 210;
         }
 
         /* Do our random check based on if we are translucent */
         /* or invisible. */
-        stealthLevel = StatsGetPlayerStealth()>>1 ;
+        stealthLevel = StatsGetPlayerStealth() >> 1;
 
         /* If invisible, minimum stealth level of 240. */
         if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_INVISIBLE)) &&
-                 (stealthLevel < 190))
-            stealthLevel = 190 ;
+            (stealthLevel < 190))
+            stealthLevel = 190;
 
         /* If translucent, minimum stealth level of 120. */
         if ((EffectPlayerEffectIsActive(PLAYER_EFFECT_TRANSLUCENT)) &&
-                 (stealthLevel < 100))
-            stealthLevel = 100 ;
+            (stealthLevel < 100))
+            stealthLevel = 100;
 
-        G_playerIsStealthy = ((rand() % 200) < stealthLevel) ? TRUE : FALSE ;
+        G_playerIsStealthy = ((rand() % 200) < stealthLevel) ? TRUE : FALSE;
     }
 }
 
-E_Boolean PlayerJustTeleported(T_void)
+E_Boolean
+PlayerJustTeleported(T_void)
 {
-    E_Boolean justTele = G_playerTeleported ;
+    E_Boolean justTele = G_playerTeleported;
 
-    G_playerTeleported = FALSE ;
+    G_playerTeleported = FALSE;
 
-    return justTele ;
+    return justTele;
 }
 
-T_void PlayerTeleported(T_void)
+T_void
+PlayerTeleported(T_void)
 {
-    G_playerTeleported = TRUE ;
+    G_playerTeleported = TRUE;
 }
 
 /** @} */

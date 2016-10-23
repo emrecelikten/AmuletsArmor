@@ -12,19 +12,21 @@
 #define VIEW_REGION_INTERIOR_HEIGHT (VIEW_REGION_HEIGHT-2)
 #define VIEW_REGION_INTERIOR_WIDTH (VIEW_REGION_WIDTH-2)
 
-T_void ViewRegionGoto(
-           T_word16 mapX,
-           T_word16 mapY,
-           T_word16 width,
-           T_word16 height) ;
+T_void
+ViewRegionGoto(
+    T_word16 mapX,
+    T_word16 mapY,
+    T_word16 width,
+    T_word16 height);
 
-T_void ViewRegionDraw(T_void) ;
+T_void ViewRegionDraw(T_void);
 
-T_void ViewRegionInitialize(T_void) ;
+T_void ViewRegionInitialize(T_void);
 
-T_void ViewRegionFinish(T_void) ;
+T_void ViewRegionFinish(T_void);
 
-T_void ViewRegionMoveToMouse(T_word16 mouseX, T_word16 mouseY) ;
+T_void
+ViewRegionMoveToMouse(T_word16 mouseX, T_word16 mouseY);
 
 #endif
 

@@ -19,12 +19,13 @@
 #define STATE_MACHINE_INSTANCE_TAG      (*((T_word32 *)"SmIt"))
 #define STATE_MACHINE_INSTANCE_DEAD_TAG (*((T_word32 *)"DsMi"))
 
-typedef struct {
-    T_word32 tag ;
-    T_word16 currentState ;
-    T_void *p_extraData ;
-    T_stateMachine *p_stateMachine ;
-} T_stateMachineInstance ;
+typedef struct
+{
+    T_word32 tag;
+    T_word16 currentState;
+    T_void *p_extraData;
+    T_stateMachine *p_stateMachine;
+} T_stateMachineInstance;
 
 /* A state of none means that no state has been declared yet */
 /* for the state machine.  This should only occur at the */
@@ -32,8 +33,9 @@ typedef struct {
 #define STATE_MACHINE_STATE_NONE 0xFFFF
 
 /* Internal prototypes: */
-static T_stateMachineInstance *IIsValidStateMachine(
-                                  T_stateMachineHandle handle) ;
+static T_stateMachineInstance *
+IIsValidStateMachine(
+    T_stateMachineHandle handle);
 
 /*-------------------------------------------------------------------------*
  * Routine:  StateMachineCreate
@@ -51,30 +53,32 @@ static T_stateMachineInstance *IIsValidStateMachine(
  *  @return Handle to state machine being worked
  *
  *<!-----------------------------------------------------------------------*/
-T_stateMachineHandle StateMachineCreate(T_stateMachine *p_stateMachine)
+T_stateMachineHandle
+StateMachineCreate(T_stateMachine *p_stateMachine)
 {
-    T_stateMachineInstance *p_machine ;
+    T_stateMachineInstance *p_machine;
 
-    DebugRoutine("StateMachineCreate") ;
-    DebugCheck(p_stateMachine != NULL) ;
+    DebugRoutine("StateMachineCreate");
+    DebugCheck(p_stateMachine != NULL);
 
     /* Allocate memory for the instance. */
     p_machine = (T_stateMachineInstance *)
-                  MemAlloc(sizeof(T_stateMachineInstance)) ;
-    DebugCheck(p_machine != NULL) ;
-    if (p_machine)  {
+        MemAlloc(sizeof(T_stateMachineInstance));
+    DebugCheck(p_machine != NULL);
+    if (p_machine)
+    {
         /* clear out the instance. */
-        memset(p_machine, 0, sizeof(T_stateMachineInstance)) ;
+        memset(p_machine, 0, sizeof(T_stateMachineInstance));
 
-        p_machine->tag = STATE_MACHINE_INSTANCE_TAG ;
-        p_machine->currentState = STATE_MACHINE_STATE_NONE ;
-        p_machine->p_extraData = NULL ;
-        p_machine->p_stateMachine = p_stateMachine ;
+        p_machine->tag = STATE_MACHINE_INSTANCE_TAG;
+        p_machine->currentState = STATE_MACHINE_STATE_NONE;
+        p_machine->p_extraData = NULL;
+        p_machine->p_stateMachine = p_stateMachine;
 
 //        printf("Created handle %p\n", p_stateMachine) ;
 
         if (p_stateMachine->initCallback)
-            p_stateMachine->initCallback((T_stateMachineHandle)p_machine) ;
+            p_stateMachine->initCallback((T_stateMachineHandle) p_machine);
 
 //        StateMachineGotoState(
 //            (T_stateMachineHandle)p_machine,
@@ -83,9 +87,9 @@ T_stateMachineHandle StateMachineCreate(T_stateMachine *p_stateMachine)
 
 
 //    DebugCompare("StateMachineCreate") ;
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_stateMachineHandle)p_machine) ;
+    return ((T_stateMachineHandle) p_machine);
 }
 
 /*-------------------------------------------------------------------------*
@@ -104,35 +108,37 @@ T_stateMachineHandle StateMachineCreate(T_stateMachine *p_stateMachine)
  *  @param handle -- Handle to state machine being worked
  *
  *<!-----------------------------------------------------------------------*/
-T_void StateMachineDestroy(T_stateMachineHandle handle)
+T_void
+StateMachineDestroy(T_stateMachineHandle handle)
 {
-    T_stateMachine *p_stateMachine ;
-    T_stateMachineInstance *p_machine ;
+    T_stateMachine *p_stateMachine;
+    T_stateMachineInstance *p_machine;
 
-    DebugRoutine("StateMachineDestroy") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineDestroy");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
         /* GEt a quick pointer to the state machine "form". */
-        p_stateMachine = p_machine->p_stateMachine ;
+        p_stateMachine = p_machine->p_stateMachine;
 
         /* Move to the 'non' state of the system. */
         /* This is make the state machine close out the */
         /* current state. */
-        StateMachineGotoState(handle, STATE_MACHINE_STATE_NONE) ;
+        StateMachineGotoState(handle, STATE_MACHINE_STATE_NONE);
 
         /* Call the finish callback if need be. */
         if (p_stateMachine->finishCallback)
-            p_stateMachine->finishCallback(handle) ;
+            p_stateMachine->finishCallback(handle);
 
         /* Now destroy all the associated data. */
-        p_machine->tag = STATE_MACHINE_INSTANCE_DEAD_TAG ;
-        MemFree(p_machine) ;
+        p_machine->tag = STATE_MACHINE_INSTANCE_DEAD_TAG;
+        MemFree(p_machine);
     }
 
 //    DebugCompare("StateMachineDestroy") ;
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -152,74 +158,81 @@ T_void StateMachineDestroy(T_stateMachineHandle handle)
  *  @param handle -- Handle to state machine being worked
  *
  *<!-----------------------------------------------------------------------*/
-T_void StateMachineUpdate(T_stateMachineHandle handle)
+T_void
+StateMachineUpdate(T_stateMachineHandle handle)
 {
-    T_stateMachine *p_stateMachine ;
-    T_stateMachineInstance *p_machine ;
-    T_stateMachineState *p_state ;
-    E_Boolean stateChangeFound = FALSE ;
-    T_word16 i ;
-    T_stateMachineConditional *p_cond ;
+    T_stateMachine *p_stateMachine;
+    T_stateMachineInstance *p_machine;
+    T_stateMachineState *p_state;
+    E_Boolean stateChangeFound = FALSE;
+    T_word16 i;
+    T_stateMachineConditional *p_cond;
 
-    DebugRoutine("StateMachineUpdate") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineUpdate");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
         /* Get a quick pointer to the state machine "form". */
-        p_stateMachine = p_machine->p_stateMachine ;
+        p_stateMachine = p_machine->p_stateMachine;
 
         /* Make sure we are not in the 'non' state. */
-        if (p_machine->currentState != STATE_MACHINE_STATE_NONE)  {
+        if (p_machine->currentState != STATE_MACHINE_STATE_NONE)
+        {
 //printf("State machine: update state: %d (%s)\n", p_machine->currentState, DebugGetCallerName()) ;
 //fflush(stdout) ;
             /* Get a pointer to the state info. */
             p_state = p_stateMachine->p_stateList +
-                          p_machine->currentState ;
+                p_machine->currentState;
 
             /* Go through the list of conditions and call each */
             /* looking for a TRUE (OK to change state). */
             /* If any one is found, do that state change. */
             /* If none are found, do an idle callback. */
-            for (i=0; i<p_state->numConditionals; i++)  {
+            for (i = 0; i < p_state->numConditionals; i++)
+            {
 //printf("State macine: update cond: %d\n", i) ;
 //fflush(stdout) ;
 //DebugCompare("StateMachineUpdate") ;
                 /* Find a conditional to check. */
-                p_cond = p_state->p_conditionalList + i ;
+                p_cond = p_state->p_conditionalList + i;
 
-                DebugCheck(p_cond->callback != NULL) ;
-                if (p_cond->callback)  {
+                DebugCheck(p_cond->callback != NULL);
+                if (p_cond->callback)
+                {
                     /* See if a state change is to be found. */
 //printf("extra data: %ld\n", p_cond->extraData) ;
                     if (p_cond->callback(
-                             handle,
-                             p_cond->extraData) == TRUE)  {
-                        stateChangeFound = TRUE ;
+                        handle,
+                        p_cond->extraData) == TRUE)
+                    {
+                        stateChangeFound = TRUE;
 
                         /* Change to the new state. */
                         StateMachineGotoState(
                             handle,
-                            p_cond->nextState) ;
+                            p_cond->nextState);
 
                         /* Stop looping. */
-                        break ;
+                        break;
                     }
                 }
             }
 
-            if (!stateChangeFound)   {
+            if (!stateChangeFound)
+            {
                 /* No state change, try doing an idle callback. */
                 if (p_state->idleCallback)
                     p_state->idleCallback(
                         handle,
-                        p_state->extraData) ;
+                        p_state->extraData);
             }
         }
     }
 
 //    DebugCompare("StateMachineUpdate") ;
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -234,23 +247,25 @@ T_void StateMachineUpdate(T_stateMachineHandle handle)
  *  @return A pointer to the attached data
  *
  *<!-----------------------------------------------------------------------*/
-T_void *StateMachineGetExtraData(T_stateMachineHandle handle)
+T_void *
+StateMachineGetExtraData(T_stateMachineHandle handle)
 {
-    T_void *p_data = NULL ;      /* Default answer. */
-    T_stateMachineInstance *p_machine ;
+    T_void *p_data = NULL;      /* Default answer. */
+    T_stateMachineInstance *p_machine;
 
-    DebugRoutine("StateMachineGetExtraData") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineGetExtraData");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
         /* Get the extra data. */
-        p_data = p_machine->p_extraData ;
+        p_data = p_machine->p_extraData;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_data ;
+    return p_data;
 }
 
 
@@ -265,20 +280,22 @@ T_void *StateMachineGetExtraData(T_stateMachineHandle handle)
  *  @param p_data -- Pointer to data
  *
  *<!-----------------------------------------------------------------------*/
-T_void StateMachineSetExtraData(T_stateMachineHandle handle, T_void *p_data)
+T_void
+StateMachineSetExtraData(T_stateMachineHandle handle, T_void *p_data)
 {
-    T_stateMachineInstance *p_machine ;
+    T_stateMachineInstance *p_machine;
 
-    DebugRoutine("StateMachineSetExtraData") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineSetExtraData");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
         /* Set the extra data. */
-        p_machine->p_extraData = p_data ;
+        p_machine->p_extraData = p_data;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -298,23 +315,25 @@ T_void StateMachineSetExtraData(T_stateMachineHandle handle, T_void *p_data)
  *  @return State number
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 StateMachineGetState(T_stateMachineHandle handle)
+T_word16
+StateMachineGetState(T_stateMachineHandle handle)
 {
-    T_word16 currentState ;
-    T_stateMachineInstance *p_machine ;
+    T_word16 currentState;
+    T_stateMachineInstance *p_machine;
 
-    DebugRoutine("StateMachineGetState") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineGetState");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
         /* Get the current state. */
-        currentState = p_machine->currentState ;
+        currentState = p_machine->currentState;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return currentState ;
+    return currentState;
 }
 
 /*-------------------------------------------------------------------------*
@@ -328,73 +347,80 @@ T_word16 StateMachineGetState(T_stateMachineHandle handle)
  *  @param stateNumber -- Number of state to go to
  *
  *<!-----------------------------------------------------------------------*/
-T_void StateMachineGotoState(
-           T_stateMachineHandle handle,
-           T_word16 stateNumber)
+T_void
+StateMachineGotoState(
+    T_stateMachineHandle handle,
+    T_word16 stateNumber)
 {
-    T_stateMachine *p_stateMachine ;
-    T_stateMachineInstance *p_machine ;
-    T_stateMachineState *p_state ;
-    E_Boolean isDestroyed = FALSE ;
+    T_stateMachine *p_stateMachine;
+    T_stateMachineInstance *p_machine;
+    T_stateMachineState *p_state;
+    E_Boolean isDestroyed = FALSE;
 
-    DebugRoutine("StateMachineGotoState") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("StateMachineGotoState");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
 
     /* Get a quick pointer. */
-    if ((p_machine = IIsValidStateMachine(handle)) != NULL)  {
+    if ((p_machine = IIsValidStateMachine(handle)) != NULL)
+    {
 //printf("State Machine %p going to state %d\n",
 //  handle,
 //  stateNumber) ;
 //fflush(stdout) ;
 
         /* GEt a quick pointer to the state machine "form". */
-        p_stateMachine = p_machine->p_stateMachine ;
+        p_stateMachine = p_machine->p_stateMachine;
 
         /* Check if this is a valid state */
         if ((stateNumber == STATE_MACHINE_STATE_NONE) ||
-            (stateNumber < p_stateMachine->numStates))  {
+            (stateNumber < p_stateMachine->numStates))
+        {
             /* This is a valid state to go to. */
 
             /* Are we going to the none state and thus */
             /* are being destroyed. */
             if (stateNumber == STATE_MACHINE_STATE_NONE)
-                isDestroyed = TRUE ;
+                isDestroyed = TRUE;
 
             /* Close out the old state we were in. */
-            if (p_machine->currentState != STATE_MACHINE_STATE_NONE)  {
+            if (p_machine->currentState != STATE_MACHINE_STATE_NONE)
+            {
                 /* Get a pointer to the old state info. */
                 p_state = p_stateMachine->p_stateList +
-                              p_machine->currentState ;
+                    p_machine->currentState;
 
                 /* Call the exit state callback if available. */
                 if (p_state->exitCallback)
                     p_state->exitCallback(
                         handle,
                         p_state->extraData,
-                        isDestroyed) ;
+                        isDestroyed);
             }
 
             /* Record this to be in the new state. */
-            p_machine->currentState = stateNumber ;
+            p_machine->currentState = stateNumber;
 
             /* Start up the new state we are going to. */
-            if (stateNumber != STATE_MACHINE_STATE_NONE)  {
+            if (stateNumber != STATE_MACHINE_STATE_NONE)
+            {
                 /* Get a pointer to the new state info. */
-                p_state = &(p_stateMachine->p_stateList[stateNumber]) ;
+                p_state = &(p_stateMachine->p_stateList[stateNumber]);
 
                 /* Call the enter state callback if availabale. */
                 if (p_state->enterCallback)
                     p_state->enterCallback(
                         handle,
-                        p_state->extraData) ;
+                        p_state->extraData);
             }
-        } else {
-            DebugCheck(FALSE) ;
+        }
+        else
+        {
+            DebugCheck(FALSE);
         }
     }
 
 //    DebugCompare("StateMachineGotoState") ;
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -410,22 +436,24 @@ T_void StateMachineGotoState(
  *      NULL.
  *
  *<!-----------------------------------------------------------------------*/
-static T_stateMachineInstance *IIsValidStateMachine(
-                                  T_stateMachineHandle handle)
+static T_stateMachineInstance *
+IIsValidStateMachine(
+    T_stateMachineHandle handle)
 {
-    T_stateMachineInstance *p_machine = NULL ;
+    T_stateMachineInstance *p_machine = NULL;
 
-    DebugRoutine("IIsValidStateMachine") ;
-    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD) ;
-    if (handle != STATE_MACHINE_HANDLE_BAD)  {
-        p_machine = (T_stateMachineInstance *)handle ;
-        DebugCheck(p_machine->tag == STATE_MACHINE_INSTANCE_TAG) ;
-        DebugCheck(p_machine->p_stateMachine != NULL) ;
+    DebugRoutine("IIsValidStateMachine");
+    DebugCheck(handle != STATE_MACHINE_HANDLE_BAD);
+    if (handle != STATE_MACHINE_HANDLE_BAD)
+    {
+        p_machine = (T_stateMachineInstance *) handle;
+        DebugCheck(p_machine->tag == STATE_MACHINE_INSTANCE_TAG);
+        DebugCheck(p_machine->p_stateMachine != NULL);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_machine ;
+    return p_machine;
 }
 
 /** @} */

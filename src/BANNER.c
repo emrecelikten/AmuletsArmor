@@ -20,11 +20,7 @@
 #include "COMWIN.H"
 #include "CONFIG.H"
 #include "CONTROL.H"
-#include "GENERAL.H"
-#include "GRAPHIC.H"
 #include "HARDFORM.H"
-#include "INIFILE.H"
-#include "INVENTOR.H"
 #include "KEYMAP.H"
 #include "KEYSCAN.H"
 #include "LOOK.H"
@@ -41,14 +37,15 @@
 #define MANA_BACKCOLOR 225
 #define NUM_AMMO_SLOTS 7
 
-typedef struct {
-        T_word16 x;
-        T_word16 y;
-        T_byte8 *p_name;
-        E_Boolean toggleType;
-        T_word16 key;
-        T_buttonHandler p_pressCallback;
-        T_buttonHandler p_releaseCallback;
+typedef struct
+{
+    T_word16 x;
+    T_word16 y;
+    T_byte8 *p_name;
+    E_Boolean toggleType;
+    T_word16 key;
+    T_buttonHandler p_pressCallback;
+    T_buttonHandler p_releaseCallback;
 } T_buttonCreateParms;
 
 static T_resource G_potionPics[MAX_POTION_PICS];
@@ -67,27 +64,27 @@ static T_TxtboxID G_bannerStatBoxes[5];
 #define NUMBER_RUNE_BUTTONS 9
 static E_Boolean G_bannerButtonsCreated = FALSE;
 static T_buttonID G_bannerButtons[NUMBER_BANNER_BUTTONS] = {
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL };
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL};
 static T_buttonID G_runeButtons[NUMBER_RUNE_BUTTONS] = {
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL };
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL};
 //static T_buttonID G_ammoButtons[NUM_AMMO_SLOTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 //static T_graphicID G_ammoGraphics[NUM_AMMO_SLOTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 static T_byte8 G_ammoSelected = 0;
@@ -95,9 +92,12 @@ static T_word16 G_ammoTypeSelected = 0;
 static T_byte8 G_numAmmoSlots = 0;
 
 /* internal routines here */
-static T_void BannerGetCoin(T_buttonID buttonID);
-static T_void BannerSelectAmmo(T_buttonID buttonID);
-static T_void BannerGetAmmo(T_buttonID buttonID);
+static T_void
+BannerGetCoin(T_buttonID buttonID);
+static T_void
+BannerSelectAmmo(T_buttonID buttonID);
+static T_void
+BannerGetAmmo(T_buttonID buttonID);
 
 /*-------------------------------------------------------------------------*
  * Routine:  BannerInit
@@ -107,7 +107,8 @@ static T_void BannerGetAmmo(T_buttonID buttonID);
  *  at the bottom of the screen.
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerInit(T_void)
+T_void
+BannerInit(T_void)
 {
     T_bitmap *b1;
     T_resource r1;
@@ -115,7 +116,7 @@ T_void BannerInit(T_void)
     DebugRoutine("BannerInit");
 
     /* Draw the boundaries of the screen. */
-    b1 = (T_bitmap *)PictureLockData("UI/3DUI/MAINBACK", &r1);
+    b1 = (T_bitmap *) PictureLockData("UI/3DUI/MAINBACK", &r1);
     GrDrawBitmap(b1, 0, 0);
     PictureUnlock(r1);
     PictureUnfind(r1);
@@ -163,7 +164,8 @@ T_void BannerInit(T_void)
  *  BannerUpdate updates all elements of the banner as necessary.
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerUpdate(T_void)
+T_void
+BannerUpdate(T_void)
 {
     static T_word32 lastupdate = 0;
     T_word32 time = 0;
@@ -174,7 +176,8 @@ T_void BannerUpdate(T_void)
     time = TickerGet();
     delta = time - lastupdate;
 
-    if (delta > 8) {
+    if (delta > 8)
+    {
         PotionUpdate();
         BannerUpdateManaDisplay();
         lastupdate = TickerGet();
@@ -190,7 +193,8 @@ T_void BannerUpdate(T_void)
  *  BannerFinish closes out all the stuff that makes up the banner.
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerFinish(T_void)
+T_void
+BannerFinish(T_void)
 {
 //    FILE *fp;
     T_iniFile ini;
@@ -247,7 +251,8 @@ T_void BannerFinish(T_void)
  *  buttons on top of the form
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerOpenForm(E_bannerFormType formtype)
+T_void
+BannerOpenForm(E_bannerFormType formtype)
 {
     T_byte8 stmp[48];
     T_byte8 *p_data;
@@ -268,23 +273,22 @@ T_void BannerOpenForm(E_bannerFormType formtype)
         NotesCloseNotesPage();
 
     /* check to see if we are opening the default form */
-    if (formtype == BANNER_FORM_CURRENT) {
+    if (formtype == BANNER_FORM_CURRENT)
+    {
         formtype = G_currentBannerFormType;
     }
 
     /* call any necessary de-initialization routines */
-    switch (G_currentBannerFormType) {
-        case BANNER_FORM_COMMUNICATE:
-            ComwinCloseCommunicatePage();
+    switch (G_currentBannerFormType)
+    {
+        case BANNER_FORM_COMMUNICATE:ComwinCloseCommunicatePage();
             KeyboardAllowKeyScans();
             break;
 
-        case BANNER_FORM_NOTES:
-            KeyboardAllowKeyScans();
+        case BANNER_FORM_NOTES:KeyboardAllowKeyScans();
             break;
 
-        default:
-            break;
+        default:break;
     }
 
     /* load the form file */
@@ -306,20 +310,21 @@ T_void BannerOpenForm(E_bannerFormType formtype)
     G_bannerIsOpen = TRUE;
 
     /* call any necessary initialization routines */
-    switch (formtype) {
-        case BANNER_FORM_INVENTORY:
-            InventoryDrawInventoryWindow(INVENTORY_PLAYER);
+    switch (formtype)
+    {
+        case BANNER_FORM_INVENTORY:InventoryDrawInventoryWindow(INVENTORY_PLAYER);
             break;
 
-        case BANNER_FORM_OPTIONS:
-            buttonID = FormGetObjID(301);
-            if (buttonID != NULL) {
+        case BANNER_FORM_OPTIONS:buttonID = FormGetObjID(301);
+            if (buttonID != NULL)
+            {
                 ButtonSetSelectPic(buttonID, "UI/CREATEC/CRC_TOG1");
                 if (G_musicOn)
                     ButtonDownNoAction(buttonID);
             }
             buttonID = FormGetObjID(302);
-            if (buttonID != NULL) {
+            if (buttonID != NULL)
+            {
                 ButtonSetSelectPic(buttonID, "UI/CREATEC/CRC_TOG1");
                 if (G_sfxOn)
                     ButtonDownNoAction(buttonID);
@@ -426,12 +431,12 @@ T_void BannerOpenForm(E_bannerFormType formtype)
 
             break;
 
-        case BANNER_FORM_STATISTICS:
-            StatsDisplayStatisticsPage();
+        case BANNER_FORM_STATISTICS:StatsDisplayStatisticsPage();
             /* display the character graphic */
             sprintf(stmp, "UI/3DUI/SMPORT%02d", StatsGetPlayerClassType());
 
-            if (PictureExist(stmp)) {
+            if (PictureExist(stmp))
+            {
                 res = PictureFind(stmp);
                 p_data = PictureLockQuick(res);
                 DebugCheck(p_data != NULL);
@@ -440,56 +445,51 @@ T_void BannerOpenForm(E_bannerFormType formtype)
             }
             break;
 
-        case BANNER_FORM_COMMUNICATE:
-            KeyboardDisallowKeyScans();
+        case BANNER_FORM_COMMUNICATE:KeyboardDisallowKeyScans();
             ComwinDisplayCommunicatePage();
             break;
 
-        case BANNER_FORM_EQUIPMENT:
-            InventoryDrawEquipmentWindow();
+        case BANNER_FORM_EQUIPMENT:InventoryDrawEquipmentWindow();
             break;
 
-        case BANNER_FORM_FINANCES:
-            BannerDisplayFinancesPage();
+        case BANNER_FORM_FINANCES:BannerDisplayFinancesPage();
             break;
 
         case BANNER_FORM_AMMO:
             /* set alternate button pictures and callbacks for buttons */
-            for (i = 0; i < NUM_AMMO_SLOTS; i++) {
+            for (i = 0; i < NUM_AMMO_SLOTS; i++)
+            {
                 buttonID = FormGetObjID(301 + i);
 //            ButtonSetSelectPic (buttonID,"UI/3DUI/AMMSELDN");
                 ButtonSetCallbacks(buttonID, BannerSelectAmmo,
-                        ButtonDownNoAction);
+                                   ButtonDownNoAction);
                 buttonID = FormGetObjID(308 + i);
                 ButtonSetCallbacks(buttonID, NULL, BannerGetAmmo);
             }
             BannerDisplayAmmoPage();
             break;
 
-        case BANNER_FORM_NOTES:
-            KeyboardDisallowKeyScans();
+        case BANNER_FORM_NOTES:KeyboardDisallowKeyScans();
             NotesOpenNotesPage();
             break;
 
-        case BANNER_FORM_JOURNAL:
-            NotesOpenJournalPage();
+        case BANNER_FORM_JOURNAL:NotesOpenJournalPage();
             break;
 
-        case BANNER_FORM_LOOK:
-            LookInit();
+        case BANNER_FORM_LOOK:LookInit();
             break;
 
-        case BANNER_FORM_CONTROL:
-            ControlDisplayControlPage();
+        case BANNER_FORM_CONTROL:ControlDisplayControlPage();
             break;
 
-        default:
-            break;
+        default:break;
     }
 
     /* fix the menu buttons */
-    if (G_bannerButtonsCreated == TRUE) {
-        for (i = 0; i < 9; i++) {
+    if (G_bannerButtonsCreated == TRUE)
+    {
+        for (i = 0; i < 9; i++)
+        {
             if (i + 1 != formtype)
                 ButtonUpNoAction(G_bannerButtons[i]);
             else
@@ -510,7 +510,8 @@ T_void BannerOpenForm(E_bannerFormType formtype)
  *  Deletes main menu buttons
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerCloseForm(T_void)
+T_void
+BannerCloseForm(T_void)
 {
     T_graphicID graphic;
 
@@ -525,7 +526,8 @@ T_void BannerCloseForm(T_void)
     /* restore the display screen to full view */
 
     View3dClipCenter(312);
-    if (HardFormIsOpen() == TRUE) {
+    if (HardFormIsOpen() == TRUE)
+    {
         graphic = GraphicCreate(209, 0, "UI/3DUI/CLOSEDBA");
         GraphicUpdateAllGraphics();
         GraphicDelete(graphic);
@@ -535,22 +537,21 @@ T_void BannerCloseForm(T_void)
 //	 GrDrawFrame (3,2,316,151,71);
 
     if (G_currentBannerFormType
-            > 0&& G_currentBannerFormType < 10 && G_bannerButtonsCreated==TRUE)ButtonUpNoAction
-        (G_bannerButtons[G_currentBannerFormType - 1]);
+        > 0 && G_currentBannerFormType < 10 && G_bannerButtonsCreated == TRUE)
+        ButtonUpNoAction
+            (G_bannerButtons[G_currentBannerFormType - 1]);
 
     /* deinitialize */
-    switch (G_currentBannerFormType) {
-        case BANNER_FORM_COMMUNICATE:
-            ComwinCloseCommunicatePage();
+    switch (G_currentBannerFormType)
+    {
+        case BANNER_FORM_COMMUNICATE:ComwinCloseCommunicatePage();
             KeyboardAllowKeyScans();
             break;
 
-        case BANNER_FORM_NOTES:
-            KeyboardAllowKeyScans();
+        case BANNER_FORM_NOTES:KeyboardAllowKeyScans();
             break;
 
-        default:
-            break;
+        default:break;
     }
 
     G_bannerIsOpen = FALSE;
@@ -566,7 +567,8 @@ T_void BannerCloseForm(T_void)
  *  Calls BannerOpenForm with the formtype specified by Button->data
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerOpenFormByButton(T_buttonID buttonID)
+T_void
+BannerOpenFormByButton(T_buttonID buttonID)
 {
     DebugRoutine("BannerOpenFormByButton");
     DebugCheck(buttonID != NULL);
@@ -577,8 +579,8 @@ T_void BannerOpenFormByButton(T_buttonID buttonID)
     DebugEnd();
 }
 
-
-T_void BannerCloseFormByButton(T_buttonID buttonID)
+T_void
+BannerCloseFormByButton(T_buttonID buttonID)
 {
     DebugRoutine("BannerCloseFormByButton");
 
@@ -597,10 +599,11 @@ T_void BannerCloseFormByButton(T_buttonID buttonID)
  *
  *<!-----------------------------------------------------------------------*/
 
-T_void BannerFormControl(
-        E_formObjectType objtype,
-        T_word16 objstatus,
-        T_word32 objID)
+T_void
+BannerFormControl(
+    E_formObjectType objtype,
+    T_word16 objstatus,
+    T_word32 objID)
 {
     T_sliderID MusicVolSlider, SfxVolSlider;
     T_buttonID MusicVolButton, SfxVolButton;
@@ -612,24 +615,36 @@ T_void BannerFormControl(
 //    fflush (stdout);
 
     if (objID == 300 && objtype == FORM_OBJECT_BUTTON
-            && objstatus == BUTTON_ACTION_RELEASED) {
+        && objstatus == BUTTON_ACTION_RELEASED)
+    {
         BannerCloseForm();
     }
 
-    else {
-        switch (G_currentBannerFormType) {
-            case BANNER_FORM_INVENTORY: {
-                if (objstatus == BUTTON_ACTION_RELEASED) {
-                    if (objID == 301) {
+    else
+    {
+        switch (G_currentBannerFormType)
+        {
+            case BANNER_FORM_INVENTORY:
+            {
+                if (objstatus == BUTTON_ACTION_RELEASED)
+                {
+                    if (objID == 301)
+                    {
                         /* eat selected */
                         //ClientEatOn();
-                    } else if (objID == 302) {
+                    }
+                    else if (objID == 302)
+                    {
                         /* equipment page selected */
                         BannerOpenForm(BANNER_FORM_EQUIPMENT);
-                    } else if (objID == 305) {
+                    }
+                    else if (objID == 305)
+                    {
                         /* last inventory window selected */
                         InventorySelectLastInventoryPage(INVENTORY_PLAYER);
-                    } else if (objID == 306) {
+                    }
+                    else if (objID == 306)
+                    {
                         /* next inventory window selected */
                         InventorySelectNextInventoryPage(INVENTORY_PLAYER);
                     }
@@ -639,9 +654,11 @@ T_void BannerFormControl(
 
             case BANNER_FORM_OPTIONS:
                 if (objtype == FORM_OBJECT_BUTTON
-                        || objtype == FORM_OBJECT_SLIDER) {
+                    || objtype == FORM_OBJECT_SLIDER)
+                {
                     if (objID == 301 || objID == 302 || objID == 600
-                            || objID == 601) {
+                        || objID == 601)
+                    {
                         MusicVolButton = FormGetObjID(301);
                         SfxVolButton = FormGetObjID(302);
                         MusicVolSlider = FormGetObjID(600);
@@ -655,8 +672,7 @@ T_void BannerFormControl(
                         if (ButtonIsPushed(SfxVolButton) == TRUE)
                             G_sfxOn = TRUE;
                         else
-                            G_sfxOn = FALSE;
-                        ;
+                            G_sfxOn = FALSE;;
 
                         G_musicVol = (SliderGetValue(MusicVolSlider));
                         G_sfxVol = (SliderGetValue(SfxVolSlider));
@@ -674,10 +690,13 @@ T_void BannerFormControl(
                 }
                 break;
 
-            case BANNER_FORM_EQUIPMENT: {
+            case BANNER_FORM_EQUIPMENT:
+            {
                 if (objtype == FORM_OBJECT_BUTTON
-                        && objstatus == BUTTON_ACTION_RELEASED) {
-                    if (objID == 301) {
+                    && objstatus == BUTTON_ACTION_RELEASED)
+                {
+                    if (objID == 301)
+                    {
                         /* to inventory page button selected */
                         BannerOpenForm(BANNER_FORM_INVENTORY);
                     }
@@ -685,11 +704,9 @@ T_void BannerFormControl(
             }
                 break;
 
-            case BANNER_FORM_AMMO:
-                break;
+            case BANNER_FORM_AMMO:break;
 
-            default:
-                break;
+            default:break;
         }
     }
 
@@ -707,26 +724,36 @@ T_void BannerFormControl(
  *  Don't call if already created.
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerCreateBottomButtons(T_void)
+T_void
+BannerCreateBottomButtons(T_void)
 {
-    T_byte8 i ;
-    T_byte8 spic[]="UI/3DUI/RUDBUT";
+    T_byte8 i;
+    T_byte8 spic[] = "UI/3DUI/RUDBUT";
 
     static T_buttonCreateParms buttonParms[NUMBER_BANNER_BUTTONS] = {
-        { 5,155,"UI/3DUI/MENUBUT1",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_7,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-        {22,155,"UI/3DUI/MENUBUT2",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_8,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-	    {39,155,"UI/3DUI/MENUBUT3",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_9,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-        { 5,169,"UI/3DUI/MENUBUT4",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_4,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-	    {22,169,"UI/3DUI/MENUBUT5",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_5,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-	    {39,169,"UI/3DUI/MENUBUT6",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_6,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-        { 5,183,"UI/3DUI/MENUBUT7",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_1,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
+        {5, 155, "UI/3DUI/MENUBUT1", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_7, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {22, 155, "UI/3DUI/MENUBUT2", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_8, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {39, 155, "UI/3DUI/MENUBUT3", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_9, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {5, 169, "UI/3DUI/MENUBUT4", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_4, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {22, 169, "UI/3DUI/MENUBUT5", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_5, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {39, 169, "UI/3DUI/MENUBUT6", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_6, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {5, 183, "UI/3DUI/MENUBUT7", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_1, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
 //	    {39,169,"UI/3DUI/MENUBUTN",FALSE,KeyDual(KEY_SCAN_CODE_KEYPAD_6,KEY_SCAN_CODE_ALT),NULL,NULL},
 //	    { 5,183,"UI/3DUI/MENUBUTN",FALSE,KeyDual(KEY_SCAN_CODE_KEYPAD_1,KEY_SCAN_CODE_ALT),NULL,NULL},
-	    {22,183,"UI/3DUI/MENUBUT8",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_2,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-	    {39,183,"UI/3DUI/MENUBUT9",TRUE,KeyDual(KEY_SCAN_CODE_KEYPAD_3,KEY_SCAN_CODE_ALT),BannerOpenFormByButton,BannerCloseFormByButton},
-	    {240,181,"UI/3DUI/CSTBUT2" ,FALSE,KEY_SCAN_CODE_KEYPAD_ENTER,SpellsCastSpell,NULL},
-	    { 93,186,"UI/3DUI/MUSEBUT2" ,FALSE,KEY_SCAN_CODE_CTRL,NULL,NULL}
-    } ;
+        {22, 183, "UI/3DUI/MENUBUT8", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_2, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {39, 183, "UI/3DUI/MENUBUT9", TRUE, KeyDual(KEY_SCAN_CODE_KEYPAD_3, KEY_SCAN_CODE_ALT), BannerOpenFormByButton,
+         BannerCloseFormByButton},
+        {240, 181, "UI/3DUI/CSTBUT2", FALSE, KEY_SCAN_CODE_KEYPAD_ENTER, SpellsCastSpell, NULL},
+        {93, 186, "UI/3DUI/MUSEBUT2", FALSE, KEY_SCAN_CODE_CTRL, NULL, NULL}
+    };
     static T_byte8 buttonKeyMaps[NUMBER_BANNER_BUTTONS] = {
         KEYMAP_INVENTORY,
         KEYMAP_EQUIPMENT,
@@ -739,29 +766,34 @@ T_void BannerCreateBottomButtons(T_void)
         KEYMAP_JOURNAL,
         KEYMAP_CAST_SPELL,
         KEYMAP_USE
-    } ;
+    };
 
     DebugRoutine("BannerCreateBottomButtons");
     DebugCheck(G_bannerButtonsCreated == FALSE);
 
     /* LES: Fix up the correct keys for the buttons. */
-    for (i = 0; i < NUMBER_BANNER_BUTTONS; i++) {
-        if (i < 9) {
+    for (i = 0; i < NUMBER_BANNER_BUTTONS; i++)
+    {
+        if (i < 9)
+        {
             buttonParms[i].key =
-                    KeyDual(KeyMap(buttonKeyMaps[i]), KEY_SCAN_CODE_ALT);
-        } else {
+                KeyDual(KeyMap(buttonKeyMaps[i]), KEY_SCAN_CODE_ALT);
+        }
+        else
+        {
             buttonParms[i].key = KeyMap(buttonKeyMaps[i]);
         }
     }
 
-    for (i = 0; i < NUMBER_BANNER_BUTTONS; i++) {
-        DebugCheck(G_bannerButtons[i]==NULL);
+    for (i = 0; i < NUMBER_BANNER_BUTTONS; i++)
+    {
+        DebugCheck(G_bannerButtons[i] == NULL);
         G_bannerButtons[i] = ButtonCreate(buttonParms[i].x, buttonParms[i].y,
-                buttonParms[i].p_name, buttonParms[i].toggleType,
-                buttonParms[i].key, buttonParms[i].p_pressCallback,
-                buttonParms[i].p_releaseCallback);
+                                          buttonParms[i].p_name, buttonParms[i].toggleType,
+                                          buttonParms[i].key, buttonParms[i].p_pressCallback,
+                                          buttonParms[i].p_releaseCallback);
 
-        DebugCheck(G_bannerButtons[i]!=NULL);
+        DebugCheck(G_bannerButtons[i] != NULL);
     }
     for (i = 0; i < 9; i++)
         ButtonSetData(G_bannerButtons[i], i + 1);
@@ -770,8 +802,10 @@ T_void BannerCreateBottomButtons(T_void)
     /* Make the buttons draw immediately. */
 //    GrScreenSet (GRAPHICS_ACTUAL_SCREEN);
     /* replace rune buttons if necessary */
-    for (i = 0; i < NUMBER_RUNE_BUTTONS; i++) {
-        if (StatsRuneIsAvailable(i)) {
+    for (i = 0; i < NUMBER_RUNE_BUTTONS; i++)
+    {
+        if (StatsRuneIsAvailable(i))
+        {
             BannerRemoveSpellButton(i);
             BannerAddSpellButton(i);
         }
@@ -782,8 +816,8 @@ T_void BannerCreateBottomButtons(T_void)
     DebugEnd();
 }
 
-
-E_Boolean BannerUseButtonIsDown(T_void)
+E_Boolean
+BannerUseButtonIsDown(T_void)
 {
     E_Boolean isdown = FALSE;
 
@@ -807,25 +841,31 @@ E_Boolean BannerUseButtonIsDown(T_void)
  *  You can call this multiple times.
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerDestroyBottomButtons(T_void)
+T_void
+BannerDestroyBottomButtons(T_void)
 {
     T_word16 i;
 
     DebugRoutine("BannerDestoryBottomButtons");
     /* Destroy each button individually. */
-    if (G_bannerButtonsCreated == TRUE) {
-        for (i = 0; i < NUMBER_BANNER_BUTTONS; i++) {
-            DebugCheck(G_bannerButtons[i]!=NULL);
-            if (G_bannerButtons[i] != NULL) {
+    if (G_bannerButtonsCreated == TRUE)
+    {
+        for (i = 0; i < NUMBER_BANNER_BUTTONS; i++)
+        {
+            DebugCheck(G_bannerButtons[i] != NULL);
+            if (G_bannerButtons[i] != NULL)
+            {
                 ButtonDelete(G_bannerButtons[i]);
 //                printf ("deleting banner button %d\n",i);
 //                fflush (stdout);
                 G_bannerButtons[i] = NULL;
             }
         }
-        for (i = 0; i < NUMBER_RUNE_BUTTONS; i++) {
+        for (i = 0; i < NUMBER_RUNE_BUTTONS; i++)
+        {
 //          DebugCheck (G_runeButtons[i]!=NULL);
-            if (G_runeButtons[i] != NULL) {
+            if (G_runeButtons[i] != NULL)
+            {
                 ButtonDelete(G_runeButtons[i]);
 //                printf ("deleting rune button %d\n",i);
 //                fflush (stdout);
@@ -838,13 +878,15 @@ T_void BannerDestroyBottomButtons(T_void)
     DebugEnd();
 }
 
-T_void BannerRedrawBottomButtons(T_void)
+T_void
+BannerRedrawBottomButtons(T_void)
 {
     T_word16 i;
 
     DebugRoutine("BannerRedrawBottomButtons");
 
-    if (G_bannerButtonsCreated == TRUE) {
+    if (G_bannerButtonsCreated == TRUE)
+    {
         for (i = 0; i < NUMBER_BANNER_BUTTONS; i++)
             ButtonRedraw(G_bannerButtons[i]);
         for (i = 0; i < NUMBER_RUNE_BUTTONS; i++)
@@ -863,14 +905,16 @@ T_void BannerRedrawBottomButtons(T_void)
  *  banner.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PotionInit(T_void)
+T_void
+PotionInit(T_void)
 {
     T_byte8 potionName[] = "UI/3DUI/POTION?";
     T_word16 i;
 
     DebugRoutine("PotionInit");
     /* Find each of the pictures so we can lock them into memory. */
-    for (i = 0; i < MAX_POTION_PICS; i++) {
+    for (i = 0; i < MAX_POTION_PICS; i++)
+    {
         potionName[14] = i + '0';
 
         G_potionPics[i] = PictureFind(potionName);
@@ -888,13 +932,15 @@ T_void PotionInit(T_void)
  *  banner.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PotionFinish(T_void)
+T_void
+PotionFinish(T_void)
 {
     T_word16 i;
 
     DebugRoutine("PotionFinish");
 
-    if (G_potionCreated == TRUE) {
+    if (G_potionCreated == TRUE)
+    {
         /* Remove each picture's reference. */
         for (i = 0; i < MAX_POTION_PICS; i++)
             PictureUnfind(G_potionPics[i]);
@@ -911,14 +957,15 @@ T_void PotionFinish(T_void)
  *  PotionUpdate animates the potion
  *
  *<!-----------------------------------------------------------------------*/
-T_void PotionUpdate(T_void)
+T_void
+PotionUpdate(T_void)
 {
     static T_byte8 potionFrame = 0;
     const float potiondepth = 192.0 - 157.0;
-    static T_byte8 bubbled[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    static T_byte8 surface[4] = { 0, 0, 0, 0 };
-    const T_byte8 potioncolor[4] = { 147, 38, 134, 54 };
-    static T_byte8 pdepth[4] = { 0, 0, 0, 0 };
+    static T_byte8 bubbled[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    static T_byte8 surface[4] = {0, 0, 0, 0};
+    const T_byte8 potioncolor[4] = {147, 38, 134, 54};
+    static T_byte8 pdepth[4] = {0, 0, 0, 0};
 
     T_screen curscreen, tempscreen;
     T_byte8 *p_data;
@@ -931,7 +978,8 @@ T_void PotionUpdate(T_void)
 
     DebugRoutine("PotionUpdate");
 
-    if (G_potionCreated == TRUE) {
+    if (G_potionCreated == TRUE)
+    {
         potionFrame++;
 
         if (rand() % 5 == 2)
@@ -949,7 +997,8 @@ T_void PotionUpdate(T_void)
         res = G_potionPics[potionFrame];
         p_data = PictureLockQuick(res);
         DebugCheck(p_data != NULL);
-        if (p_data != NULL) {
+        if (p_data != NULL)
+        {
             GrDrawBitmap(PictureToBitmap(p_data), 61, 0);   //155
             PictureUnlock(res);
         }
@@ -957,27 +1006,28 @@ T_void PotionUpdate(T_void)
         /* now, draw background red over 'top' of potion to show
          levels */
 
-        pcts[0] = (float)StatsGetPlayerHealth()
-                / (float)StatsGetPlayerMaxHealth();
-        pcts[1] = (float)StatsGetPlayerMana() / (float)StatsGetPlayerMaxMana();
-        pcts[2] = (float)StatsGetPlayerFood() / (float)StatsGetPlayerMaxFood();
+        pcts[0] = (float) StatsGetPlayerHealth()
+            / (float) StatsGetPlayerMaxHealth();
+        pcts[1] = (float) StatsGetPlayerMana() / (float) StatsGetPlayerMaxMana();
+        pcts[2] = (float) StatsGetPlayerFood() / (float) StatsGetPlayerMaxFood();
         pcts[3] =
-                (float)StatsGetPlayerWater() / (float)StatsGetPlayerMaxWater();
+            (float) StatsGetPlayerWater() / (float) StatsGetPlayerMaxWater();
 
-        for (i = 0; i < 4; i++) {
-            depth = (int)((1.0 - pcts[i]) * potiondepth);
+        for (i = 0; i < 4; i++)
+        {
+            depth = (int) ((1.0 - pcts[i]) * potiondepth);
             if (depth > pdepth[i])
                 pdepth[i]++;
             else if (depth < pdepth[i])
                 pdepth[i]--;
 
             GrDrawRectangle(65 + i * 7, 2, 66 + i * 7, 2 + pdepth[i],
-                    BANNER_BASE_COLOR);
+                            BANNER_BASE_COLOR);
             GrDrawLine(64 + i * 7, 2, 67 + i * 7, 2, BANNER_BASE_COLOR);
 
             if (pdepth[i] > 32)
                 GrDrawRectangle(64 + i * 7, 34, 67 + i * 7,
-                        34 + (pdepth[i] - 32), BANNER_BASE_COLOR);
+                                34 + (pdepth[i] - 32), BANNER_BASE_COLOR);
 
             /* draw 'bubbles' */
 
@@ -987,16 +1037,18 @@ T_void PotionUpdate(T_void)
             if (randno == 2)
                 bubbled[i * 2 + 1] = 1;
 
-            if (bubbled[i * 2] > 0 && pdepth[i] < potiondepth) {
+            if (bubbled[i * 2] > 0 && pdepth[i] < potiondepth)
+            {
                 GrDrawPixel(65 + i * 7, 3 + pdepth[i] - bubbled[i * 2],
-                        potioncolor[i]);
+                            potioncolor[i]);
                 bubbled[i * 2]++;
                 if (bubbled[i * 2] > 2)
                     bubbled[i * 2] = 0;
             }
-            if (bubbled[i * 2 + 1] > 0 && pdepth[i] < potiondepth) {
+            if (bubbled[i * 2 + 1] > 0 && pdepth[i] < potiondepth)
+            {
                 GrDrawPixel(66 + i * 7, 3 + pdepth[i] - bubbled[i * 2 + 1],
-                        potioncolor[i]);
+                            potioncolor[i]);
                 bubbled[i * 2 + 1]++;
                 if (bubbled[i * 2 + 1] > 2)
                     bubbled[i * 2 + 1] = 0;
@@ -1006,9 +1058,10 @@ T_void PotionUpdate(T_void)
             if (randno > 15)
                 surface[i] = rand() % 3;
 
-            if (surface[i] > 0 && pdepth[i] < potiondepth) {
+            if (surface[i] > 0 && pdepth[i] < potiondepth)
+            {
                 GrDrawPixel(64 + i * 7 + surface[i], 3 + pdepth[i],
-                        BANNER_BASE_COLOR);
+                            BANNER_BASE_COLOR);
             }
 
         }
@@ -1031,26 +1084,27 @@ T_void PotionUpdate(T_void)
  *  Sets up the mini-status bar displayed at the bottom of the 3d banner
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerStatusBarInit(T_void)
+T_void
+BannerStatusBarInit(T_void)
 {
     DebugRoutine("BannerStatusBarInit");
 
     G_bannerStatsCreated = TRUE;
 
     G_bannerStatBoxes[0] = TxtboxCreate(140, 156, 168, 162, "FontTiny", 0, 0,
-            FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
+                                        FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
 
     G_bannerStatBoxes[1] = TxtboxCreate(140, 164, 168, 170, "FontTiny", 0, 0,
-            FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
+                                        FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
 
     G_bannerStatBoxes[2] = TxtboxCreate(140, 172, 168, 178, "FontTiny", 0, 0,
-            FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
+                                        FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
 
     G_bannerStatBoxes[3] = TxtboxCreate(140, 180, 168, 186, "FontTiny", 0, 0,
-            FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
+                                        FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
 
     G_bannerStatBoxes[4] = TxtboxCreate(140, 188, 168, 194, "FontTiny", 0, 0,
-            FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
+                                        FALSE, TRUE, Txtbox_MODE_VIEW_NOSCROLL_FORM, NULL);
 
 //   TxtboxSetData (G_bannerStatBoxes[0]," ");
 //   TxtboxSetData (G_bannerStatBoxes[1]," ");
@@ -1073,7 +1127,8 @@ T_void BannerStatusBarInit(T_void)
  *  accordingly
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerStatusBarUpdate(T_void)
+T_void
+BannerStatusBarUpdate(T_void)
 {
     T_word16 Health, HealthMax;
     T_word16 Mana, ManaMax;
@@ -1084,7 +1139,8 @@ T_void BannerStatusBarUpdate(T_void)
 
     DebugRoutine("BannerStatusBarUpdate");
 
-    if (G_bannerStatsCreated == TRUE) {
+    if (G_bannerStatsCreated == TRUE)
+    {
         Health = StatsGetPlayerHealth();
         HealthMax = StatsGetPlayerMaxHealth();
         sprintf(stmp, "%d/%d", ((Health + 99) / 100), ((HealthMax + 99) / 100));
@@ -1103,7 +1159,7 @@ T_void BannerStatusBarUpdate(T_void)
         sprintf(stmp, "%d%%", ((Water + 19) / 20));
         TxtboxSetData(G_bannerStatBoxes[3], stmp);
 
-        load = (float)(StatsGetPlayerLoad() / 10.0);
+        load = (float) (StatsGetPlayerLoad() / 10.0);
         sprintf(stmp, "%3.1f KG", load);
         TxtboxSetData(G_bannerStatBoxes[4], stmp);
     }
@@ -1120,7 +1176,8 @@ T_void BannerStatusBarUpdate(T_void)
  *  Removes text boxes created for the mini status display
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerStatusBarFinish(T_void)
+T_void
+BannerStatusBarFinish(T_void)
 {
     T_word16 i;
 
@@ -1142,7 +1199,8 @@ T_void BannerStatusBarFinish(T_void)
  *  This routine updates the mana available display
  *
  *<!-----------------------------------------------------------------------*/
-T_void BannerUpdateManaDisplay(T_void)
+T_void
+BannerUpdateManaDisplay(T_void)
 {
     T_sword16 Manaleft;
     T_sword16 i, j;
@@ -1194,7 +1252,8 @@ T_void BannerUpdateManaDisplay(T_void)
     b = ColorGetBlue(MANA_BACKCOLOR);
 
     /* update MANA_BACKCOLOR */
-    if (r > 20 || g > 0 || b > 0) {
+    if (r > 20 || g > 0 || b > 0)
+    {
         r -= 2;
         b -= 2;
         g -= 2;
@@ -1204,7 +1263,7 @@ T_void BannerUpdateManaDisplay(T_void)
             b = 0;
         if (g < 0)
             g = 0;
-        ColorSetColor(MANA_BACKCOLOR, (T_byte8)r, (T_byte8)g, (T_byte8)b);
+        ColorSetColor(MANA_BACKCOLOR, (T_byte8) r, (T_byte8) g, (T_byte8) b);
     }
 
     /* update plots */
@@ -1215,19 +1274,20 @@ T_void BannerUpdateManaDisplay(T_void)
         vel += 1.5;
     level += vel;
 
-    rpct = (float)StatsGetPlayerMana() / (float)StatsGetPlayerMaxMana();
+    rpct = (float) StatsGetPlayerMana() / (float) StatsGetPlayerMaxMana();
     if (pct < rpct)
-        pct += (float)0.05;
+        pct += (float) 0.05;
     else if (pct > rpct)
-        pct -= (float)0.05;
+        pct -= (float) 0.05;
 
     /* update plots */
-    plots[0][0] = ((deltay >> 1) + (T_word16)((float)level * pct));
+    plots[0][0] = ((deltay >> 1) + (T_word16) ((float) level * pct));
 
     if (plots[0][0] > deltay)
-        plots[0][0] = (T_byte8)deltay;
+        plots[0][0] = (T_byte8) deltay;
 
-    for (i = 20; i > 0; i--) {
+    for (i = 20; i > 0; i--)
+    {
         plots[3][i] = plots[2][i];
         plots[2][i] = plots[1][i];
         plots[1][i] = plots[0][i];
@@ -1236,18 +1296,19 @@ T_void BannerUpdateManaDisplay(T_void)
 
     /* draw plots */
     cnt = dispx1;
-    color = 44 - (T_sword32)((float)6.0 * pct);
+    color = 44 - (T_sword32) ((float) 6.0 * pct);
     if (pct > 0.90)
         color2 = 32;
     else
         color2 = color - 3;
 
-    for (i = 1; i < 20; i++) {
+    for (i = 1; i < 20; i++)
+    {
         GrDrawLine(cnt, plots[3][i], cnt + plotstep, plots[3][i + 1], color);
         GrDrawLine(cnt, plots[2][i], cnt + plotstep, plots[2][i + 1],
-                color - 1);
+                   color - 1);
         GrDrawLine(cnt, plots[1][i], cnt + plotstep, plots[1][i + 1],
-                color - 2);
+                   color - 2);
         GrDrawLine(cnt, plots[0][i], cnt + plotstep, plots[0][i + 1], color2);
         cnt += plotstep;
     }
@@ -1282,7 +1343,7 @@ T_void BannerUpdateManaDisplay(T_void)
     /* put graphic on screen */
     MouseHide();
     GrTransferRectangle(GRAPHICS_ACTUAL_SCREEN, dispx1, 0, dispx2, deltay,
-            dispx1, dispy1);
+                        dispx1, dispy1);
     MouseShow();
     GrScreenSet(GRAPHICS_ACTUAL_SCREEN);
     GrScreenFree(tempscreen);
@@ -1290,9 +1351,8 @@ T_void BannerUpdateManaDisplay(T_void)
     DebugEnd();
 }
 
-
-
-E_Boolean BannerIsOpen(T_void)
+E_Boolean
+BannerIsOpen(T_void)
 {
     E_Boolean retvalue = FALSE;
 
@@ -1305,7 +1365,8 @@ E_Boolean BannerIsOpen(T_void)
     return (retvalue);
 }
 
-E_Boolean BannerFormIsOpen(E_bannerFormType formtype)
+E_Boolean
+BannerFormIsOpen(E_bannerFormType formtype)
 {
     E_Boolean retvalue = FALSE;
 
@@ -1319,9 +1380,8 @@ E_Boolean BannerFormIsOpen(E_bannerFormType formtype)
     return (retvalue);
 }
 
-
-
-T_void BannerDisplayFinancesPage(T_void)
+T_void
+BannerDisplayFinancesPage(T_void)
 {
     T_TxtboxID TxtboxID;
     T_buttonID buttonID;
@@ -1331,7 +1391,8 @@ T_void BannerDisplayFinancesPage(T_void)
     /* get Txtbox ID's for finances form */
     /* and fill them out */
 
-    if (BannerFormIsOpen(BANNER_FORM_FINANCES)) {
+    if (BannerFormIsOpen(BANNER_FORM_FINANCES))
+    {
         TxtboxID = FormGetObjID(500);
         sprintf(stmp, "%d", StatsGetPlayerCoins(COIN_TYPE_PLATINUM));
         TxtboxSetData(TxtboxID, stmp);
@@ -1399,7 +1460,8 @@ T_void BannerDisplayFinancesPage(T_void)
 
 /* routine takes care of updating/displaying the Ammo page */
 /* note that the form BAN00007.FRM must be loaded and active first */
-T_void BannerDisplayAmmoPage(T_void)
+T_void
+BannerDisplayAmmoPage(T_void)
 {
     T_word16 i;
     T_byte8 slotcount = 0;
@@ -1411,8 +1473,9 @@ T_void BannerDisplayAmmoPage(T_void)
 
     DebugRoutine("BannerDisplayAmmoPage");
     /* iterate through all types of ammo, check to see if available */
-    for (i = 0; i < BOLT_TYPE_UNKNOWN; i++) {
-        if (StatsGetPlayerBolts(i)>0)
+    for (i = 0; i < BOLT_TYPE_UNKNOWN; i++)
+    {
+        if (StatsGetPlayerBolts(i) > 0)
         {
             /* Record the last bolt position on the list. */
             lastBoltType = i;
@@ -1420,63 +1483,55 @@ T_void BannerDisplayAmmoPage(T_void)
             /* set the text for the type field */
             switch (i)
             {
-                case BOLT_TYPE_NORMAL:
-                strcpy (stmp,"Normal bolt");
-                break;
-                case BOLT_TYPE_POISON:
-                strcpy (stmp,"Poison bolt");
-                break;
-                case BOLT_TYPE_PIERCING:
-                strcpy (stmp,"Piercing bolt");
-                break;
-                case BOLT_TYPE_FIRE:
-                strcpy (stmp,"Fire bolt");
-                break;
-                case BOLT_TYPE_ELECTRICITY:
-                strcpy (stmp,"Charged bolt");
-                break;
-                case BOLT_TYPE_ACID:
-                strcpy (stmp,"Acid bolt");
-                break;
-                case BOLT_TYPE_MANA_DRAIN:
-                strcpy (stmp,"Mana drain bolt");
-                break;
-                default:
-                DebugCheck (0);
-                break;
+                case BOLT_TYPE_NORMAL:strcpy (stmp, "Normal bolt");
+                    break;
+                case BOLT_TYPE_POISON:strcpy (stmp, "Poison bolt");
+                    break;
+                case BOLT_TYPE_PIERCING:strcpy (stmp, "Piercing bolt");
+                    break;
+                case BOLT_TYPE_FIRE:strcpy (stmp, "Fire bolt");
+                    break;
+                case BOLT_TYPE_ELECTRICITY:strcpy (stmp, "Charged bolt");
+                    break;
+                case BOLT_TYPE_ACID:strcpy (stmp, "Acid bolt");
+                    break;
+                case BOLT_TYPE_MANA_DRAIN:strcpy (stmp, "Mana drain bolt");
+                    break;
+                default:DebugCheck (0);
+                    break;
             }
 
-            TxtboxID=FormGetObjID(500+slotcount);
-            TxtboxSetData (TxtboxID,stmp);
+            TxtboxID = FormGetObjID(500 + slotcount);
+            TxtboxSetData(TxtboxID, stmp);
 
             /* set the field data for the number of ammo field */
-            sprintf (stmp,"%d",StatsGetPlayerBolts(i));
-            TxtboxID=FormGetObjID(507+slotcount);
-            TxtboxSetData (TxtboxID,stmp);
+            sprintf (stmp, "%d", StatsGetPlayerBolts(i));
+            TxtboxID = FormGetObjID(507 + slotcount);
+            TxtboxSetData(TxtboxID, stmp);
 
             /* push selected button down, otherwise up */
-            buttonID=FormGetObjID(301+slotcount);
-            ButtonSetData (buttonID,slotcount);
-            ButtonSetSubData (buttonID,i);
+            buttonID = FormGetObjID(301 + slotcount);
+            ButtonSetData(buttonID, slotcount);
+            ButtonSetSubData(buttonID, i);
 
-            if (G_ammoSelected==slotcount)
+            if (G_ammoSelected == slotcount)
             {
-                ButtonDownNoAction (buttonID);
-                G_ammoTypeSelected=i;
+                ButtonDownNoAction(buttonID);
+                G_ammoTypeSelected = i;
             }
             else
             {
-                ButtonUpNoAction (buttonID);
+                ButtonUpNoAction(buttonID);
             }
 
-            if (ButtonIsEnabled(buttonID)==FALSE)
-            ButtonEnable(buttonID);
+            if (ButtonIsEnabled(buttonID) == FALSE)
+                ButtonEnable(buttonID);
 
-            buttonID=FormGetObjID(308+slotcount);
-            ButtonSetData (buttonID,slotcount);
-            ButtonSetSubData (buttonID,i);
-            if (ButtonIsEnabled(buttonID)==FALSE)
-            ButtonEnable (buttonID);
+            buttonID = FormGetObjID(308 + slotcount);
+            ButtonSetData(buttonID, slotcount);
+            ButtonSetSubData(buttonID, i);
+            if (ButtonIsEnabled(buttonID) == FALSE)
+                ButtonEnable(buttonID);
 
 //          ButtonEnable (buttonID);
             /* increment slotcount */
@@ -1487,7 +1542,8 @@ T_void BannerDisplayAmmoPage(T_void)
     G_numAmmoSlots = slotcount;
 
     /* 'erase' the empty slots */
-    for (i = slotcount; i < NUM_AMMO_SLOTS; i++) {
+    for (i = slotcount; i < NUM_AMMO_SLOTS; i++)
+    {
         TxtboxID = FormGetObjID(500 + i);
         TxtboxSetData(TxtboxID, "");
 
@@ -1502,9 +1558,11 @@ T_void BannerDisplayAmmoPage(T_void)
         if (ButtonIsEnabled(buttonID))
             ButtonDisable(buttonID);
 //        ButtonSetCallbacks (buttonID,NULL,NULL);
-        if (G_ammoSelected == i) {
+        if (G_ammoSelected == i)
+        {
             /* move selected button */
-            if (ButtonIsEnabled(buttonID) != TRUE) {
+            if (ButtonIsEnabled(buttonID) != TRUE)
+            {
                 ButtonEnable(buttonID);
             }
             ButtonUpNoAction(buttonID);
@@ -1512,10 +1570,13 @@ T_void BannerDisplayAmmoPage(T_void)
             ButtonDisable(buttonID);
 
             /* Choose the selection over to the new one. */
-            if (slotcount > 0) {
+            if (slotcount > 0)
+            {
                 G_ammoSelected = slotcount - 1;
                 G_ammoTypeSelected = lastBoltType;
-            } else {
+            }
+            else
+            {
                 G_ammoSelected = 0;
                 G_ammoTypeSelected = BOLT_TYPE_NORMAL;
             }
@@ -1529,8 +1590,8 @@ T_void BannerDisplayAmmoPage(T_void)
     DebugEnd();
 }
 
-
-static T_void BannerSelectAmmo(T_buttonID buttonID)
+static T_void
+BannerSelectAmmo(T_buttonID buttonID)
 {
     DebugRoutine("BannerSelectAmmo");
     G_ammoSelected = ButtonGetData(buttonID);
@@ -1540,26 +1601,27 @@ static T_void BannerSelectAmmo(T_buttonID buttonID)
 }
 
 /* routine that returns the current bolt selection type */
-E_equipBoltTypes BannerGetSelectedAmmoType(T_void)
+E_equipBoltTypes
+BannerGetSelectedAmmoType(T_void)
 {
     E_equipBoltTypes retvalue = BOLT_TYPE_UNKNOWN;
     T_word16 i;
     DebugRoutine("BannerGetSelectedAmmoType");
 
-    if (StatsGetPlayerBolts(G_ammoTypeSelected)>0)
+    if (StatsGetPlayerBolts(G_ammoTypeSelected) > 0)
     {
-        retvalue=G_ammoTypeSelected;
+        retvalue = G_ammoTypeSelected;
     }
     else
     {
         /* try to find next slot */
-        for (i=BOLT_TYPE_NORMAL;i<BOLT_TYPE_UNKNOWN;i++)
+        for (i = BOLT_TYPE_NORMAL; i < BOLT_TYPE_UNKNOWN; i++)
         {
-            if (StatsGetPlayerBolts(i)>0)
+            if (StatsGetPlayerBolts(i) > 0)
             {
                 /* use these */
-                G_ammoTypeSelected=i;
-                retvalue=i;
+                G_ammoTypeSelected = i;
+                retvalue = i;
                 if (BannerFormIsOpen(BANNER_FORM_AMMO))
                 {
                     BannerDisplayAmmoPage();
@@ -1572,8 +1634,8 @@ E_equipBoltTypes BannerGetSelectedAmmoType(T_void)
     return (retvalue);
 }
 
-
-static T_void BannerGetAmmo(T_buttonID buttonID)
+static T_void
+BannerGetAmmo(T_buttonID buttonID)
 {
 //  T_byte8 stmp[32];
     T_byte8 whichbolt;
@@ -1587,102 +1649,91 @@ static T_void BannerGetAmmo(T_buttonID buttonID)
     whichbolt = ButtonGetSubData(buttonID);
     DebugCheck(whichbolt < BOLT_TYPE_UNKNOWN);
 
-    if (StatsGetPlayerBolts(whichbolt)>0 && InventoryObjectIsInMouseHand()==FALSE)
+    if (StatsGetPlayerBolts(whichbolt) > 0 && InventoryObjectIsInMouseHand() == FALSE)
     {
-        if (ClientIsPaused()) {
+        if (ClientIsPaused())
+        {
             MessageAdd("Cannot get ammo while paused.");
-        } else if (ClientIsDead()) {
+        }
+        else if (ClientIsDead())
+        {
             MessageAdd("Dead people cannot get ammo.");
-        } else {
-            if (StatsGetPlayerBolts(whichbolt)>11)
+        }
+        else
+        {
+            if (StatsGetPlayerBolts(whichbolt) > 11)
             {
                 /* remove a quiver */
                 /* get obj id for bolt */
                 switch (whichbolt)
                 {
-                    case BOLT_TYPE_NORMAL:
-                    objnum=144;
-                    break;
-                    case BOLT_TYPE_POISON:
-                    objnum=146;
-                    break;
-                    case BOLT_TYPE_PIERCING:
-                    objnum=147;
-                    break;
-                    case BOLT_TYPE_FIRE:
-                    objnum=145;
-                    break;
-                    case BOLT_TYPE_ELECTRICITY:
-                    objnum=149;
-                    break;
-                    case BOLT_TYPE_MANA_DRAIN:
-                    objnum=150;
-                    break;
-                    case BOLT_TYPE_ACID:
-                    objnum=148;
-                    break;
-                    default:
-                    DebugCheck(0);
-                    break;
+                    case BOLT_TYPE_NORMAL:objnum = 144;
+                        break;
+                    case BOLT_TYPE_POISON:objnum = 146;
+                        break;
+                    case BOLT_TYPE_PIERCING:objnum = 147;
+                        break;
+                    case BOLT_TYPE_FIRE:objnum = 145;
+                        break;
+                    case BOLT_TYPE_ELECTRICITY:objnum = 149;
+                        break;
+                    case BOLT_TYPE_MANA_DRAIN:objnum = 150;
+                        break;
+                    case BOLT_TYPE_ACID:objnum = 148;
+                        break;
+                    default:DebugCheck(0);
+                        break;
                 }
-                StatsAddBolt(whichbolt,-12);
+                StatsAddBolt(whichbolt, -12);
             }
             else
-            /* remove a bolt */
+                /* remove a bolt */
             {
                 /* get obj id for bolt */
                 switch (whichbolt)
                 {
-                    case BOLT_TYPE_NORMAL:
-                    objnum=206;
-                    break;
-                    case BOLT_TYPE_POISON:
-                    objnum=222;
-                    break;
-                    case BOLT_TYPE_PIERCING:
-                    objnum=229;
-                    break;
-                    case BOLT_TYPE_FIRE:
-                    objnum=218;
-                    break;
-                    case BOLT_TYPE_ELECTRICITY:
-                    objnum=241;
-                    break;
-                    case BOLT_TYPE_MANA_DRAIN:
-                    objnum=242;
-                    break;
-                    case BOLT_TYPE_ACID:
-                    objnum=240;
-                    break;
-                    default:
-                    DebugCheck(0);
-                    break;
+                    case BOLT_TYPE_NORMAL:objnum = 206;
+                        break;
+                    case BOLT_TYPE_POISON:objnum = 222;
+                        break;
+                    case BOLT_TYPE_PIERCING:objnum = 229;
+                        break;
+                    case BOLT_TYPE_FIRE:objnum = 218;
+                        break;
+                    case BOLT_TYPE_ELECTRICITY:objnum = 241;
+                        break;
+                    case BOLT_TYPE_MANA_DRAIN:objnum = 242;
+                        break;
+                    case BOLT_TYPE_ACID:objnum = 240;
+                        break;
+                    default:DebugCheck(0);
+                        break;
                 }
-                StatsAddBolt(whichbolt,-1);
+                StatsAddBolt(whichbolt, -1);
             }
 
             /* make the object */
-            object=ObjectCreateFake ();
-            ObjectSetType (object,objnum);
-            ObjectSetAngle (object,0x4000);
-            p_inv=InventoryTakeObject (INVENTORY_PLAYER,object);
+            object = ObjectCreateFake();
+            ObjectSetType(object, objnum);
+            ObjectSetAngle(object, 0x4000);
+            p_inv = InventoryTakeObject(INVENTORY_PLAYER, object);
             InventorySetMouseHandPointer(p_inv->elementID);
-            ControlSetObjectPointer (p_inv->object);
+            ControlSetObjectPointer(p_inv->object);
 
-            if (StoreIsOpen()==TRUE &&
-            StoreHouseModeIsOn()==FALSE)
+            if (StoreIsOpen() == TRUE &&
+                StoreHouseModeIsOn() == FALSE)
             {
-                value=StoreGetBuyValue(p_inv);
+                value = StoreGetBuyValue(p_inv);
                 /* find out if store will buy this type of item */
                 if (StoreWillBuy(p_inv->itemdesc.type) &&
-                value != 0)
+                    value != 0)
                 {
-                    StoreConvertCurrencyToString(stmp,value);
-                    MessagePrintf("^011I'll buy that for %s^011",stmp);
+                    StoreConvertCurrencyToString(stmp, value);
+                    MessagePrintf("^011I'll buy that for %s^011", stmp);
                 }
                 else
                 {
-                    MessageAdd ("^004I don't want to buy that.");
+                    MessageAdd("^004I don't want to buy that.");
                 }
             }
 
@@ -1697,7 +1748,8 @@ static T_void BannerGetAmmo(T_buttonID buttonID)
 }
 
 /* routine that retrieves a coin from the finance banner display */
-static T_void BannerGetCoin(T_buttonID buttonID)
+static T_void
+BannerGetCoin(T_buttonID buttonID)
 {
     T_word16 type;
     T_word16 objtype;
@@ -1707,49 +1759,53 @@ static T_void BannerGetCoin(T_buttonID buttonID)
     E_Boolean fivepiece = FALSE;
     DebugRoutine("BannerGetCoin");
 
-    if (ClientIsPaused()) {
+    if (ClientIsPaused())
+    {
         MessageAdd("Cannot get coin while paused.");
     }
-    if (ClientIsDead()) {
+    if (ClientIsDead())
+    {
         MessageAdd("The dead have no need of coins.");
-    } else {
+    }
+    else
+    {
         /* get type of goin to retrieve */
         type = ButtonGetData(buttonID);
 
         /* get fivepiece flag */
-        if (type >= COIN_TYPE_FIVE) {
+        if (type >= COIN_TYPE_FIVE)
+        {
             fivepiece = TRUE;
             type -= COIN_TYPE_FIVE;
         }
 
         /* see if the mouse hand is empty */
-        if (!InventoryObjectIsInMouseHand()) {
+        if (!InventoryObjectIsInMouseHand())
+        {
             /* ok, retrieve the proper coin and put it in the mouse hand */
-            switch (type) {
-                case COIN_TYPE_COPPER:
-                    objtype = 100;
+            switch (type)
+            {
+                case COIN_TYPE_COPPER:objtype = 100;
                     break;
 
-                case COIN_TYPE_SILVER:
-                    objtype = 102;
+                case COIN_TYPE_SILVER:objtype = 102;
                     break;
 
-                case COIN_TYPE_GOLD:
-                    objtype = 104;
+                case COIN_TYPE_GOLD:objtype = 104;
                     break;
 
-                case COIN_TYPE_PLATINUM:
-                    objtype = 106;
+                case COIN_TYPE_PLATINUM:objtype = 106;
                     break;
 
                 default:
                     /* fail */
-                    DebugCheck(0==1);
+                    DebugCheck(0 == 1);
                     break;
             }
 
             /* subtract the number of coins from stats */
-            if (StatsAddCoin(type, -1 - (fivepiece * 4)) == TRUE) {
+            if (StatsAddCoin(type, -1 - (fivepiece * 4)) == TRUE)
+            {
                 /* create a coin object */
                 if (fivepiece == TRUE)
                     objtype++;
@@ -1770,39 +1826,42 @@ static T_void BannerGetCoin(T_buttonID buttonID)
     DebugEnd();
 }
 
-T_void BannerSpellAddRuneMaybe(T_buttonID buttonID)
+T_void
+BannerSpellAddRuneMaybe(T_buttonID buttonID)
 {
     DebugRoutine("BannerSpellAddRuneMaybe");
     // Cannot cast spells when communications window is open
-    if (!BannerFormIsOpen(BANNER_FORM_COMMUNICATE)) {
+    if (!BannerFormIsOpen(BANNER_FORM_COMMUNICATE))
+    {
         SpellsAddRune(buttonID);
     }
     DebugEnd();
 }
 /* this routine adds a rune button for selection of a spell */
 /* Spellsystem dictates the picture locked, slot indicates where */
-T_void BannerAddSpellButton(T_byte8 slot)
+T_void
+BannerAddSpellButton(T_byte8 slot)
 {
     const T_word16 xloc[NUMBER_RUNE_BUTTONS] = {
-            265,
-            282,
-            299,
-            265,
-            282,
-            299,
-            265,
-            282,
-            299 };
+        265,
+        282,
+        299,
+        265,
+        282,
+        299,
+        265,
+        282,
+        299};
     const T_word16 yloc[NUMBER_RUNE_BUTTONS] = {
-            183,
-            183,
-            183,
-            169,
-            169,
-            169,
-            155,
-            155,
-            155 };
+        183,
+        183,
+        183,
+        169,
+        169,
+        169,
+        155,
+        155,
+        155};
     E_spellsSpellSystemType spellSystem;
 
     T_byte8 keycode, picno;
@@ -1813,14 +1872,14 @@ T_void BannerAddSpellButton(T_byte8 slot)
 
 //    DebugCheck (G_bannerButtonsCreated==TRUE);
 
-    if (G_bannerButtonsCreated == TRUE) {
-        switch (spellSystem) {
-            case SPELL_SYSTEM_MAGE:
-                picno = slot;
+    if (G_bannerButtonsCreated == TRUE)
+    {
+        switch (spellSystem)
+        {
+            case SPELL_SYSTEM_MAGE:picno = slot;
                 break;
 
-            case SPELL_SYSTEM_CLERIC:
-                picno = slot + 9;
+            case SPELL_SYSTEM_CLERIC:picno = slot + 9;
                 break;
 
             case SPELL_SYSTEM_ARCANE:
@@ -1830,30 +1889,37 @@ T_void BannerAddSpellButton(T_byte8 slot)
                     picno = slot + 5;
                 break;
 
-            default:
-                printf("Bad class type in bannerAddSpellButton");
+            default:printf("Bad class type in bannerAddSpellButton");
                 DebugCheck(-1);
                 /* fail! */
         }
 
         if (slot == 0)
             keycode = KeyMap(KEYMAP_RUNE1);
-            else if (slot==1) keycode=KeyMap(KEYMAP_RUNE2);
-            else if (slot==2) keycode=KeyMap(KEYMAP_RUNE3);
-            else if (slot==3) keycode=KeyMap(KEYMAP_RUNE4);
-            else if (slot==4) keycode=KeyMap(KEYMAP_RUNE5);
-            else if (slot==5) keycode=KeyMap(KEYMAP_RUNE6);
-            else if (slot==6) keycode=KeyMap(KEYMAP_RUNE7);
-            else if (slot==7) keycode=KeyMap(KEYMAP_RUNE8);
-            else if (slot==8) keycode=KeyMap(KEYMAP_RUNE9);
+        else if (slot == 1)
+            keycode = KeyMap(KEYMAP_RUNE2);
+        else if (slot == 2)
+            keycode = KeyMap(KEYMAP_RUNE3);
+        else if (slot == 3)
+            keycode = KeyMap(KEYMAP_RUNE4);
+        else if (slot == 4)
+            keycode = KeyMap(KEYMAP_RUNE5);
+        else if (slot == 5)
+            keycode = KeyMap(KEYMAP_RUNE6);
+        else if (slot == 6)
+            keycode = KeyMap(KEYMAP_RUNE7);
+        else if (slot == 7)
+            keycode = KeyMap(KEYMAP_RUNE8);
+        else if (slot == 8)
+            keycode = KeyMap(KEYMAP_RUNE9);
 
-            /* add button for slot */
+        /* add button for slot */
         sprintf(stmp, "UI/3DUI/RUNBUT%02d", picno);
 
-        DebugCheck(G_runeButtons[slot]==NULL);
+        DebugCheck(G_runeButtons[slot] == NULL);
         G_runeButtons[slot] = ButtonCreate(xloc[slot], yloc[slot], stmp, FALSE,
-                keycode, BannerSpellAddRuneMaybe, NULL);
-        DebugCheck(G_runeButtons[slot]!=NULL);
+                                           keycode, BannerSpellAddRuneMaybe, NULL);
+        DebugCheck(G_runeButtons[slot] != NULL);
         sprintf(stmp, "UI/3DUI/RUDBUT%02d", picno);
         ButtonSetSelectPic(G_runeButtons[slot], stmp);
 
@@ -1866,35 +1932,38 @@ T_void BannerAddSpellButton(T_byte8 slot)
 }
 
 /* this routine removes a rune button for spell selection */
-T_void BannerRemoveSpellButton(T_byte8 slot)
+T_void
+BannerRemoveSpellButton(T_byte8 slot)
 {
     T_graphicID keyback;
     const T_word16 xloc[NUMBER_RUNE_BUTTONS] = {
-            265,
-            282,
-            299,
-            265,
-            282,
-            299,
-            265,
-            282,
-            299 };
+        265,
+        282,
+        299,
+        265,
+        282,
+        299,
+        265,
+        282,
+        299};
     const T_word16 yloc[NUMBER_RUNE_BUTTONS] = {
-            183,
-            183,
-            183,
-            169,
-            169,
-            169,
-            155,
-            155,
-            155 };
+        183,
+        183,
+        183,
+        169,
+        169,
+        169,
+        155,
+        155,
+        155};
 
     DebugRoutine("BannerRemoveSpellButton");
 //  DebugCheck (G_runeButtons[slot]!=NULL);
-    if (G_bannerButtonsCreated == TRUE) {
+    if (G_bannerButtonsCreated == TRUE)
+    {
 //      DebugCheck (G_runeButtons[slot]!=NULL);
-        if (G_runeButtons[slot] != NULL) {
+        if (G_runeButtons[slot] != NULL)
+        {
             ButtonDelete(G_runeButtons[slot]);
             G_runeButtons[slot] = NULL;
 
@@ -1912,16 +1981,20 @@ T_void BannerRemoveSpellButton(T_byte8 slot)
 
 /* routine disables some banner functionality for */
 /* UI screens */
-T_void BannerUIModeOn(T_void)
+T_void
+BannerUIModeOn(T_void)
 {
     T_graphicID graphic;
 
     DebugRoutine("BannerUIModeOn");
     G_bannerUIMode = TRUE;
 
-    if (BannerIsOpen()) {
+    if (BannerIsOpen())
+    {
         G_bannerLastForm = G_currentBannerFormType;
-    } else {
+    }
+    else
+    {
         G_bannerLastForm = BANNER_FORM_UNKNOWN;
         /* open 'blank' banner scren */
         graphic = GraphicCreate(209, 0, "UI/3DUI/CLOSEDBA");
@@ -1941,7 +2014,8 @@ T_void BannerUIModeOn(T_void)
 }
 
 /* routine restores disabled banner functionality */
-T_void BannerUIModeOff(T_void)
+T_void
+BannerUIModeOff(T_void)
 {
     DebugRoutine("BannerUIModeOff");
 
@@ -1965,9 +2039,8 @@ T_void BannerUIModeOff(T_void)
     DebugEnd();
 }
 
-
-
-T_void BannerInitSoundOptions(T_void)
+T_void
+BannerInitSoundOptions(T_void)
 {
     T_iniFile ini;
     T_byte8 *p_value;
@@ -2010,34 +2083,42 @@ T_void BannerInitSoundOptions(T_void)
 #endif
 
     /* set initial sfx and music volumes */
-    if (G_musicOn == TRUE) {
+    if (G_musicOn == TRUE)
+    {
         SoundSetBackgroundVolume(G_musicVol >> 8);
-    } else {
+    }
+    else
+    {
         SoundSetBackgroundVolume(0);
     }
 
-    if (G_sfxOn == TRUE) {
+    if (G_sfxOn == TRUE)
+    {
         SoundSetEffectsVolume(G_sfxVol >> 8);
-    } else {
+    }
+    else
+    {
         SoundSetEffectsVolume(0);
     }
 
     DebugEnd();
 }
 
-
-E_Boolean BannerButtonsOk(T_void)
+E_Boolean
+BannerButtonsOk(T_void)
 {
     return (G_bannerButtonsCreated);
 }
 
-E_Boolean BannerFinancesWindowIsAt(T_word16 x, T_word16 y)
+E_Boolean
+BannerFinancesWindowIsAt(T_word16 x, T_word16 y)
 {
     E_Boolean isAt = FALSE;
     DebugRoutine("BannerFinancesWindowIsAt");
 
     if (BannerFormIsOpen(BANNER_FORM_FINANCES) && (x > 214) && (x < 315)
-            && (y > 18) && (y < 147)) {
+        && (y > 18) && (y < 147))
+    {
         isAt = TRUE;
     }
 
@@ -2045,13 +2126,15 @@ E_Boolean BannerFinancesWindowIsAt(T_word16 x, T_word16 y)
     return (isAt);
 }
 
-E_Boolean BannerAmmoWindowIsAt(T_word16 x, T_word16 y)
+E_Boolean
+BannerAmmoWindowIsAt(T_word16 x, T_word16 y)
 {
     E_Boolean isAt = FALSE;
     DebugRoutine("BannerAmmoWindowIsAt");
 
     if (BannerFormIsOpen(BANNER_FORM_AMMO) && (x > 214) && (x < 315) && (y > 18)
-            && (y < 147)) {
+        && (y < 147))
+    {
         isAt = TRUE;
     }
 
@@ -2059,7 +2142,8 @@ E_Boolean BannerAmmoWindowIsAt(T_word16 x, T_word16 y)
     return (isAt);
 }
 
-T_void BannerOpenLast(T_void)
+T_void
+BannerOpenLast(T_void)
 {
     DebugRoutine("BannerOpenLast");
     if (G_bannerLastForm < BANNER_FORM_UNKNOWN)

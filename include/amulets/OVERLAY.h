@@ -19,31 +19,40 @@
 #define ANIMATION_OVERLAY_WAND           8
 #define ANIMATION_OVERLAY_NULL           9
 
-typedef T_void (*T_overlayCallback)(T_word16 animationNumber, T_byte8 flags) ;
+typedef T_void (*T_overlayCallback)(T_word16 animationNumber, T_byte8 flags);
 
-T_void OverlayInitialize(T_void) ;
+T_void
+OverlayInitialize(T_void);
 
-T_void OverlayFinish(T_void) ;
+T_void
+OverlayFinish(T_void);
 
-T_void OverlaySetAnimation(T_word16 animationNumber) ;
+T_void
+OverlaySetAnimation(T_word16 animationNumber);
 
-T_void OverlayAnimate(T_word32 speed) ;
+T_void
+OverlayAnimate(T_word32 speed);
 
-T_void OverlaySetCallback(T_overlayCallback p_callback) ;
+T_void
+OverlaySetCallback(T_overlayCallback p_callback);
 
-T_void OverlayUpdate(E_Boolean isPaused) ;
+T_void
+OverlayUpdate(E_Boolean isPaused);
 
-T_void OverlayDraw(
-           T_word16 left,
-           T_word16 top,
-           T_word16 right,
-           T_word16 bottom,
-           T_sword16 xOffset,
-           T_sword16 yOffset) ;
+T_void
+OverlayDraw(
+    T_word16 left,
+    T_word16 top,
+    T_word16 right,
+    T_word16 bottom,
+    T_sword16 xOffset,
+    T_sword16 yOffset);
 
-E_Boolean OverlayIsDone(T_void);
+E_Boolean
+OverlayIsDone(T_void);
 
-T_void OverlaySetTranslucencyMode(E_Boolean mode) ;
+T_void
+OverlaySetTranslucencyMode(E_Boolean mode);
 
 #endif
 

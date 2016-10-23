@@ -6,7 +6,7 @@
 
 #include "GENERAL.H"
 
-typedef T_byte8 E_colorizeTable ;
+typedef T_byte8 E_colorizeTable;
 #define COLORIZE_TABLE_NONE           0
 #define COLORIZE_TABLE_WOOD           1
 #define COLORIZE_TABLE_RUSTY          2
@@ -25,16 +25,20 @@ typedef T_byte8 E_colorizeTable ;
 
 #define MAX_COLORIZE_TABLES  15
 
-T_void ColorizeInitialize(T_void) ;
-T_void ColorizeFinish(T_void) ;
+T_void
+ColorizeInitialize(T_void);
+T_void
+ColorizeFinish(T_void);
 
-T_void ColorizeMemory(
-           T_byte8 *p_source,
-           T_byte8 *p_destination,
-           T_word32 count,
-           E_colorizeTable table) ;
+T_void
+ColorizeMemory(
+    T_byte8 *p_source,
+    T_byte8 *p_destination,
+    T_word32 count,
+    E_colorizeTable table);
 
-T_byte8 *ColorizeGetTable(E_colorizeTable colorTable) ;
+T_byte8 *
+ColorizeGetTable(E_colorizeTable colorTable);
 
 #endif
 

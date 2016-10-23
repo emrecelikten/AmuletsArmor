@@ -13,7 +13,7 @@
 #define MAX_EFFECT_POWER 28000
 #define MAX_EFFECT_DURATION 28000
 
-typedef T_byte8 E_effectDamageType ;
+typedef T_byte8 E_effectDamageType;
 #define EFFECT_DAMAGE_UNKNOWN 0
 #define EFFECT_DAMAGE_NORMAL 1
 #define EFFECT_DAMAGE_FIRE 2         /* 25% bonus damage */
@@ -200,37 +200,49 @@ typedef enum
 typedef struct
 {
     /* type of player effect in action */
-    E_playerEffectType      type;
-    T_word16                duration;
-    T_word16                power;
-    T_void*                 p_owner;
+    E_playerEffectType type;
+    T_word16 duration;
+    T_word16 power;
+    T_void *p_owner;
     T_doubleLinkListElement p_element;
-    T_resource              p_effectpic;
+    T_resource p_effectpic;
 } T_playerEffectStruct;
 
-T_void EffectInit (T_void);
-T_void EffectFinish (T_void);
+T_void
+EffectInit(T_void);
+T_void
+EffectFinish(T_void);
 
-E_Boolean Effect(E_effectType type,
-                 E_effectTriggerType triggertype,
-                 T_word16 data1,
-                 T_word16 data2,
-                 T_word16 data3,
-                 T_void*  p_owner);
+E_Boolean
+Effect(E_effectType type,
+       E_effectTriggerType triggertype,
+       T_word16 data1,
+       T_word16 data2,
+       T_word16 data3,
+       T_void *p_owner);
 
-E_Boolean EffectPlayerEffectIsActive (E_playerEffectType type);
-T_word16  EffectGetPlayerEffectPower (E_playerEffectType type);
+E_Boolean
+EffectPlayerEffectIsActive(E_playerEffectType type);
+T_word16
+EffectGetPlayerEffectPower(E_playerEffectType type);
 
 /* variables passed in represent 'overlay' coordinates for effect icons */
-T_void EffectUpdateAllPlayerEffects (T_void);
-T_void EffectRemoveAllPlayerEffects (T_void);
-T_void EffectDrawEffectIcons (T_word16 left,
-                              T_word16 right,
-                              T_word16 top,
-                              T_word16 bottom);
+T_void
+EffectUpdateAllPlayerEffects(T_void);
+T_void
+EffectRemoveAllPlayerEffects(T_void);
+T_void
+EffectDrawEffectIcons(T_word16 left,
+                      T_word16 right,
+                      T_word16 top,
+                      T_word16 bottom);
 
-T_void EffectSoundOff (T_void);
-T_void EffectSoundOn (T_void);
-E_Boolean EffectSoundIsOn (T_void);
-T_void EffectRemoveRandomPlayerEffect (T_void);
+T_void
+EffectSoundOff(T_void);
+T_void
+EffectSoundOn(T_void);
+E_Boolean
+EffectSoundIsOn(T_void);
+T_void
+EffectRemoveRandomPlayerEffect(T_void);
 #endif

@@ -12,43 +12,45 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include "ACTIVITY.H"
-#include "GENERAL.H"
 #include "SCRIPT.H"
 
 /* Note where the table, strings, and program data are located */
-static T_script G_activityScript = SCRIPT_BAD ;
+static T_script G_activityScript = SCRIPT_BAD;
 
 /* LES 01/04/96 */
 /* LES 06/05/96 -- Added use of activities handle. */
-T_activitiesHandle ActivitiesLoad(T_word32 number)
+T_activitiesHandle
+ActivitiesLoad(T_word32 number)
 {
-    DebugRoutine("ActivitiesLoad") ;
+    DebugRoutine("ActivitiesLoad");
 
-    G_activityScript = ScriptLock(number) ;
+    G_activityScript = ScriptLock(number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return (T_activitiesHandle)G_activityScript ;
+    return (T_activitiesHandle) G_activityScript;
 }
 
 /* LES 01/04/96 */
-T_void ActivitiesUnload(T_void)
+T_void
+ActivitiesUnload(T_void)
 {
-    DebugRoutine("ActivitiesUnload") ;
+    DebugRoutine("ActivitiesUnload");
 
-    ScriptUnlock(G_activityScript) ;
+    ScriptUnlock(G_activityScript);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES 01/04/96 */
-T_void ActivitiesRun(T_word16 numberOfActivity)
+T_void
+ActivitiesRun(T_word16 numberOfActivity)
 {
-    DebugRoutine("ActivitiesRun") ;
+    DebugRoutine("ActivitiesRun");
 
-    ScriptRunPlace(G_activityScript, numberOfActivity) ;
+    ScriptRunPlace(G_activityScript, numberOfActivity);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

@@ -28,115 +28,122 @@
 //#define MAINUI_BULLETIN_LIST            501
 #define MAINUI_CHARACTER_LIST           502
 
-static E_Boolean G_exit=FALSE;
-static E_Boolean G_play=TRUE;
+static E_Boolean G_exit = FALSE;
+static E_Boolean G_play = TRUE;
 //static T_byte8 G_bulletinSelected=0;
-static T_byte8 G_characterSelected=0;
-static T_void MainUClearPortraitArea();
-static T_void MainUIUpdateCharacterListing (T_void);
+static T_byte8 G_characterSelected = 0;
+static T_void
+MainUClearPortraitArea();
+static T_void
+MainUIUpdateCharacterListing(T_void);
 
-E_Boolean MainUI (T_void)
+E_Boolean
+MainUI(T_void)
 {
 
     DebugRoutine ("MainUI");
 
-    G_play=TRUE;
+    G_play = TRUE;
 
-    ViewSetPalette(VIEW_PALETTE_STANDARD) ;
+    ViewSetPalette(VIEW_PALETTE_STANDARD);
 
     /* load the main ui form */
-    MainUIInit ();
+    MainUIInit();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
     DebugEnd();
     return (G_play);
 }
 
-
-
-T_void MainUIControl (E_formObjectType objtype,
-					  T_word16 objstatus,
-					  T_word32 objID)
+T_void
+MainUIControl(E_formObjectType objtype,
+              T_word16 objstatus,
+              T_word32 objID)
 {
-	T_byte8 tempstr[64];
+    T_byte8 tempstr[64];
     T_byte8 selected;
-    T_statsSavedCharacterID* chardata;
-	T_TxtboxID TxtboxID;
+    T_statsSavedCharacterID *chardata;
+    T_TxtboxID TxtboxID;
 
-	DebugRoutine ("MainUIControl");
+    DebugRoutine ("MainUIControl");
 
-    if (objID==MAINUI_LOAD_CHARACTER_BUTTON &&
-        objstatus==BUTTON_ACTION_RELEASED)
+    if (objID == MAINUI_LOAD_CHARACTER_BUTTON &&
+        objstatus == BUTTON_ACTION_RELEASED)
     {
         /* get the selection number of the character to be loaded */
-        selected=(T_byte8)TxtboxGetSelectionNumber(FormGetObjID(MAINUI_CHARACTER_LIST));
+        selected = (T_byte8) TxtboxGetSelectionNumber(FormGetObjID(MAINUI_CHARACTER_LIST));
 //        DebugCheck (selected < MAX_CHARACTERS_PER_SERVER);
-        if (selected >= MAX_CHARACTERS_PER_SERVER) selected=0;
+        if (selected >= MAX_CHARACTERS_PER_SERVER)
+            selected = 0;
 
         /* LES:  Make the selected item the active one. */
-        StatsMakeActive(G_characterSelected) ;
+        StatsMakeActive(G_characterSelected);
 
         /* load character selected, go to the load character UI */
-        if (StatsLoadCharacter((T_byte8)selected)==TRUE)
+        if (StatsLoadCharacter((T_byte8) selected) == TRUE)
         {
-            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_LOAD, TRUE) ;
+            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_LOAD, TRUE);
         }
         else
         {
-            PromptDisplayMessage ("Character not available.");
-            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_REDRAW, TRUE) ;
+            PromptDisplayMessage("Character not available.");
+            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_REDRAW, TRUE);
         }
     }
-    else if (objID==MAINUI_CREATE_CHARACTER_BUTTON &&
-             objstatus==BUTTON_ACTION_RELEASED)
+    else if (objID == MAINUI_CREATE_CHARACTER_BUTTON &&
+        objstatus == BUTTON_ACTION_RELEASED)
     {
         GraphicUpdateAllGraphics();
         /* create character selected, go to the create character UI */
 
         /* get the selection number of the character to be loaded */
-        selected=(T_byte8)TxtboxGetSelectionNumber(
-                     FormGetObjID(MAINUI_CHARACTER_LIST));
+        selected = (T_byte8) TxtboxGetSelectionNumber(
+            FormGetObjID(MAINUI_CHARACTER_LIST));
 //        DebugCheck (selected < MAX_CHARACTERS_PER_SERVER);
-        if (selected >= MAX_CHARACTERS_PER_SERVER) selected=0;
+        if (selected >= MAX_CHARACTERS_PER_SERVER)
+            selected = 0;
 
         /* LES:  Make the selected item the active one. */
-        StatsMakeActive(G_characterSelected) ;
+        StatsMakeActive(G_characterSelected);
 
-        chardata=StatsGetSavedCharacterIDStruct (selected);
+        chardata = StatsGetSavedCharacterIDStruct(selected);
 
         FormCleanUp();
 
-        if (chardata->status==CHARACTER_STATUS_UNDEFINED)
+        if (chardata->status == CHARACTER_STATUS_UNDEFINED)
         {
-            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_CREATE, TRUE) ;
+            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_CREATE, TRUE);
         }
         else
         {
-            strcpy (tempstr,"^001Character slot filled - ^003Delete^001 character first.");
-            PromptDisplayMessage (tempstr);
+            strcpy (tempstr, "^001Character slot filled - ^003Delete^001 character first.");
+            PromptDisplayMessage(tempstr);
         }
 
         MainUIInit();
     }
     else if (objID == MAINUI_DELETE_CHARACTER_BUTTON &&
-             objstatus==BUTTON_ACTION_RELEASED)
+        objstatus == BUTTON_ACTION_RELEASED)
     {
-        selected=(T_byte8)TxtboxGetSelectionNumber(
-                     FormGetObjID(MAINUI_CHARACTER_LIST));
+        selected = (T_byte8) TxtboxGetSelectionNumber(
+            FormGetObjID(MAINUI_CHARACTER_LIST));
 //        DebugCheck (selected < MAX_CHARACTERS_PER_SERVER);
-        if (selected >= MAX_CHARACTERS_PER_SERVER) selected=0;
+        if (selected >= MAX_CHARACTERS_PER_SERVER)
+            selected = 0;
 
         /* LES:  Make the selected item the active one. */
-        StatsMakeActive(G_characterSelected) ;
-        chardata=StatsGetSavedCharacterIDStruct(StatsGetActive());
+        StatsMakeActive(G_characterSelected);
+        chardata = StatsGetSavedCharacterIDStruct(StatsGetActive());
         if (chardata->status < CHARACTER_STATUS_UNDEFINED)
         {
-            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_DELETE, TRUE) ;
-        } else {
-            strcpy (tempstr,"^001Character slot not filled.");
-            PromptDisplayMessage (tempstr);
+            SMCChooseSetFlag(SMCCHOOSE_FLAG_CHOOSE_DELETE, TRUE);
+        }
+        else
+        {
+            strcpy (tempstr, "^001Character slot not filled.");
+            PromptDisplayMessage(tempstr);
             MainUIInit();
         }
 #if 0
@@ -192,42 +199,42 @@ T_void MainUIControl (E_formObjectType objtype,
 #endif
     }
     else if (objID == MAINUI_EXIT_BUTTON &&
-             objstatus==BUTTON_ACTION_RELEASED)
+        objstatus == BUTTON_ACTION_RELEASED)
     {
-        SMCChooseSetFlag(SMCCHOOSE_FLAG_EXIT, TRUE) ;
+        SMCChooseSetFlag(SMCCHOOSE_FLAG_EXIT, TRUE);
     }
 #if 0
-    else if (objID == MAINUI_BULLETIN_LIST &&
-             objstatus == Txtbox_ACTION_SELECTION_CHANGED)
-    {
-        /* load new bulletin */
-        TxtboxID=FormGetObjID (MAINUI_BULLETIN_LIST);
-        showwindowID=FormGetObjID (MAINUI_BULLETIN_TEXT);
-        DebugCheck (TxtboxID != NULL);
-        DebugCheck (showwindowID != NULL);
-        G_bulletinSelected=TxtboxGetSelectionNumber(TxtboxID);
-        MainUIShowBulletin (showwindowID,G_bulletinSelected);
-    }
+        else if (objID == MAINUI_BULLETIN_LIST &&
+                 objstatus == Txtbox_ACTION_SELECTION_CHANGED)
+        {
+            /* load new bulletin */
+            TxtboxID=FormGetObjID (MAINUI_BULLETIN_LIST);
+            showwindowID=FormGetObjID (MAINUI_BULLETIN_TEXT);
+            DebugCheck (TxtboxID != NULL);
+            DebugCheck (showwindowID != NULL);
+            G_bulletinSelected=TxtboxGetSelectionNumber(TxtboxID);
+            MainUIShowBulletin (showwindowID,G_bulletinSelected);
+        }
 #endif
     else if (objID == MAINUI_CHARACTER_LIST &&
-             objstatus == Txtbox_ACTION_SELECTION_CHANGED)
+        objstatus == Txtbox_ACTION_SELECTION_CHANGED)
     {
         /* character selected changed */
-        TxtboxID=FormGetObjID (MAINUI_CHARACTER_LIST);
+        TxtboxID = FormGetObjID(MAINUI_CHARACTER_LIST);
         DebugCheck (TxtboxID != NULL);
 
-        selected=(T_byte8)TxtboxGetSelectionNumber(TxtboxID);
+        selected = (T_byte8) TxtboxGetSelectionNumber(TxtboxID);
         if (G_characterSelected != selected)
         {
-            G_characterSelected=selected;
+            G_characterSelected = selected;
 
             /* LES:  Make the selected item the active one. */
             StatsMakeActive(G_characterSelected);
-            chardata=StatsGetSavedCharacterIDStruct (G_characterSelected);
+            chardata = StatsGetSavedCharacterIDStruct(G_characterSelected);
             if (chardata->status < CHARACTER_STATUS_UNDEFINED)
             {
                 StatsLoadCharacter(G_characterSelected);
-                StatsDrawCharacterPortrait(180,79);
+                StatsDrawCharacterPortrait(180, 79);
             }
             else
             {
@@ -237,8 +244,7 @@ T_void MainUIControl (E_formObjectType objtype,
         }
     }
 
-
-	DebugEnd();
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -298,8 +304,8 @@ T_void MainUIShowBulletin (T_TxtboxID showwindowID, T_word16 number)
             /* get a line from the bulletin file */
             fgets (tempstr,128,fp);
 
-			/* strip last (newline) character */
-			if (tempstr[strlen(tempstr)-1]=='\n') tempstr[strlen(tempstr)-1]='\r';
+            /* strip last (newline) character */
+            if (tempstr[strlen(tempstr)-1]=='\n') tempstr[strlen(tempstr)-1]='\r';
 
             /* display the line */
             TxtboxAppendString (showwindowID,tempstr);
@@ -316,19 +322,19 @@ T_void MainUIShowBulletin (T_TxtboxID showwindowID, T_word16 number)
 }
 #endif
 
-
-T_void MainUIInit (T_void)
+T_void
+MainUIInit(T_void)
 {
     T_TxtboxID TxtboxID;
-    T_statsSavedCharacterID* chardata;
+    T_statsSavedCharacterID *chardata;
 
     DebugRoutine ("MainUIInit");
 
- 	/* load the form for this page */
-	FormLoadFromFile ("frm/MAINUI.FRM");
+    /* load the form for this page */
+    FormLoadFromFile("frm/MAINUI.FRM");
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (MainUIControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(MainUIControl);
 
     /* set up windows */
 
@@ -354,17 +360,17 @@ T_void MainUIInit (T_void)
     GraphicUpdateAllGraphics();
 
     /* character selected changed */
-    TxtboxID=FormGetObjID (MAINUI_CHARACTER_LIST);
+    TxtboxID = FormGetObjID(MAINUI_CHARACTER_LIST);
     DebugCheck (TxtboxID != NULL);
-    TxtboxCursSetRow (TxtboxID,G_characterSelected);
+    TxtboxCursSetRow(TxtboxID, G_characterSelected);
 
     /* LES:  Make the selected item the active one. */
     StatsMakeActive(G_characterSelected);
-    chardata=StatsGetSavedCharacterIDStruct (G_characterSelected);
+    chardata = StatsGetSavedCharacterIDStruct(G_characterSelected);
     if (chardata->status < CHARACTER_STATUS_UNDEFINED)
     {
         StatsLoadCharacter(G_characterSelected);
-        StatsDrawCharacterPortrait(180,79);
+        StatsDrawCharacterPortrait(180, 79);
     }
     else
     {
@@ -379,44 +385,43 @@ T_void MainUIInit (T_void)
     DebugEnd();
 }
 
-
-static T_void MainUIUpdateCharacterListing (T_void)
+static T_void
+MainUIUpdateCharacterListing(T_void)
 {
     T_word16 i;
     T_TxtboxID TxtboxID;
-    T_statsSavedCharacterID* charID;
+    T_statsSavedCharacterID *charID;
     DebugRoutine ("MainUIUpdateCharacterListing");
 
-
-    TxtboxID=FormGetObjID (MAINUI_CHARACTER_LIST);
+    TxtboxID = FormGetObjID(MAINUI_CHARACTER_LIST);
 
     if (TxtboxID != NULL)
     {
         /* loop through list of saved character slots */
         /* and create listing */
-        TxtboxSetData (TxtboxID,"");
-        TxtboxCursTop (TxtboxID);
+        TxtboxSetData(TxtboxID, "");
+        TxtboxCursTop(TxtboxID);
 
-        for (i=0;i<MAX_CHARACTERS_PER_SERVER;i++)
+        for (i = 0; i < MAX_CHARACTERS_PER_SERVER; i++)
         {
-            charID=StatsGetSavedCharacterIDStruct(i);
-            TxtboxAppendString (TxtboxID,charID->name);
-            TxtboxAppendKey (TxtboxID,'\r');
+            charID = StatsGetSavedCharacterIDStruct(i);
+            TxtboxAppendString(TxtboxID, charID->name);
+            TxtboxAppendKey(TxtboxID, '\r');
         }
-        TxtboxBackSpace (TxtboxID);
-        TxtboxCursTop (TxtboxID);
+        TxtboxBackSpace(TxtboxID);
+        TxtboxCursTop(TxtboxID);
     }
 
     DebugEnd();
 }
 
-
-T_void MainUIStart(T_void)
+T_void
+MainUIStart(T_void)
 {
     DebugRoutine ("MainUIStart");
 
     /* load the main ui form */
-    MainUIInit ();
+    MainUIInit();
 
     /* go into generic control loop */
     FormGenericControlStart();
@@ -424,7 +429,8 @@ T_void MainUIStart(T_void)
     DebugEnd();
 }
 
-T_void MainUIUpdate(T_void)
+T_void
+MainUIUpdate(T_void)
 {
 
     DebugRoutine ("MainUIUpdate");
@@ -436,25 +442,25 @@ T_void MainUIUpdate(T_void)
     DebugEnd();
 }
 
-T_void MainUIEnd(T_void)
+T_void
+MainUIEnd(T_void)
 {
 
     DebugRoutine ("MainUIEnd");
 
     /* go into generic control loop */
-    FormGenericControlEnd() ;
+    FormGenericControlEnd();
 
     DebugEnd();
 }
 
-
-
-static T_void MainUClearPortraitArea()
+static T_void
+MainUClearPortraitArea()
 {
     T_resource res;
     T_byte8 *p_data;
-    const T_word16 x1=180;
-    const T_word16 y1=79;
+    const T_word16 x1 = 180;
+    const T_word16 y1 = 79;
 
     DebugRoutine ("MainUIClearPortraitArea");
 
@@ -463,18 +469,19 @@ static T_void MainUClearPortraitArea()
 //    GrScreenSet (GRAPHICS_ACTUAL_SCREEN);
 
 //    GrDrawRectangle (x1,y1,x1+115,y1+102,0);
-    if (PictureExist ("UI/CREATEC/CHARINFO"))
+    if (PictureExist("UI/CREATEC/CHARINFO"))
     {
-        res=PictureFind("UI/CREATEC/CHARINFO");
-        p_data=PictureLockQuick (res);
+        res = PictureFind("UI/CREATEC/CHARINFO");
+        p_data = PictureLockQuick(res);
         DebugCheck (p_data != NULL);
-        ColorUpdate(0) ;
-        GrDrawBitmap (PictureToBitmap(p_data),x1,y1);
-        PictureUnlockAndUnfind (res);
-    } else
+        ColorUpdate(0);
+        GrDrawBitmap(PictureToBitmap(p_data), x1, y1);
+        PictureUnlockAndUnfind(res);
+    }
+    else
     {
         /* clear area */
-        GrDrawRectangle (x1,y1,x1+115,y1+102,55);
+        GrDrawRectangle(x1, y1, x1 + 115, y1 + 102, 55);
     }
 
     DebugEnd();

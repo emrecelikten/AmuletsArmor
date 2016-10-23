@@ -19,8 +19,8 @@
 #define ALLOW_DOS_DITALK
 #endif
 
-#ifdef WIN32
-#include "Win32\ipx_client.h"
+#ifdef SDL
+#include "SDL/ipx_client.h"
 #endif
 
 // DirectTalk is the name give to the API between A&A and a generic
@@ -60,14 +60,14 @@
 #include "DITALKP.H"
 
 // Use one of the .C files
-#ifdef WIN32
-    #if WIN_IPX
-        #include "WIN32\WINDTALK.C"
-    #else
-        #include "Generic\NODTALK.C"
-    #endif
+#ifdef SDL
+#if WIN_IPX
+#include "SDL/WINDTALK.C"
 #else
-    #include "DOS\DOSDTALK.C"
+#include "Generic/NODTALK.C"
+#endif
+#else
+#include "DOS\DOSDTALK.C"
 #endif
 
 /** @} */

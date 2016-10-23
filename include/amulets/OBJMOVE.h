@@ -27,42 +27,42 @@
 #define OBJMOVE_FLAG_IGNORE_Z_UPDATES      0x2000   /* --1----- -------- */
 #define OBJMOVE_FLAG_DOES_NOT_FLOW         0x4000   /* -1------ -------- */
 #define OBJMOVE_FLAG_LOW_GRAVITY           0x8000   /* 1------- -------- */
-#define OBJMOVE_FLAG_FAST_MOVEMENT			0x0000 // not used
+#define OBJMOVE_FLAG_FAST_MOVEMENT            0x0000 // not used
 
 typedef struct
 {
-	T_sword32	X;
-	T_sword32	Y;
-	T_sword32	Z;
+    T_sword32 X;
+    T_sword32 Y;
+    T_sword32 Z;
 
-	T_sword32	XV;
-	T_sword32	YV;
-	T_sword32	ZV;
+    T_sword32 XV;
+    T_sword32 YV;
+    T_sword32 ZV;
 
-	T_sword32	XVExternal;
-	T_sword32	YVExternal;
-	T_sword32	ZVExternal;
+    T_sword32 XVExternal;
+    T_sword32 YVExternal;
+    T_sword32 ZVExternal;
 
-	T_word16	Radius;
-	T_sword16	Height;
-	T_word16 	Angle;
-	T_word16 	Flags;
+    T_word16 Radius;
+    T_sword16 Height;
+    T_word16 Angle;
+    T_word16 Flags;
 
-	T_word16	AreaSector;
-	T_word16	AreaCeilingSector;
-	T_word16    CenterSector;
-    T_word16    numOnSectors ;
-	T_word16    OnSectors[MAX_OBJECT_SECTORS] ;
+    T_word16 AreaSector;
+    T_word16 AreaCeilingSector;
+    T_word16 CenterSector;
+    T_word16 numOnSectors;
+    T_word16 OnSectors[MAX_OBJECT_SECTORS];
 
-    T_word16    maxVelocity ;  /* LES */
+    T_word16 maxVelocity;  /* LES */
 
-    T_word16    lastSound ;
+    T_word16 lastSound;
 
-    T_sword32   lowestPoint ;           /* Based on all that is below */
-                                        /* this is the lowest height allowed. */
-    T_sword32   highestPoint ;          /* Based on all that is above */
-                                        /* this is the highest height allowed. */
-    T_word16    climbHeight ;           /* How big of a step can I climb? */
+    T_sword32 lowestPoint;           /* Based on all that is below */
+    /* this is the lowest height allowed. */
+    T_sword32 highestPoint;          /* Based on all that is above */
+    /* this is the highest height allowed. */
+    T_word16 climbHeight;           /* How big of a step can I climb? */
 } T_objMoveStruct;
 
 /*
@@ -103,7 +103,6 @@ typedef struct
 #define ObjMoveSetClimbHeight(oms, height)  \
             (((oms)->climbHeight) = (height))
 
-
 #define ObjMoveForceUpdate(p_objM) \
              ((p_objM)->Flags |= OBJMOVE_FLAG_PLEASE_UPDATE)
 
@@ -120,46 +119,57 @@ typedef struct
              (((p_objM)->lastSound) = (sound))
 #define ObjMoveGetClimbHeight(oms)  ((oms)->climbHeight)
 
-T_void ObjMoveUpdate (T_objMoveStruct *p_obj, T_sword32 delta) ;
+T_void
+ObjMoveUpdate(T_objMoveStruct *p_obj, T_sword32 delta);
 
-T_void ObjMoveInit (T_objMoveStruct *ObjMoveStruct);
+T_void
+ObjMoveInit(T_objMoveStruct *ObjMoveStruct);
 
-T_void ObjMoveSetXYZ (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 newx,
-						T_sword32 newy,
-						T_sword32 newz);
-T_void ObjMoveGetXYZ (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 *xval,
-						T_sword32 *yval,
-						T_sword32 *zval);
-T_void ObjMoveAccelXYZ    (T_objMoveStruct *ObjMoveStruct,
-							 T_sword32 XACC,
-							 T_sword32 YACC,
-							 T_sword32 ZACC);
-T_void ObjMoveAccelFlat   (T_objMoveStruct *ObjMoveStruct,
-							 T_sword32 amount,
-							 T_sword32 angle);
+T_void
+ObjMoveSetXYZ(T_objMoveStruct *ObjMoveStruct,
+              T_sword32 newx,
+              T_sword32 newy,
+              T_sword32 newz);
+T_void
+ObjMoveGetXYZ(T_objMoveStruct *ObjMoveStruct,
+              T_sword32 *xval,
+              T_sword32 *yval,
+              T_sword32 *zval);
+T_void
+ObjMoveAccelXYZ(T_objMoveStruct *ObjMoveStruct,
+                T_sword32 XACC,
+                T_sword32 YACC,
+                T_sword32 ZACC);
+T_void
+ObjMoveAccelFlat(T_objMoveStruct *ObjMoveStruct,
+                 T_sword32 amount,
+                 T_sword32 angle);
 
-E_Boolean ObjMoveIsAboveGround (T_objMoveStruct *ObjMoveStruct);
-T_void ObjMoveStopMoving(T_objMoveStruct *ObjMoveStruct) ;
+E_Boolean
+ObjMoveIsAboveGround(T_objMoveStruct *ObjMoveStruct);
+T_void
+ObjMoveStopMoving(T_objMoveStruct *ObjMoveStruct);
 
-T_void ObjMoveAddExternalVelocity(
-           T_objMoveStruct *ObjMoveStruct,
-           T_sword32 dVX,
-           T_sword32 dVY,
-           T_sword32 dVZ) ;
+T_void
+ObjMoveAddExternalVelocity(
+    T_objMoveStruct *ObjMoveStruct,
+    T_sword32 dVX,
+    T_sword32 dVY,
+    T_sword32 dVZ);
 
-T_void ObjMoveSetUpSectors(T_objMoveStruct *ObjMoveStruct) ;
+T_void
+ObjMoveSetUpSectors(T_objMoveStruct *ObjMoveStruct);
 
-T_void ObjMoveSetAngularVelocity(
-           T_objMoveStruct *p_objM,
-           T_word16 angle,
-           T_sword16 magnitude);
+T_void
+ObjMoveSetAngularVelocity(
+    T_objMoveStruct *p_objM,
+    T_word16 angle,
+    T_sword16 magnitude);
 
-T_void ObjMoveUpdateZVel(
-           T_objMoveStruct *ObjMoveStruct,
-           T_word32 delta) ;
-
+T_void
+ObjMoveUpdateZVel(
+    T_objMoveStruct *ObjMoveStruct,
+    T_word32 delta);
 
 #ifdef FAST_OBJMOVE
 #define ObjMoveSetX(ObjMoveStruct, newx)  ((ObjMoveStruct)->X = (newx))
@@ -204,13 +214,13 @@ T_void ObjMoveUpdateZVel(
 
 #else
 T_void ObjMoveSetX   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 newx);
+                        T_sword32 newx);
 T_void ObjMoveSetY   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 newy);
+                        T_sword32 newy);
 T_void ObjMoveSetZ   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 newz);
+                        T_sword32 newz);
 T_void ObjMoveSetFlags (T_objMoveStruct *ObjMoveStruct,
-						  T_word16 newflags);
+                          T_word16 newflags);
 T_void ObjMoveSetAngle	(T_objMoveStruct *ObjMoveStruct, T_word16 newAngle);
 T_void ObjMoveSetHeight	(T_objMoveStruct *ObjMoveStruct, T_sword32 newHeight);
 T_void ObjMoveSetRadius (T_objMoveStruct *ObjMoveStruct, T_word16 newRadius);
@@ -220,11 +230,11 @@ T_void ObjMoveSetMaxVelocity(
 
 T_void ObjMoveAddAngle  (T_objMoveStruct *ObjMoveStruct, T_word16 addAngle);
 T_void ObjMoveAddX   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 addx);
+                        T_sword32 addx);
 T_void ObjMoveAddY   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 addy);
+                        T_sword32 addy);
 T_void ObjMoveAddZ   (T_objMoveStruct *ObjMoveStruct,
-						T_sword32 addz);
+                        T_sword32 addz);
 
 T_sword32 ObjMoveGetX      (T_objMoveStruct *ObjMoveStruct);
 T_sword32 ObjMoveGetY      (T_objMoveStruct *ObjMoveStruct);
@@ -247,8 +257,8 @@ T_word16 ObjMoveGetNthAreaSector(
              T_objMoveStruct *ObjMoveStruct,
              T_word16 n) ;
 #endif
-T_void ObjMoveSetMovedFlag(T_objMoveStruct *ObjMoveStruct) ;
-
+T_void
+ObjMoveSetMovedFlag(T_objMoveStruct *ObjMoveStruct);
 
 #define ObjMoveDoesNotFlow(oms) ((oms)->Flags |= OBJMOVE_FLAG_DOES_NOT_FLOW)
 
@@ -257,7 +267,6 @@ T_void ObjMoveSetMovedFlag(T_objMoveStruct *ObjMoveStruct) ;
 #define ObjMoveLowGravity(oms) ((oms)->Flags |= OBJMOVE_FLAG_LOW_GRAVITY)
 
 #define ObjMoveNormalGravity(oms) ((oms)->Flags &= (~OBJMOVE_FLAG_LOW_GRAVITY))
-
 
 #define ObjMoveForceNormalFriction(oms) \
             ((oms)->Flags |= OBJMOVE_FLAG_FORCE_NORMAL_FRICTION)

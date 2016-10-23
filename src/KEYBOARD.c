@@ -44,28 +44,28 @@
 #define MAX_SCAN_KEY_BUFFER 128
 
 /* Note if the keyboard is on: */
-static E_Boolean F_keyboardOn = FALSE ;
+static E_Boolean F_keyboardOn = FALSE;
 
 /* Note if we are using the keyboard buffer: */
-static E_Boolean F_keyboardBufferOn = TRUE ;
+static E_Boolean F_keyboardBufferOn = TRUE;
 
 /* Table to keep track of which keys are pressed: */
-static E_Boolean G_keyTable[256] ;
+static E_Boolean G_keyTable[256];
 
 /* Also keep a table to track which events for what keys have occured: */
-static E_Boolean G_keyEventTable[256] ;
+static E_Boolean G_keyEventTable[256];
 
 /* Information about how long the key was pressed. */
-static T_word32 G_keyHoldTime[256] ;
-static T_word32 G_keyPressTime[256] ;
+static T_word32 G_keyHoldTime[256];
+static T_word32 G_keyPressTime[256];
 
 /* Internal buffer of press and release keys: */
-static T_word16 G_scanKeyBuffer[MAX_SCAN_KEY_BUFFER] ;
-static T_word16 G_scanKeyStart = 0 ;
-static T_word16 G_scanKeyEnd = 0 ;
+static T_word16 G_scanKeyBuffer[MAX_SCAN_KEY_BUFFER];
+static T_word16 G_scanKeyStart = 0;
+static T_word16 G_scanKeyEnd = 0;
 
 /* Number of keys being pressed simultaneously: */
-static T_word16 G_keysPressed = 0 ;
+static T_word16 G_keysPressed = 0;
 
 /* Pointer to old BIOS key handler. */
 #ifdef ALLOW_KEYBOARD_INTERRUPT
@@ -73,25 +73,27 @@ static T_void (__interrupt __far *IOldKeyboardInterrupt)(T_void);
 #endif
 
 /* Keep track of the event handler for the keyboard. */
-static T_keyboardEventHandler G_keyboardEventHandler ;
+static T_keyboardEventHandler G_keyboardEventHandler;
 
 /* Flag to tell if KeyboardGetScanCode works */
-static E_Boolean G_allowKeyScans = TRUE ;
+static E_Boolean G_allowKeyScans = TRUE;
 
 /* Internal routines: */
 #ifdef ALLOW_KEYBOARD_INTERRUPT
 static T_void __interrupt __far IKeyboardInterrupt(T_void);
 #endif
 
-static T_void IKeyboardClear(T_void) ;
+static T_void
+IKeyboardClear(T_void);
 
-static T_void IKeyboardSendCommand(T_byte8 keyboardCommand) ;
+static T_void
+IKeyboardSendCommand(T_byte8 keyboardCommand);
 
-static E_Boolean G_escapeCode = FALSE ;
+static E_Boolean G_escapeCode = FALSE;
 
-static T_doubleLinkList G_eventStack = DOUBLE_LINK_LIST_BAD ;
+static T_doubleLinkList G_eventStack = DOUBLE_LINK_LIST_BAD;
 
-static T_word16 G_pauseLevel = 0 ;
+static T_word16 G_pauseLevel = 0;
 
 #ifdef WIN32
 char G_keyboardToASCII[256] = {
@@ -167,10 +169,9 @@ char G_keyboardToASCII[256] = {
 } ;
 #endif
 
-
-static char G_asciiBuffer[32] ;
-static T_word16 G_asciiStart = 0 ;
-static T_word16 G_asciiEnd = 0 ;
+static char G_asciiBuffer[32];
+static T_word16 G_asciiStart = 0;
+static T_word16 G_asciiEnd = 0;
 
 /*-------------------------------------------------------------------------*
  * Routine:  KeyboardOn
@@ -184,13 +185,14 @@ static T_word16 G_asciiEnd = 0 ;
  *  keyboard buffer commands).
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardOn(T_void)
+T_void
+KeyboardOn(T_void)
 {
-    DebugRoutine("KeyboardOn") ;
-    DebugCheck(F_keyboardOn == FALSE) ;
+    DebugRoutine("KeyboardOn");
+    DebugCheck(F_keyboardOn == FALSE);
 
     /* Note that the keyboard is now on. */
-    F_keyboardOn = TRUE ;
+    F_keyboardOn = TRUE;
 
 #ifdef ALLOW_KEYBOARD_INTERRUPT
     /* We are doing somewhat sensitive stuff, so turn off the interrupts. */
@@ -209,12 +211,12 @@ T_void KeyboardOn(T_void)
     _enable() ;
 #else
     /* Clear the keyboard and event keyboard before we let things go. */
-    IKeyboardClear() ;
+    IKeyboardClear();
 #endif
-    G_eventStack = DoubleLinkListCreate() ;
-    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD) ;
+    G_eventStack = DoubleLinkListCreate();
+    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -228,13 +230,14 @@ T_void KeyboardOn(T_void)
  *  This routine MUST be called before exiting or DOS will crash.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardOff(T_void)
+T_void
+KeyboardOff(T_void)
 {
-    DebugRoutine("KeyboardOff") ;
-    DebugCheck(F_keyboardOn == TRUE) ;
+    DebugRoutine("KeyboardOff");
+    DebugCheck(F_keyboardOn == TRUE);
 
-    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD) ;
-    DoubleLinkListDestroy(G_eventStack) ;
+    DebugCheck(G_eventStack != DOUBLE_LINK_LIST_BAD);
+    DoubleLinkListDestroy(G_eventStack);
 
 #ifdef ALLOW_KEYBOARD_INTERRUPT
     /* We are doing somewhat sensitive stuff, so turn off the interrupts. */
@@ -248,9 +251,9 @@ T_void KeyboardOff(T_void)
 #endif
 
     /* Note that the keyboard is now off. */
-    F_keyboardOn = FALSE ;
+    F_keyboardOn = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -267,41 +270,42 @@ T_void KeyboardOff(T_void)
  *      FALSE = Key is not pressed
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IGetAdjustedKey(T_word16 scanCode)
+static E_Boolean
+IGetAdjustedKey(T_word16 scanCode)
 {
     switch (scanCode)
     {
         case 0x38 /** Left alt key **/ :
         case 0xB8 /** Right alt key **/ :
-           return G_keyTable[0x38] |
-                  G_keyTable[0xB8] ;
-           break;
+            return G_keyTable[0x38] |
+                G_keyTable[0xB8];
+            break;
 
         case KEY_SCAN_CODE_RIGHT_SHIFT:
         case KEY_SCAN_CODE_LEFT_SHIFT:
-           return G_keyTable[KEY_SCAN_CODE_RIGHT_SHIFT] |
-                  G_keyTable[KEY_SCAN_CODE_LEFT_SHIFT] ;
-           break;
+            return G_keyTable[KEY_SCAN_CODE_RIGHT_SHIFT] |
+                G_keyTable[KEY_SCAN_CODE_LEFT_SHIFT];
+            break;
 
         case 0x9D /** Right control key **/ :
         case 0x1D /** Left control key **/ :
-           return G_keyTable[0x9D] |
-                  G_keyTable[0x1D] ;
-           break;
+            return G_keyTable[0x9D] |
+                G_keyTable[0x1D];
+            break;
 
-        default:
-           break;
+        default:break;
     }
-    return G_keyTable[scanCode] ;
+    return G_keyTable[scanCode];
 }
 
-E_Boolean KeyboardGetScanCode(T_word16 scanCodes)
+E_Boolean
+KeyboardGetScanCode(T_word16 scanCodes)
 {
-    E_Boolean isPressed ;
-    T_byte8 scanCode, scanCode2 ;
+    E_Boolean isPressed;
+    T_byte8 scanCode, scanCode2;
 
-    DebugRoutine("KeyboardGetScanCode") ;
-    DebugCheck(F_keyboardOn == TRUE) ;
+    DebugRoutine("KeyboardGetScanCode");
+    DebugCheck(F_keyboardOn == TRUE);
 
     /* Check to see if key scans are allowed */
     /* (ESC and ALT and ENTER key break this rule) */
@@ -321,27 +325,30 @@ E_Boolean KeyboardGetScanCode(T_word16 scanCodes)
         && (IGetAdjustedKey(KEY_SCAN_CODE_F9) == FALSE)
         && (IGetAdjustedKey(KEY_SCAN_CODE_F10) == FALSE)
         && (IGetAdjustedKey(KEY_SCAN_CODE_F11) == FALSE)
-        && (IGetAdjustedKey(KEY_SCAN_CODE_F12) == FALSE))  {
+        && (IGetAdjustedKey(KEY_SCAN_CODE_F12) == FALSE))
+    {
         /* Pretend the key is not pressed if in this mode. */
-        isPressed = FALSE ;
-    } else {
-        scanCode = scanCodes & 0xFF ;
-        scanCode2 = (scanCodes >> 8) ;
+        isPressed = FALSE;
+    }
+    else
+    {
+        scanCode = scanCodes & 0xFF;
+        scanCode2 = (scanCodes >> 8);
 
-        DebugCheck(scanCode <= KEYBOARD_HIGHEST_SCAN_CODE) ;
-        DebugCheck(scanCode2 <= KEYBOARD_HIGHEST_SCAN_CODE) ;
+        DebugCheck(scanCode <= KEYBOARD_HIGHEST_SCAN_CODE);
+        DebugCheck(scanCode2 <= KEYBOARD_HIGHEST_SCAN_CODE);
 
         if (scanCode2 == 0)
-            isPressed = IGetAdjustedKey(scanCode) ;
+            isPressed = IGetAdjustedKey(scanCode);
         else
             isPressed = IGetAdjustedKey(scanCode) |
-                        IGetAdjustedKey(scanCode) ;
+                IGetAdjustedKey(scanCode);
     }
 
-    DebugCheck(isPressed < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(isPressed < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return isPressed ;
+    return isPressed;
 }
 
 /*-------------------------------------------------------------------------*
@@ -353,29 +360,30 @@ E_Boolean KeyboardGetScanCode(T_word16 scanCodes)
  *  has released all pressed keys.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardDebounce(T_void)
+T_void
+KeyboardDebounce(T_void)
 {
-    DebugRoutine("KeyboardDebounce") ;
-    DebugCheck(F_keyboardOn == TRUE) ;
+    DebugRoutine("KeyboardDebounce");
+    DebugCheck(F_keyboardOn == TRUE);
 
 #if 0
     T_word32 time ;
 
     time = TickerGet() ;
 
-//puts("Waiting") ;
+  //puts("Waiting") ;
     while (G_keysPressed != 0)
         { /* wait */
             if ((TickerGet() - time) > 210)
                 break ;
         }
-//puts("Done") ;
+  //puts("Done") ;
 
     /* Clear out the keyboard stats. */
-//    IKeyboardClear() ;
+  //    IKeyboardClear() ;
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -391,19 +399,20 @@ T_void KeyboardDebounce(T_void)
  *      for none.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardSetEventHandler(T_keyboardEventHandler keyboardEventHandler)
+T_void
+KeyboardSetEventHandler(T_keyboardEventHandler keyboardEventHandler)
 {
-    DebugRoutine("KeyboardSetEventHandler") ;
+    DebugRoutine("KeyboardSetEventHandler");
     /* Nothing to do a DebugCheck on ... */
 
     /* Record the event handler for future use. */
-    G_keyboardEventHandler = keyboardEventHandler ;
+    G_keyboardEventHandler = keyboardEventHandler;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-
-T_keyboardEventHandler KeyboardGetEventHandler (T_void)
+T_keyboardEventHandler
+KeyboardGetEventHandler(T_void)
 {
     return (G_keyboardEventHandler);
 }
@@ -419,35 +428,44 @@ T_keyboardEventHandler KeyboardGetEventHandler (T_void)
  *  tell what keys are being pressed and released.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardUpdateEvents(T_void)
+T_void
+KeyboardUpdateEvents(T_void)
 {
-    T_word16 scanCode ;
+    T_word16 scanCode;
 
-    DebugRoutine("KeyboardUpdateEvents") ;
-    DebugCheck(F_keyboardOn == TRUE) ;
+    DebugRoutine("KeyboardUpdateEvents");
+    DebugCheck(F_keyboardOn == TRUE);
 
-    while (G_scanKeyStart != G_scanKeyEnd)  {
-        scanCode = G_scanKeyBuffer[G_scanKeyStart] ;
+    while (G_scanKeyStart != G_scanKeyEnd)
+    {
+        scanCode = G_scanKeyBuffer[G_scanKeyStart];
         /* Is this a press or a release? */
-        if (scanCode & 0x100)  {
+        if (scanCode & 0x100)
+        {
             /* THis is a release. */
-            G_keyboardEventHandler(KEYBOARD_EVENT_RELEASE, scanCode & 0xFF) ;
-        } else {
-            G_keyboardEventHandler(KEYBOARD_EVENT_PRESS, scanCode) ;
+            G_keyboardEventHandler(KEYBOARD_EVENT_RELEASE, scanCode & 0xFF);
+        }
+        else
+        {
+            G_keyboardEventHandler(KEYBOARD_EVENT_PRESS, scanCode);
         }
 
         /* Special case for the right ctrl key -- we want it to act */
         /* just like the left control key. */
-        if ((scanCode & 0xFF) == KEY_SCAN_CODE_RIGHT_CTRL)  {
-            if (scanCode & 0x100)  {
+        if ((scanCode & 0xFF) == KEY_SCAN_CODE_RIGHT_CTRL)
+        {
+            if (scanCode & 0x100)
+            {
                 /* THis is a release. */
-                G_keyboardEventHandler(KEYBOARD_EVENT_RELEASE, KEY_SCAN_CODE_CTRL) ;
-            } else {
-                G_keyboardEventHandler(KEYBOARD_EVENT_PRESS, KEY_SCAN_CODE_CTRL) ;
+                G_keyboardEventHandler(KEYBOARD_EVENT_RELEASE, KEY_SCAN_CODE_CTRL);
+            }
+            else
+            {
+                G_keyboardEventHandler(KEYBOARD_EVENT_PRESS, KEY_SCAN_CODE_CTRL);
             }
         }
         _disable();
-        G_scanKeyStart = (G_scanKeyStart+1) & (MAX_SCAN_KEY_BUFFER-1) ;
+        G_scanKeyStart = (G_scanKeyStart + 1) & (MAX_SCAN_KEY_BUFFER - 1);
         _enable();
     }
 
@@ -457,25 +475,27 @@ T_void KeyboardUpdateEvents(T_void)
         /* Check to see if key is being held. */
         if (G_keyTable[scanCode] == TRUE)
             /* We need to send a event. */
-            G_keyboardEventHandler(KEYBOARD_EVENT_HELD, scanCode) ;
+            G_keyboardEventHandler(KEYBOARD_EVENT_HELD, scanCode);
 
     /* Add an event for the right ctrl to be the left ctrl. */
     if (G_keyTable[KEY_SCAN_CODE_RIGHT_CTRL] == TRUE)
-        G_keyboardEventHandler(KEYBOARD_EVENT_HELD, KEY_SCAN_CODE_CTRL) ;
+        G_keyboardEventHandler(KEYBOARD_EVENT_HELD, KEY_SCAN_CODE_CTRL);
 
     /* Check to see if we are in buffered mode. */
-    if (F_keyboardBufferOn == TRUE)  {
+    if (F_keyboardBufferOn == TRUE)
+    {
         /* If we are, loop while there are characters in the buffer. */
-        while (KeyboardBufferReady())  {
+        while (KeyboardBufferReady())
+        {
             /* Send a special buffered event for each */
             /* of these characters. */
             G_keyboardEventHandler(
                 KEYBOARD_EVENT_BUFFERED,
-                KeyboardBufferGet()) ;
+                KeyboardBufferGet());
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -491,13 +511,14 @@ T_void KeyboardUpdateEvents(T_void)
  *  KeyboardBufferOn CAN be called even if KeyboardOn is not.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardBufferOn(T_void)
+T_void
+KeyboardBufferOn(T_void)
 {
-    DebugRoutine("KeyboardBufferOn") ;
+    DebugRoutine("KeyboardBufferOn");
 
-    F_keyboardBufferOn = TRUE ;
+    F_keyboardBufferOn = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -514,13 +535,14 @@ T_void KeyboardBufferOn(T_void)
  *  The default is for the buffer to be on.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardBufferOff(T_void)
+T_void
+KeyboardBufferOff(T_void)
 {
-    DebugRoutine("KeyboardBufferOff") ;
+    DebugRoutine("KeyboardBufferOff");
 
 //    F_keyboardBufferOn = FALSE ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -534,40 +556,44 @@ T_void KeyboardBufferOff(T_void)
  *      or 0 for none.
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 KeyboardBufferGet(T_void)
+T_byte8
+KeyboardBufferGet(T_void)
 {
-    T_byte8 key ;
-    T_word16 next ;
+    T_byte8 key;
+    T_word16 next;
 
-    DebugRoutine("KeyboardBufferGet") ;
+    DebugRoutine("KeyboardBufferGet");
 
 #if 0
     if (_bios_keybrd(1))  {
         key = _bios_keybrd(0) ;
-//        if (key == 0)
-//            getch() ;
+  //        if (key == 0)
+  //            getch() ;
     } else
         key = 0 ;
 #endif
 
     /* Are there any keys waiting? */
-    if (G_asciiStart != G_asciiEnd)  {
+    if (G_asciiStart != G_asciiEnd)
+    {
         /* Find where the next position will be */
-        next = (G_asciiStart+1)&31 ;
+        next = (G_asciiStart + 1) & 31;
 
         /* Get this character */
-        key = G_asciiBuffer[G_asciiStart] ;
+        key = G_asciiBuffer[G_asciiStart];
 
         /* Advance in the queue. */
-        G_asciiStart = next ;
-    } else {
+        G_asciiStart = next;
+    }
+    else
+    {
         /* No keys waiting. */
-        key = 0 ;
+        key = 0;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return key ;
+    return key;
 }
 
 /*-------------------------------------------------------------------------*
@@ -596,15 +622,15 @@ static T_void __interrupt __far IKeyboardInterrupt(T_void)
     _disable() ;
 
     /* Wait for the keyboard to prepare itself. */
-	do {
-		portStatus = inp(STATUS_PORT) ;
-	} while ((portStatus & INPUT_BUFFER_FULL)==INPUT_BUFFER_FULL) ;
+    do {
+        portStatus = inp(STATUS_PORT) ;
+    } while ((portStatus & INPUT_BUFFER_FULL)==INPUT_BUFFER_FULL) ;
 
     /* Now that we are ready, let me get the scanCode. */
-	scanCode = inp(KEYBOARD_DATA) ;
+    scanCode = inp(KEYBOARD_DATA) ;
 
     /* Turn back on the interrupts. */
-	_enable() ;
+    _enable() ;
 
     if (scanCode == 0xE0)  {
         G_escapeCode = TRUE ;
@@ -733,7 +759,7 @@ static T_void __interrupt __far IKeyboardInterrupt(T_void)
     } else  {
 #endif
         /* Otherwise, signify end of interrupt */
-	    outp(0x20,0x20) ;
+        outp(0x20,0x20) ;
 #if 0
     }
 #endif
@@ -786,18 +812,18 @@ static T_void IKeyboardSendCommand(T_byte8 keyboardCommand)
     /* cannot easily debug this routine since part of interrupt. */
 
     /* Don't allow any interrupts. */
-	_disable() ;
+    _disable() ;
 
     /* Wait for the status port to say we are ready. */
-	do {
-		statusPort = inp(STATUS_PORT) ;
-	} while ((statusPort & INPUT_BUFFER_FULL) == INPUT_BUFFER_FULL) ;
+    do {
+        statusPort = inp(STATUS_PORT) ;
+    } while ((statusPort & INPUT_BUFFER_FULL) == INPUT_BUFFER_FULL) ;
 
     /* Send the command. */
-	outp(STATUS_PORT, keyboardCommand) ;
+    outp(STATUS_PORT, keyboardCommand) ;
 
     /* Turn back on interrupts. */
-	_enable() ;
+    _enable() ;
 }
 #endif
 
@@ -815,33 +841,35 @@ static T_void IKeyboardSendCommand(T_byte8 keyboardCommand)
  *  words, you should only call this routine on startup.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IKeyboardClear(T_void)
+static T_void
+IKeyboardClear(T_void)
 {
-    T_word16 scanCode ;
+    T_word16 scanCode;
 
-    DebugRoutine("IKeyboardClear") ;
+    DebugRoutine("IKeyboardClear");
 
     _disable();
 
     /* Clear all scan codes stored in the key table and key event table. */
-    for (scanCode = 0; scanCode <= KEYBOARD_HIGHEST_SCAN_CODE; scanCode++)  {
-        G_keyTable[scanCode] = FALSE ;
-        G_keyEventTable[scanCode] = FALSE ;
-        G_keyHoldTime[scanCode] = 0 ;
-        G_keyPressTime[scanCode] = 0 ;
+    for (scanCode = 0; scanCode <= KEYBOARD_HIGHEST_SCAN_CODE; scanCode++)
+    {
+        G_keyTable[scanCode] = FALSE;
+        G_keyEventTable[scanCode] = FALSE;
+        G_keyHoldTime[scanCode] = 0;
+        G_keyPressTime[scanCode] = 0;
     }
 
-    memset(G_scanKeyBuffer, 0, sizeof(G_scanKeyBuffer)) ;
-    G_scanKeyStart = G_scanKeyEnd = 0 ;
+    memset(G_scanKeyBuffer, 0, sizeof(G_scanKeyBuffer));
+    G_scanKeyStart = G_scanKeyEnd = 0;
 
     /* Note that none of the keys are pressed. */
-    G_keysPressed = 0 ;
+    G_keysPressed = 0;
 
-    G_asciiStart = G_asciiEnd = 0 ;
+    G_asciiStart = G_asciiEnd = 0;
 
     _enable();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -859,42 +887,46 @@ static T_void IKeyboardClear(T_void)
  *  to make a call to KeyboardDebounce which clears the timing values.
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 KeyboardGetHeldTimeAndClear(T_word16 scanCode)
+T_word32
+KeyboardGetHeldTimeAndClear(T_word16 scanCode)
 {
-    T_word32 timeHeld ;
-    T_word32 time ;
+    T_word32 timeHeld;
+    T_word32 time;
 
-    DebugRoutine("KeyboardGetHeldTimeAndClear") ;
+    DebugRoutine("KeyboardGetHeldTimeAndClear");
 
     /* No interrupts, please. */
-    _disable() ;
+    _disable();
 
     /* Is the key being currently pressed? */
-    if (G_keyTable[scanCode])  {
+    if (G_keyTable[scanCode])
+    {
         /* It is being pressed. */
         /* Return the time held in the past plus the time currently held */
-        time = TickerGet() ;
-        timeHeld = G_keyHoldTime[scanCode] + (time-G_keyPressTime[scanCode]) ;
-        G_keyPressTime[scanCode] = time ;
-    } else {
+        time = TickerGet();
+        timeHeld = G_keyHoldTime[scanCode] + (time - G_keyPressTime[scanCode]);
+        G_keyPressTime[scanCode] = time;
+    }
+    else
+    {
         /* It is not being pressed. */
         /* Return the time held in the register. */
-        timeHeld = G_keyHoldTime[scanCode] ;
+        timeHeld = G_keyHoldTime[scanCode];
     }
 
     /* Always clear the time held. */
-    G_keyHoldTime[scanCode] = 0 ;
+    G_keyHoldTime[scanCode] = 0;
 
     /* Allow interrupts again. */
-    _enable() ;
+    _enable();
 
     /* If no key scans are allowed, pretend the key was not hit. */
     if (G_allowKeyScans == FALSE)
-        timeHeld = 0 ;
+        timeHeld = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return timeHeld ;
+    return timeHeld;
 }
 
 /*-------------------------------------------------------------------------*
@@ -909,19 +941,20 @@ T_word32 KeyboardGetHeldTimeAndClear(T_word16 scanCode)
  *      for none.
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardPushEventHandler(T_keyboardEventHandler keyboardEventHandler)
+T_void
+KeyboardPushEventHandler(T_keyboardEventHandler keyboardEventHandler)
 {
-    DebugRoutine("KeyboardPushEventHandler") ;
+    DebugRoutine("KeyboardPushEventHandler");
 
     /* Store the old event handler. */
     DoubleLinkListAddElementAtFront(
         G_eventStack,
-        (T_void *)KeyboardGetEventHandler) ;
+        (T_void *) KeyboardGetEventHandler);
 
     /* set up the new handler. */
-    KeyboardSetEventHandler(keyboardEventHandler) ;
+    KeyboardSetEventHandler(keyboardEventHandler);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -933,46 +966,49 @@ T_void KeyboardPushEventHandler(T_keyboardEventHandler keyboardEventHandler)
  *  (if there is one).
  *
  *<!-----------------------------------------------------------------------*/
-T_void KeyboardPopEventHandler(T_void)
+T_void
+KeyboardPopEventHandler(T_void)
 {
-    T_doubleLinkListElement first ;
-    T_keyboardEventHandler handler ;
+    T_doubleLinkListElement first;
+    T_keyboardEventHandler handler;
 
-    DebugRoutine("KeyboardPopEventHandler") ;
+    DebugRoutine("KeyboardPopEventHandler");
 
     /* Get the old event handler. */
-    first = DoubleLinkListGetFirst(G_eventStack) ;
-    DebugCheck(first != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    first = DoubleLinkListGetFirst(G_eventStack);
+    DebugCheck(first != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
-    if (first != DOUBLE_LINK_LIST_ELEMENT_BAD)  {
+    if (first != DOUBLE_LINK_LIST_ELEMENT_BAD)
+    {
         handler = (T_keyboardEventHandler)
-                      DoubleLinkListElementGetData(first) ;
-        KeyboardSetEventHandler(handler) ;
-        DoubleLinkListRemoveElement(first) ;
+            DoubleLinkListElementGetData(first);
+        KeyboardSetEventHandler(handler);
+        DoubleLinkListRemoveElement(first);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void KeyboardDisallowKeyScans(T_void)
+T_void
+KeyboardDisallowKeyScans(T_void)
 {
-    G_allowKeyScans = FALSE ;
+    G_allowKeyScans = FALSE;
 }
 
-T_void KeyboardAllowKeyScans(T_void)
+T_void
+KeyboardAllowKeyScans(T_void)
 {
-    G_allowKeyScans = TRUE ;
+    G_allowKeyScans = TRUE;
 }
 
-E_Boolean KeyboardBufferReady(T_void)
+E_Boolean
+KeyboardBufferReady(T_void)
 {
     if (G_asciiStart != G_asciiEnd)
-        return TRUE ;
+        return TRUE;
     else
-        return FALSE ;
+        return FALSE;
 }
-
-
 
 #ifdef WIN32
 
@@ -1069,9 +1105,9 @@ const uint8_t G_sdlToScancode[] = {
         0, // 88
         0, // 89
         0, // 90
-	/*
-	   Skip uppercase letters
-	 */
+    /*
+       Skip uppercase letters
+     */
         KEY_SCAN_CODE_SB_OPEN, // SDLK_LEFTBRACKET	= 91,
         KEY_SCAN_CODE_BACKSLASH, // SDLK_BACKSLASH		= 92,
         KEY_SCAN_CODE_SB_CLOSE, // SDLK_RIGHTBRACKET	= 93,
@@ -1141,194 +1177,194 @@ const uint8_t G_sdlToScancode[] = {
         0, // 157
         0, // 158
         0, // 159
-	/* End of ASCII mapped keysyms */
+    /* End of ASCII mapped keysyms */
         /*@}*/
 
-	/** @name International keyboard syms */
+    /** @name International keyboard syms */
         /*@{*/
-	0, // SDLK_WORLD_0		= 160,		/* 0xA0 */
-	0, // SDLK_WORLD_1		= 161,
-	0, // SDLK_WORLD_2		= 162,
-	0, // SDLK_WORLD_3		= 163,
-	0, // SDLK_WORLD_4		= 164,
-	0, // SDLK_WORLD_5		= 165,
-	0, // SDLK_WORLD_6		= 166,
-	0, // SDLK_WORLD_7		= 167,
-	0, // SDLK_WORLD_8		= 168,
-	0, // SDLK_WORLD_9		= 169,
-	0, // SDLK_WORLD_10		= 170,
-	0, // SDLK_WORLD_11		= 171,
-	0, // SDLK_WORLD_12		= 172,
-	0, // SDLK_WORLD_13		= 173,
-	0, // SDLK_WORLD_14		= 174,
-	0, // SDLK_WORLD_15		= 175,
-	0, // SDLK_WORLD_16		= 176,
-	0, // SDLK_WORLD_17		= 177,
-	0, // SDLK_WORLD_18		= 178,
-	0, // SDLK_WORLD_19		= 179,
-	0, // SDLK_WORLD_20		= 180,
-	0, // SDLK_WORLD_21		= 181,
-	0, // SDLK_WORLD_22		= 182,
-	0, // SDLK_WORLD_23		= 183,
-	0, // SDLK_WORLD_24		= 184,
-	0, // SDLK_WORLD_25		= 185,
-	0, // SDLK_WORLD_26		= 186,
-	0, // SDLK_WORLD_27		= 187,
-	0, // SDLK_WORLD_28		= 188,
-	0, // SDLK_WORLD_29		= 189,
-	0, // SDLK_WORLD_30		= 190,
-	0, // SDLK_WORLD_31		= 191,
-	0, // SDLK_WORLD_32		= 192,
-	0, // SDLK_WORLD_33		= 193,
-	0, // SDLK_WORLD_34		= 194,
-	0, // SDLK_WORLD_35		= 195,
-	0, // SDLK_WORLD_36		= 196,
-	0, // SDLK_WORLD_37		= 197,
-	0, // SDLK_WORLD_38		= 198,
-	0, // SDLK_WORLD_39		= 199,
-	0, // SDLK_WORLD_40		= 200,
-	0, // SDLK_WORLD_41		= 201,
-	0, // SDLK_WORLD_42		= 202,
-	0, // SDLK_WORLD_43		= 203,
-	0, // SDLK_WORLD_44		= 204,
-	0, // SDLK_WORLD_45		= 205,
-	0, // SDLK_WORLD_46		= 206,
-	0, // SDLK_WORLD_47		= 207,
-	0, // SDLK_WORLD_48		= 208,
-	0, // SDLK_WORLD_49		= 209,
-	0, // SDLK_WORLD_50		= 210,
-	0, // SDLK_WORLD_51		= 211,
-	0, // SDLK_WORLD_52		= 212,
-	0, // SDLK_WORLD_53		= 213,
-	0, // SDLK_WORLD_54		= 214,
-	0, // SDLK_WORLD_55		= 215,
-	0, // SDLK_WORLD_56		= 216,
-	0, // SDLK_WORLD_57		= 217,
-	0, // SDLK_WORLD_58		= 218,
-	0, // SDLK_WORLD_59		= 219,
-	0, // SDLK_WORLD_60		= 220,
-	0, // SDLK_WORLD_61		= 221,
-	0, // SDLK_WORLD_62		= 222,
-	0, // SDLK_WORLD_63		= 223,
-	0, // SDLK_WORLD_64		= 224,
-	0, // SDLK_WORLD_65		= 225,
-	0, // SDLK_WORLD_66		= 226,
-	0, // SDLK_WORLD_67		= 227,
-	0, // SDLK_WORLD_68		= 228,
-	0, // SDLK_WORLD_69		= 229,
-	0, // SDLK_WORLD_70		= 230,
-	0, // SDLK_WORLD_71		= 231,
-	0, // SDLK_WORLD_72		= 232,
-	0, // SDLK_WORLD_73		= 233,
-	0, // SDLK_WORLD_74		= 234,
-	0, // SDLK_WORLD_75		= 235,
-	0, // SDLK_WORLD_76		= 236,
-	0, // SDLK_WORLD_77		= 237,
-	0, // SDLK_WORLD_78		= 238,
-	0, // SDLK_WORLD_79		= 239,
-	0, // SDLK_WORLD_80		= 240,
-	0, // SDLK_WORLD_81		= 241,
-	0, // SDLK_WORLD_82		= 242,
-	0, // SDLK_WORLD_83		= 243,
-	0, // SDLK_WORLD_84		= 244,
-	0, // SDLK_WORLD_85		= 245,
-	0, // SDLK_WORLD_86		= 246,
-	0, // SDLK_WORLD_87		= 247,
-	0, // SDLK_WORLD_88		= 248,
-	0, // SDLK_WORLD_89		= 249,
-	0, // SDLK_WORLD_90		= 250,
-	0, // SDLK_WORLD_91		= 251,
-	0, // SDLK_WORLD_92		= 252,
-	0, // SDLK_WORLD_93		= 253,
-	0, // SDLK_WORLD_94		= 254,
-	0, // SDLK_WORLD_95		= 255,		/* 0xFF */
+    0, // SDLK_WORLD_0		= 160,		/* 0xA0 */
+    0, // SDLK_WORLD_1		= 161,
+    0, // SDLK_WORLD_2		= 162,
+    0, // SDLK_WORLD_3		= 163,
+    0, // SDLK_WORLD_4		= 164,
+    0, // SDLK_WORLD_5		= 165,
+    0, // SDLK_WORLD_6		= 166,
+    0, // SDLK_WORLD_7		= 167,
+    0, // SDLK_WORLD_8		= 168,
+    0, // SDLK_WORLD_9		= 169,
+    0, // SDLK_WORLD_10		= 170,
+    0, // SDLK_WORLD_11		= 171,
+    0, // SDLK_WORLD_12		= 172,
+    0, // SDLK_WORLD_13		= 173,
+    0, // SDLK_WORLD_14		= 174,
+    0, // SDLK_WORLD_15		= 175,
+    0, // SDLK_WORLD_16		= 176,
+    0, // SDLK_WORLD_17		= 177,
+    0, // SDLK_WORLD_18		= 178,
+    0, // SDLK_WORLD_19		= 179,
+    0, // SDLK_WORLD_20		= 180,
+    0, // SDLK_WORLD_21		= 181,
+    0, // SDLK_WORLD_22		= 182,
+    0, // SDLK_WORLD_23		= 183,
+    0, // SDLK_WORLD_24		= 184,
+    0, // SDLK_WORLD_25		= 185,
+    0, // SDLK_WORLD_26		= 186,
+    0, // SDLK_WORLD_27		= 187,
+    0, // SDLK_WORLD_28		= 188,
+    0, // SDLK_WORLD_29		= 189,
+    0, // SDLK_WORLD_30		= 190,
+    0, // SDLK_WORLD_31		= 191,
+    0, // SDLK_WORLD_32		= 192,
+    0, // SDLK_WORLD_33		= 193,
+    0, // SDLK_WORLD_34		= 194,
+    0, // SDLK_WORLD_35		= 195,
+    0, // SDLK_WORLD_36		= 196,
+    0, // SDLK_WORLD_37		= 197,
+    0, // SDLK_WORLD_38		= 198,
+    0, // SDLK_WORLD_39		= 199,
+    0, // SDLK_WORLD_40		= 200,
+    0, // SDLK_WORLD_41		= 201,
+    0, // SDLK_WORLD_42		= 202,
+    0, // SDLK_WORLD_43		= 203,
+    0, // SDLK_WORLD_44		= 204,
+    0, // SDLK_WORLD_45		= 205,
+    0, // SDLK_WORLD_46		= 206,
+    0, // SDLK_WORLD_47		= 207,
+    0, // SDLK_WORLD_48		= 208,
+    0, // SDLK_WORLD_49		= 209,
+    0, // SDLK_WORLD_50		= 210,
+    0, // SDLK_WORLD_51		= 211,
+    0, // SDLK_WORLD_52		= 212,
+    0, // SDLK_WORLD_53		= 213,
+    0, // SDLK_WORLD_54		= 214,
+    0, // SDLK_WORLD_55		= 215,
+    0, // SDLK_WORLD_56		= 216,
+    0, // SDLK_WORLD_57		= 217,
+    0, // SDLK_WORLD_58		= 218,
+    0, // SDLK_WORLD_59		= 219,
+    0, // SDLK_WORLD_60		= 220,
+    0, // SDLK_WORLD_61		= 221,
+    0, // SDLK_WORLD_62		= 222,
+    0, // SDLK_WORLD_63		= 223,
+    0, // SDLK_WORLD_64		= 224,
+    0, // SDLK_WORLD_65		= 225,
+    0, // SDLK_WORLD_66		= 226,
+    0, // SDLK_WORLD_67		= 227,
+    0, // SDLK_WORLD_68		= 228,
+    0, // SDLK_WORLD_69		= 229,
+    0, // SDLK_WORLD_70		= 230,
+    0, // SDLK_WORLD_71		= 231,
+    0, // SDLK_WORLD_72		= 232,
+    0, // SDLK_WORLD_73		= 233,
+    0, // SDLK_WORLD_74		= 234,
+    0, // SDLK_WORLD_75		= 235,
+    0, // SDLK_WORLD_76		= 236,
+    0, // SDLK_WORLD_77		= 237,
+    0, // SDLK_WORLD_78		= 238,
+    0, // SDLK_WORLD_79		= 239,
+    0, // SDLK_WORLD_80		= 240,
+    0, // SDLK_WORLD_81		= 241,
+    0, // SDLK_WORLD_82		= 242,
+    0, // SDLK_WORLD_83		= 243,
+    0, // SDLK_WORLD_84		= 244,
+    0, // SDLK_WORLD_85		= 245,
+    0, // SDLK_WORLD_86		= 246,
+    0, // SDLK_WORLD_87		= 247,
+    0, // SDLK_WORLD_88		= 248,
+    0, // SDLK_WORLD_89		= 249,
+    0, // SDLK_WORLD_90		= 250,
+    0, // SDLK_WORLD_91		= 251,
+    0, // SDLK_WORLD_92		= 252,
+    0, // SDLK_WORLD_93		= 253,
+    0, // SDLK_WORLD_94		= 254,
+    0, // SDLK_WORLD_95		= 255,		/* 0xFF */
         /*@}*/
 
-	/** @name Numeric keypad */
+    /** @name Numeric keypad */
         /*@{*/
-	KEY_SCAN_CODE_KEYPAD_0, // SDLK_KP0		= 256,
-	KEY_SCAN_CODE_KEYPAD_1, // SDLK_KP1		= 257,
-	KEY_SCAN_CODE_KEYPAD_2, // SDLK_KP2		= 258,
-	KEY_SCAN_CODE_KEYPAD_3, // SDLK_KP3		= 259,
-	KEY_SCAN_CODE_KEYPAD_4, // SDLK_KP4		= 260,
-	KEY_SCAN_CODE_KEYPAD_5, // SDLK_KP5		= 261,
-	KEY_SCAN_CODE_KEYPAD_6, // SDLK_KP6		= 262,
-	KEY_SCAN_CODE_KEYPAD_7, // SDLK_KP7		= 263,
-	KEY_SCAN_CODE_KEYPAD_8, // SDLK_KP8		= 264,
-	KEY_SCAN_CODE_KEYPAD_9, // SDLK_KP9		= 265,
-	KEY_SCAN_CODE_KEYPAD_PERIOD, // SDLK_KP_PERIOD		= 266,
-	KEY_SCAN_CODE_KEYPAD_SLASH, // SDLK_KP_DIVIDE		= 267,
-	KEY_SCAN_CODE_KEYPAD_STAR, // SDLK_KP_MULTIPLY	= 268,
-	KEY_SCAN_CODE_KEYPAD_MINUS, // SDLK_KP_MINUS		= 269,
-	KEY_SCAN_CODE_KEYPAD_PLUS, // SDLK_KP_PLUS		= 270,
-	KEY_SCAN_CODE_KEYPAD_ENTER, // SDLK_KP_ENTER		= 271,
-	0, // SDLK_KP_EQUALS		= 272,
+    KEY_SCAN_CODE_KEYPAD_0, // SDLK_KP0		= 256,
+    KEY_SCAN_CODE_KEYPAD_1, // SDLK_KP1		= 257,
+    KEY_SCAN_CODE_KEYPAD_2, // SDLK_KP2		= 258,
+    KEY_SCAN_CODE_KEYPAD_3, // SDLK_KP3		= 259,
+    KEY_SCAN_CODE_KEYPAD_4, // SDLK_KP4		= 260,
+    KEY_SCAN_CODE_KEYPAD_5, // SDLK_KP5		= 261,
+    KEY_SCAN_CODE_KEYPAD_6, // SDLK_KP6		= 262,
+    KEY_SCAN_CODE_KEYPAD_7, // SDLK_KP7		= 263,
+    KEY_SCAN_CODE_KEYPAD_8, // SDLK_KP8		= 264,
+    KEY_SCAN_CODE_KEYPAD_9, // SDLK_KP9		= 265,
+    KEY_SCAN_CODE_KEYPAD_PERIOD, // SDLK_KP_PERIOD		= 266,
+    KEY_SCAN_CODE_KEYPAD_SLASH, // SDLK_KP_DIVIDE		= 267,
+    KEY_SCAN_CODE_KEYPAD_STAR, // SDLK_KP_MULTIPLY	= 268,
+    KEY_SCAN_CODE_KEYPAD_MINUS, // SDLK_KP_MINUS		= 269,
+    KEY_SCAN_CODE_KEYPAD_PLUS, // SDLK_KP_PLUS		= 270,
+    KEY_SCAN_CODE_KEYPAD_ENTER, // SDLK_KP_ENTER		= 271,
+    0, // SDLK_KP_EQUALS		= 272,
         /*@}*/
 
-	/** @name Arrows + Home/End pad */
+    /** @name Arrows + Home/End pad */
         /*@{*/
-	KEY_SCAN_CODE_UP, // SDLK_UP			= 273,
-	KEY_SCAN_CODE_DOWN, // SDLK_DOWN		= 274,
-	KEY_SCAN_CODE_RIGHT, // SDLK_RIGHT		= 275,
-	KEY_SCAN_CODE_LEFT, // SDLK_LEFT		= 276,
-	KEY_SCAN_CODE_INSERT, // SDLK_INSERT		= 277,
-	KEY_SCAN_CODE_HOME, // SDLK_HOME		= 278,
-	KEY_SCAN_CODE_END, // SDLK_END		= 279,
-	KEY_SCAN_CODE_PGUP, // SDLK_PAGEUP		= 280,
-	KEY_SCAN_CODE_PGDN, // SDLK_PAGEDOWN		= 281,
+    KEY_SCAN_CODE_UP, // SDLK_UP			= 273,
+    KEY_SCAN_CODE_DOWN, // SDLK_DOWN		= 274,
+    KEY_SCAN_CODE_RIGHT, // SDLK_RIGHT		= 275,
+    KEY_SCAN_CODE_LEFT, // SDLK_LEFT		= 276,
+    KEY_SCAN_CODE_INSERT, // SDLK_INSERT		= 277,
+    KEY_SCAN_CODE_HOME, // SDLK_HOME		= 278,
+    KEY_SCAN_CODE_END, // SDLK_END		= 279,
+    KEY_SCAN_CODE_PGUP, // SDLK_PAGEUP		= 280,
+    KEY_SCAN_CODE_PGDN, // SDLK_PAGEDOWN		= 281,
         /*@}*/
 
-	/** @name Function keys */
+    /** @name Function keys */
         /*@{*/
-	KEY_SCAN_CODE_F1, // SDLK_F1			= 282,
-	KEY_SCAN_CODE_F2, // SDLK_F2			= 283,
-	KEY_SCAN_CODE_F3, // SDLK_F3			= 284,
-	KEY_SCAN_CODE_F4, // SDLK_F4			= 285,
-	KEY_SCAN_CODE_F5, // SDLK_F5			= 286,
-	KEY_SCAN_CODE_F6, // SDLK_F6			= 287,
-	KEY_SCAN_CODE_F7, // SDLK_F7			= 288,
-	KEY_SCAN_CODE_F8, // SDLK_F8			= 289,
-	KEY_SCAN_CODE_F9, // SDLK_F9			= 290,
-	KEY_SCAN_CODE_F10, // SDLK_F10		= 291,
-	KEY_SCAN_CODE_F11, // SDLK_F11		= 292,
-	KEY_SCAN_CODE_F12, // SDLK_F12		= 293,
-	0, // SDLK_F13		= 294,
-	0, // SDLK_F14		= 295,
-	0, // SDLK_F15		= 296,
-	0, // 297
-	0, // 298
-	0, // 299
+    KEY_SCAN_CODE_F1, // SDLK_F1			= 282,
+    KEY_SCAN_CODE_F2, // SDLK_F2			= 283,
+    KEY_SCAN_CODE_F3, // SDLK_F3			= 284,
+    KEY_SCAN_CODE_F4, // SDLK_F4			= 285,
+    KEY_SCAN_CODE_F5, // SDLK_F5			= 286,
+    KEY_SCAN_CODE_F6, // SDLK_F6			= 287,
+    KEY_SCAN_CODE_F7, // SDLK_F7			= 288,
+    KEY_SCAN_CODE_F8, // SDLK_F8			= 289,
+    KEY_SCAN_CODE_F9, // SDLK_F9			= 290,
+    KEY_SCAN_CODE_F10, // SDLK_F10		= 291,
+    KEY_SCAN_CODE_F11, // SDLK_F11		= 292,
+    KEY_SCAN_CODE_F12, // SDLK_F12		= 293,
+    0, // SDLK_F13		= 294,
+    0, // SDLK_F14		= 295,
+    0, // SDLK_F15		= 296,
+    0, // 297
+    0, // 298
+    0, // 299
         /*@}*/
 
-	/** @name Key state modifier keys */
+    /** @name Key state modifier keys */
         /*@{*/
-	KEY_SCAN_CODE_NUM_LOCK, // SDLK_NUMLOCK		= 300,
-	KEY_SCAN_CODE_CAPS_LOCK, // SDLK_CAPSLOCK		= 301,
-	KEY_SCAN_CODE_SCROLL_LOCK, // SDLK_SCROLLOCK		= 302,
-	KEY_SCAN_CODE_RIGHT_SHIFT, // SDLK_RSHIFT		= 303,
-	KEY_SCAN_CODE_LEFT_SHIFT, // SDLK_LSHIFT		= 304,
-	KEY_SCAN_CODE_RIGHT_CTRL, // SDLK_RCTRL		= 305,
-	KEY_SCAN_CODE_LEFT_CTRL, // SDLK_LCTRL		= 306,
-	KEY_SCAN_CODE_ALT, // SDLK_RALT		= 307,
-	KEY_SCAN_CODE_ALT, // SDLK_LALT		= 308,
-	0, // SDLK_RMETA		= 309,
-	0, // SDLK_LMETA		= 310,
-	0, // SDLK_LSUPER		= 311,		/**< Left "Windows" key */
-	0, // SDLK_RSUPER		= 312,		/**< Right "Windows" key */
-	0, // SDLK_MODE		= 313,		/**< "Alt Gr" key */
-	0, // SDLK_COMPOSE		= 314,		/**< Multi-key compose key */
+    KEY_SCAN_CODE_NUM_LOCK, // SDLK_NUMLOCK		= 300,
+    KEY_SCAN_CODE_CAPS_LOCK, // SDLK_CAPSLOCK		= 301,
+    KEY_SCAN_CODE_SCROLL_LOCK, // SDLK_SCROLLOCK		= 302,
+    KEY_SCAN_CODE_RIGHT_SHIFT, // SDLK_RSHIFT		= 303,
+    KEY_SCAN_CODE_LEFT_SHIFT, // SDLK_LSHIFT		= 304,
+    KEY_SCAN_CODE_RIGHT_CTRL, // SDLK_RCTRL		= 305,
+    KEY_SCAN_CODE_LEFT_CTRL, // SDLK_LCTRL		= 306,
+    KEY_SCAN_CODE_ALT, // SDLK_RALT		= 307,
+    KEY_SCAN_CODE_ALT, // SDLK_LALT		= 308,
+    0, // SDLK_RMETA		= 309,
+    0, // SDLK_LMETA		= 310,
+    0, // SDLK_LSUPER		= 311,		/**< Left "Windows" key */
+    0, // SDLK_RSUPER		= 312,		/**< Right "Windows" key */
+    0, // SDLK_MODE		= 313,		/**< "Alt Gr" key */
+    0, // SDLK_COMPOSE		= 314,		/**< Multi-key compose key */
         /*@}*/
 
-	/** @name Miscellaneous function keys */
+    /** @name Miscellaneous function keys */
         /*@{*/
-	0, // SDLK_HELP		= 315,
-	0, // SDLK_PRINT		= 316,
-	0, // SDLK_SYSREQ		= 317,
-	0, // SDLK_BREAK		= 318,
-	0, // SDLK_MENU		= 319,
-	0, // SDLK_POWER		= 320,		/**< Power Macintosh power key */
-	0, // SDLK_EURO		= 321,		/**< Some european keyboards */
-	0, // SDLK_UNDO		= 322,		/**< Atari keyboard has Undo */
+    0, // SDLK_HELP		= 315,
+    0, // SDLK_PRINT		= 316,
+    0, // SDLK_SYSREQ		= 317,
+    0, // SDLK_BREAK		= 318,
+    0, // SDLK_MENU		= 319,
+    0, // SDLK_POWER		= 320,		/**< Power Macintosh power key */
+    0, // SDLK_EURO		= 321,		/**< Some european keyboards */
+    0, // SDLK_UNDO		= 322,		/**< Atari keyboard has Undo */
 
 };
 

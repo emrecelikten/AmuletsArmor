@@ -12,9 +12,7 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include "3D_TRIG.H"
-#include "3D_VIEW.H"
 #include "AREASND.H"
-#include "GENERAL.H"
 #include "MEMORY.H"
 #include "PLAYER.H"
 #include "SOUND.H"
@@ -30,58 +28,68 @@
                              (((T_word32)'S')<<16) | \
                              (((T_word32)'_')<<24))
 
-typedef struct T_areaSoundStructTag {
-    T_word32 tag ;
-    T_sword16 x, y ;              /* Position of sound. */
-    T_sword16 radius ;            /* Maximum radius to where sound is 0 */
-    T_word16 maxVolume ;          /* Volume in center. */
-    T_word16 currentVolume ;      /* Volume to player. 0 means not active. */
-    E_areaSoundType type ;        /* Type:  to loop or not to loop. */
-    T_word16 length ;             /* How long the sound is. */
-    T_word16 groupId ;            /* Group id or 0 if independent. */
-    T_sword16 soundNum ;          /* Number of sound to play. */
-    T_sword16 channel ;           /* Number of channel sound is in, */
-                                  /* or SOUND_BAD if none. */
-    T_areaSoundFinishCallback p_callback ; /* Who to call when sound is done, */
-                                           /* or NULL if nobody. */
-                                           /* Only applies to type ONCE. */
-    struct T_areaSoundStructTag *group ;  /* Link to group "leader". */
-    struct T_areaSoundStructTag *next ;   /* Link to next area sound. */
-    T_word32 data ;               /* Extra data to pass to the callback. */
-    T_word32 id ;
-    E_Boolean markedForDestroy ;
-} ;
+typedef struct T_areaSoundStructTag
+{
+    T_word32 tag;
+    T_sword16 x, y;              /* Position of sound. */
+    T_sword16 radius;            /* Maximum radius to where sound is 0 */
+    T_word16 maxVolume;          /* Volume in center. */
+    T_word16 currentVolume;      /* Volume to player. 0 means not active. */
+    E_areaSoundType type;        /* Type:  to loop or not to loop. */
+    T_word16 length;             /* How long the sound is. */
+    T_word16 groupId;            /* Group id or 0 if independent. */
+    T_sword16 soundNum;          /* Number of sound to play. */
+    T_sword16 channel;           /* Number of channel sound is in, */
+    /* or SOUND_BAD if none. */
+    T_areaSoundFinishCallback p_callback; /* Who to call when sound is done, */
+    /* or NULL if nobody. */
+    /* Only applies to type ONCE. */
+    struct T_areaSoundStructTag *group;  /* Link to group "leader". */
+    struct T_areaSoundStructTag *next;   /* Link to next area sound. */
+    T_word32 data;               /* Extra data to pass to the callback. */
+    T_word32 id;
+    E_Boolean markedForDestroy;
+};
 
 #define T_areaSoundStruct struct T_areaSoundStructTag
 
-static E_Boolean G_areaSoundInit = FALSE ;
-static T_areaSoundStruct *P_firstAreaSound = NULL ;
-static T_areaSoundStruct *P_lastAreaSound = NULL ;
-static T_word32 G_nextID = 0 ;
+static E_Boolean G_areaSoundInit = FALSE;
+static T_areaSoundStruct *P_firstAreaSound = NULL;
+static T_areaSoundStruct *P_lastAreaSound = NULL;
+static T_word32 G_nextID = 0;
 
 /* Internal prototypes: */
-T_areaSound IFindGroupLeader(T_word16 groupId) ;
-T_void ISetGroupLeaderAndId(
-           T_areaSound areaSound,
-           T_areaSound groupLeader,
-           T_word16 groupId) ;
-T_areaSoundStruct *IFindPrevSound(T_areaSoundStruct *p_sound) ;
-T_void ICalculateAllVolumes(T_sword16 listenX, T_sword16 listenY) ;
-T_areaSoundStruct *IFindLoudestNotChannelSound(T_void) ;
-T_void IUpdateActiveSounds(T_sword16 listenX, T_sword16 listenY) ;
-T_void IUpdateInactiveSounds(T_sword16 listenX, T_sword16 listenY) ;
-T_word16 ICalculateVolume(
-             T_areaSoundStruct *p_sound,
-             T_sword16 listenX,
-             T_sword16 listenY) ;
-static T_word16 IAreaSoundDeterminePan(
-                    T_areaSoundStruct *p_sound,
-                    T_sword16 listenX,
-                    T_sword16 listenY) ;
-static T_void ISoundForAreaSoundIsDone(
-                  T_void *p_data) ;
-static T_areaSoundStruct *IFindAreaSoundByID(T_word32 id) ;
-static T_void IDestroyMarked(T_void) ;
+T_areaSound
+IFindGroupLeader(T_word16 groupId);
+T_void
+ISetGroupLeaderAndId(
+    T_areaSound areaSound,
+    T_areaSound groupLeader,
+    T_word16 groupId);
+T_areaSoundStruct *IFindPrevSound(T_areaSoundStruct *p_sound);
+T_void
+ICalculateAllVolumes(T_sword16 listenX, T_sword16 listenY);
+T_areaSoundStruct *IFindLoudestNotChannelSound(T_void);
+T_void
+IUpdateActiveSounds(T_sword16 listenX, T_sword16 listenY);
+T_void
+IUpdateInactiveSounds(T_sword16 listenX, T_sword16 listenY);
+T_word16
+ICalculateVolume(
+    T_areaSoundStruct *p_sound,
+    T_sword16 listenX,
+    T_sword16 listenY);
+static T_word16
+IAreaSoundDeterminePan(
+    T_areaSoundStruct *p_sound,
+    T_sword16 listenX,
+    T_sword16 listenY);
+static T_void
+ISoundForAreaSoundIsDone(
+    T_void *p_data);
+static T_areaSoundStruct *IFindAreaSoundByID(T_word32 id);
+static T_void
+IDestroyMarked(T_void);
 
 
 /*-------------------------------------------------------------------------*
@@ -93,14 +101,15 @@ static T_void IDestroyMarked(T_void) ;
  *  done.
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundInitialize(T_void)
+T_void
+AreaSoundInitialize(T_void)
 {
-    DebugRoutine("AreaSoundInitialize") ;
-    DebugCheck(G_areaSoundInit == FALSE) ;
+    DebugRoutine("AreaSoundInitialize");
+    DebugCheck(G_areaSoundInit == FALSE);
 
-    G_areaSoundInit = TRUE ;
+    G_areaSoundInit = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -112,20 +121,21 @@ T_void AreaSoundInitialize(T_void)
  *  after turning off all the sounds.
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundFinish(T_void)
+T_void
+AreaSoundFinish(T_void)
 {
-    DebugRoutine("AreaSoundFinish") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundFinish");
+    DebugCheck(G_areaSoundInit == TRUE);
+    AreaSoundCheck();
 
     /* Destroy all the sounds currently being used. */
     /* This also frees up all the memory. */
     while (P_firstAreaSound != NULL)
-        AreaSoundDestroy(P_firstAreaSound) ;
+        AreaSoundDestroy(P_firstAreaSound);
 
-    G_areaSoundInit = FALSE ;
+    G_areaSoundInit = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -138,16 +148,17 @@ T_void AreaSoundFinish(T_void)
  *  @param mapNumber -- Map/level sounds to load
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundLoad(T_word32 mapNumber)
+T_void
+AreaSoundLoad(T_word32 mapNumber)
 {
-    DebugRoutine("AreaSoundLoad") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundLoad");
+    DebugCheck(G_areaSoundInit == TRUE);
+    AreaSoundCheck();
 
     /* First, destroy all the sounds currently being used. */
     /* This also frees up all the memory. */
     while (P_firstAreaSound != NULL)
-        AreaSoundDestroy(P_firstAreaSound) ;
+        AreaSoundDestroy(P_firstAreaSound);
 
 #if 0
     /* Identify the file we wish to load. */
@@ -206,7 +217,7 @@ T_void AreaSoundLoad(T_word32 mapNumber)
                        NULL,
                        0,
                        soundNum) ;
-AreaSoundCheck() ;
+  AreaSoundCheck() ;
 
             if (self != NULL)
                 if ((groupId != 0) && (p_groupLeader == NULL))  {
@@ -217,7 +228,7 @@ AreaSoundCheck() ;
     }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -243,77 +254,88 @@ AreaSoundCheck() ;
  *  @return area sound handle that was created
  *
  *<!-----------------------------------------------------------------------*/
-T_areaSound AreaSoundCreate(
-                T_sword16 x,
-                T_sword16 y,
-                T_word16 radius,
-                T_word16 volume,
-                E_areaSoundType type,
-                T_word16 length,
-                T_areaSound p_groupLeader,
-                T_areaSoundFinishCallback p_callback,
-                T_word32 data,
-                T_word16 soundNum)
+T_areaSound
+AreaSoundCreate(
+    T_sword16 x,
+    T_sword16 y,
+    T_word16 radius,
+    T_word16 volume,
+    E_areaSoundType type,
+    T_word16 length,
+    T_areaSound p_groupLeader,
+    T_areaSoundFinishCallback p_callback,
+    T_word32 data,
+    T_word16 soundNum)
 {
-    T_areaSoundStruct *p_sound ;
+    T_areaSoundStruct *p_sound;
 
-    DebugRoutine("AreaSoundCreate") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundCreate");
+    DebugCheck(G_areaSoundInit == TRUE);
+    AreaSoundCheck();
 
     /* First check to see if sound is turned on. */
-    if (SoundIsOn()==TRUE)  {
+    if (SoundIsOn() == TRUE)
+    {
         /* Allocate memory for the sound. */
-        p_sound = (T_areaSoundStruct*)MemAlloc(sizeof(T_areaSoundStruct)) ;
+        p_sound = (T_areaSoundStruct *) MemAlloc(sizeof(T_areaSoundStruct));
 
         /* If sound is allocated ... */
-        DebugCheck(p_sound != NULL) ;
-        if (p_sound != NULL)  {
+        DebugCheck(p_sound != NULL);
+        if (p_sound != NULL)
+        {
             /* Initialize the fields as we can. */
-            p_sound->tag = AREA_SOUND_ID ;
-            p_sound->x = x ;
-            p_sound->y = y ;
-            p_sound->radius = radius ;
-            p_sound->maxVolume = volume ;
-            p_sound->currentVolume = 0 ;
-            p_sound->type = type ;
-            p_sound->length = length ;
-            p_sound->group = (T_areaSoundStruct *)p_groupLeader ;
-            p_sound->data = data ;
-            p_sound->id = G_nextID++ ;
+            p_sound->tag = AREA_SOUND_ID;
+            p_sound->x = x;
+            p_sound->y = y;
+            p_sound->radius = radius;
+            p_sound->maxVolume = volume;
+            p_sound->currentVolume = 0;
+            p_sound->type = type;
+            p_sound->length = length;
+            p_sound->group = (T_areaSoundStruct *) p_groupLeader;
+            p_sound->data = data;
+            p_sound->id = G_nextID++;
             p_sound->markedForDestroy = FALSE;
-            if (p_groupLeader != NULL)  {
+            if (p_groupLeader != NULL)
+            {
                 /* Make the group id match the group leader (in case */
                 /* the group leader is destroyed. */
-                DebugCheck(p_sound->group->tag == AREA_SOUND_ID) ;
-                p_sound->groupId = p_sound->group->groupId ;
-            } else {
-                /* Must be an independent. */
-                p_sound->groupId = 0 ;
+                DebugCheck(p_sound->group->tag == AREA_SOUND_ID);
+                p_sound->groupId = p_sound->group->groupId;
             }
-            p_sound->p_callback = p_callback ;
-            p_sound->soundNum = soundNum ;
+            else
+            {
+                /* Must be an independent. */
+                p_sound->groupId = 0;
+            }
+            p_sound->p_callback = p_callback;
+            p_sound->soundNum = soundNum;
             /* No channel given to this sound yet. */
-            p_sound->channel = SOUND_BAD ;
+            p_sound->channel = SOUND_BAD;
 
             /* Place on list of sounds. */
-            if (P_lastAreaSound != NULL)  {
-                P_lastAreaSound->next = p_sound ;
-            } else  {
-                P_firstAreaSound = p_sound ;
+            if (P_lastAreaSound != NULL)
+            {
+                P_lastAreaSound->next = p_sound;
             }
-            P_lastAreaSound = p_sound ;
-            p_sound->next = NULL ;
+            else
+            {
+                P_firstAreaSound = p_sound;
+            }
+            P_lastAreaSound = p_sound;
+            p_sound->next = NULL;
 
-            DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+            DebugCheck(p_sound->tag == AREA_SOUND_ID);
         }
-    } else {
-        p_sound = NULL ;
+    }
+    else
+    {
+        p_sound = NULL;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return((T_areaSound)p_sound) ;
+    return ((T_areaSound) p_sound);
 }
 
 /*-------------------------------------------------------------------------*
@@ -326,70 +348,82 @@ T_areaSound AreaSoundCreate(
  *  @param areaSound -- Area sound to destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundDestroy(T_areaSound areaSound)
+T_void
+AreaSoundDestroy(T_areaSound areaSound)
 {
-    T_areaSoundStruct *p_sound ;
-    T_areaSoundStruct *p_prev ;
-    static E_Boolean insideHere = FALSE ;
-    T_word32 timeOut ;
+    T_areaSoundStruct *p_sound;
+    T_areaSoundStruct *p_prev;
+    static E_Boolean insideHere = FALSE;
+    T_word32 timeOut;
 
-    DebugRoutine("AreaSoundDestroy") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    DebugCheck(areaSound != NULL) ;
-    DebugCheck(((T_areaSoundStruct *)areaSound)->tag == AREA_SOUND_ID) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundDestroy");
+    DebugCheck(G_areaSoundInit == TRUE);
+    DebugCheck(areaSound != NULL);
+    DebugCheck(((T_areaSoundStruct *) areaSound)->tag == AREA_SOUND_ID);
+    AreaSoundCheck();
 
-    if (insideHere == TRUE)  {
-        DebugEnd() ;
-        return ;
+    if (insideHere == TRUE)
+    {
+        DebugEnd();
+        return;
     }
     /* Get a quick pointer to the sound. */
-    p_sound = (T_areaSoundStruct *)areaSound ;
+    p_sound = (T_areaSoundStruct *) areaSound;
 
-    DebugCheck(p_sound->channel != ((T_sword16)0xCECE)) ;
-    DebugCheck(p_sound->channel != ((T_sword16)0xCDCD)) ;
-    DebugCheck(p_sound->channel != ((T_sword16)0xCCCC)) ;
+    DebugCheck(p_sound->channel != ((T_sword16) 0xCECE));
+    DebugCheck(p_sound->channel != ((T_sword16) 0xCDCD));
+    DebugCheck(p_sound->channel != ((T_sword16) 0xCCCC));
     /* Turn off the sound if it is playing. */
-    if (p_sound->channel != SOUND_BAD)  {
-        if (SoundIsOn())  {
+    if (p_sound->channel != SOUND_BAD)
+    {
+        if (SoundIsOn())
+        {
             /* You have 1/2 second to stop the sound */
-            timeOut = TickerGet() + 35 ;
-            while ((p_sound->channel != SOUND_BAD) && (TickerGet() < timeOut))  {
-                insideHere = TRUE ;
-                SoundStop(p_sound->channel) ;
-                SoundUpdate() ;
-                insideHere = FALSE ;
+            timeOut = TickerGet() + 35;
+            while ((p_sound->channel != SOUND_BAD) && (TickerGet() < timeOut))
+            {
+                insideHere = TRUE;
+                SoundStop(p_sound->channel);
+                SoundUpdate();
+                insideHere = FALSE;
             }
-        } else {
+        }
+        else
+        {
             /* If no sound, make sure we have no channel assigned. */
-            p_sound->channel = SOUND_BAD ;
+            p_sound->channel = SOUND_BAD;
         }
         /* If we are looping, destroy us NOW. */
         if (p_sound->type == AREA_SOUND_TYPE_LOOP)
-            AreaSoundDestroy(areaSound) ;
-    } else {
+            AreaSoundDestroy(areaSound);
+    }
+    else
+    {
         /* If there is a callback routine, call it before we destroy it. */
         if (p_sound->p_callback != NULL)
-            p_sound->p_callback(p_sound, p_sound->data) ;
+            p_sound->p_callback(p_sound, p_sound->data);
 
         /* Remove the sound from the list. */
-        p_prev = IFindPrevSound(p_sound) ;
-        if (p_prev == NULL)  {
-            P_firstAreaSound = p_sound->next ;
-        } else {
-            p_prev->next = p_sound->next ;
+        p_prev = IFindPrevSound(p_sound);
+        if (p_prev == NULL)
+        {
+            P_firstAreaSound = p_sound->next;
+        }
+        else
+        {
+            p_prev->next = p_sound->next;
         }
         if (P_lastAreaSound == p_sound)
-            P_lastAreaSound = p_prev ;
+            P_lastAreaSound = p_prev;
 
         /* Tag the sound as truly freed. */
-        p_sound->tag = AREA_SOUND_ID_DONE ;
+        p_sound->tag = AREA_SOUND_ID_DONE;
 
         /* Now that we are freed from the link, remove the sound from memory. */
-        MemFree(p_sound) ;
+        MemFree(p_sound);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -404,17 +438,18 @@ T_void AreaSoundDestroy(T_areaSound areaSound)
  *  @param newY -- New Y location of sound
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundMove(T_areaSound areaSound, T_sword16 newX, T_sword16 newY)
+T_void
+AreaSoundMove(T_areaSound areaSound, T_sword16 newX, T_sword16 newY)
 {
-    DebugRoutine("AreaSoundMove") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    DebugCheck(((T_areaSoundStruct *)areaSound)->tag == AREA_SOUND_ID) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundMove");
+    DebugCheck(G_areaSoundInit == TRUE);
+    DebugCheck(((T_areaSoundStruct *) areaSound)->tag == AREA_SOUND_ID);
+    AreaSoundCheck();
 
-    ((T_areaSoundStruct *)areaSound)->x = newX ;
-    ((T_areaSoundStruct *)areaSound)->y = newY ;
+    ((T_areaSoundStruct *) areaSound)->x = newX;
+    ((T_areaSoundStruct *) areaSound)->y = newY;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -428,18 +463,19 @@ T_void AreaSoundMove(T_areaSound areaSound, T_sword16 newX, T_sword16 newY)
  *  @param listenY -- Y Position where sounds are heard.
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundUpdate(T_sword16 listenX, T_sword16 listenY)
+T_void
+AreaSoundUpdate(T_sword16 listenX, T_sword16 listenY)
 {
-    DebugRoutine("AreaSoundUpdate") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    AreaSoundCheck() ;
+    DebugRoutine("AreaSoundUpdate");
+    DebugCheck(G_areaSoundInit == TRUE);
+    AreaSoundCheck();
 
 //    IDestroyMarked() ;
-    ICalculateAllVolumes(listenX, listenY) ;
-    IUpdateActiveSounds(listenX, listenY) ;
-    IUpdateInactiveSounds(listenX, listenY) ;
+    ICalculateAllVolumes(listenX, listenY);
+    IUpdateActiveSounds(listenX, listenY);
+    IUpdateInactiveSounds(listenX, listenY);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -454,25 +490,27 @@ T_void AreaSoundUpdate(T_sword16 listenX, T_sword16 listenY)
  *  @return Found group leader, or AREA_SOUND_BAD
  *
  *<!-----------------------------------------------------------------------*/
-T_areaSound IFindGroupLeader(T_word16 groupId)
+T_areaSound
+IFindGroupLeader(T_word16 groupId)
 {
-    T_areaSoundStruct *p_areaSound ;
+    T_areaSoundStruct *p_areaSound;
 
-    DebugRoutine("IFindGroupLeader") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    AreaSoundCheck() ;
+    DebugRoutine("IFindGroupLeader");
+    DebugCheck(G_areaSoundInit == TRUE);
+    AreaSoundCheck();
 
-    p_areaSound = P_firstAreaSound ;
-    while (p_areaSound != NULL)  {
-        DebugCheck(p_areaSound->tag == AREA_SOUND_ID) ;
+    p_areaSound = P_firstAreaSound;
+    while (p_areaSound != NULL)
+    {
+        DebugCheck(p_areaSound->tag == AREA_SOUND_ID);
         if (p_areaSound->groupId == groupId)
-            break ;
-        p_areaSound = p_areaSound->next ;
+            break;
+        p_areaSound = p_areaSound->next;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return((T_areaSound)p_areaSound) ;
+    return ((T_areaSound) p_areaSound);
 }
 
 /*-------------------------------------------------------------------------*
@@ -487,20 +525,21 @@ T_areaSound IFindGroupLeader(T_word16 groupId)
  *  @param groupId -- Group Id to change to
  *
  *<!-----------------------------------------------------------------------*/
-T_void ISetGroupLeaderAndId(
-           T_areaSound areaSound,
-           T_areaSound groupLeader,
-           T_word16 groupId)
+T_void
+ISetGroupLeaderAndId(
+    T_areaSound areaSound,
+    T_areaSound groupLeader,
+    T_word16 groupId)
 {
-    DebugRoutine("ISetGroupLeaderAndId") ;
-    DebugCheck(G_areaSoundInit == TRUE) ;
-    DebugCheck(((T_areaSoundStruct *)areaSound)->tag == AREA_SOUND_ID) ;
-    AreaSoundCheck() ;
+    DebugRoutine("ISetGroupLeaderAndId");
+    DebugCheck(G_areaSoundInit == TRUE);
+    DebugCheck(((T_areaSoundStruct *) areaSound)->tag == AREA_SOUND_ID);
+    AreaSoundCheck();
 
-    ((T_areaSoundStruct *)areaSound)->group = groupLeader ;
-    ((T_areaSoundStruct *)areaSound)->groupId = groupId ;
+    ((T_areaSoundStruct *) areaSound)->group = groupLeader;
+    ((T_areaSoundStruct *) areaSound)->groupId = groupId;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -517,10 +556,10 @@ T_void ISetGroupLeaderAndId(
  *<!-----------------------------------------------------------------------*/
 T_areaSoundStruct *IFindPrevSound(T_areaSoundStruct *p_sound)
 {
-    T_areaSoundStruct *p_prev ;
-    T_areaSoundStruct *p_where ;
+    T_areaSoundStruct *p_prev;
+    T_areaSoundStruct *p_where;
 
-    DebugRoutine("IFindPrevSound") ;
+    DebugRoutine("IFindPrevSound");
 #ifndef NDEBUG
     if(p_sound->tag != AREA_SOUND_ID) {
         printf("Bad sound %p\n", p_sound);  fflush(stdout) ;
@@ -529,26 +568,27 @@ T_areaSoundStruct *IFindPrevSound(T_areaSoundStruct *p_sound)
         }
     }
 #endif
-    DebugCheck(p_sound != NULL) ;
-    DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
-    AreaSoundCheck() ;
+    DebugCheck(p_sound != NULL);
+    DebugCheck(p_sound->tag == AREA_SOUND_ID);
+    AreaSoundCheck();
 
     /* Keep track of the previous and the current location. */
-    p_prev = NULL ;
-    p_where = P_firstAreaSound ;
+    p_prev = NULL;
+    p_where = P_firstAreaSound;
 
     /* Search through the list until we find the match.  Prev is one */
     /* element behind. */
-    while (p_where != NULL)  {
+    while (p_where != NULL)
+    {
         if (p_where == p_sound)
-             break ;
-        p_prev = p_where ;
-        p_where = p_where->next ;
+            break;
+        p_prev = p_where;
+        p_where = p_where->next;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_prev ;
+    return p_prev;
 }
 
 
@@ -564,42 +604,48 @@ T_areaSoundStruct *IFindPrevSound(T_areaSoundStruct *p_sound)
  *  @param listenY -- Y Position where sounds are heard.
  *
  *<!-----------------------------------------------------------------------*/
-T_void IUpdateActiveSounds(T_sword16 listenX, T_sword16 listenY)
+T_void
+IUpdateActiveSounds(T_sword16 listenX, T_sword16 listenY)
 {
-    T_areaSoundStruct *p_sound ;
-    T_word16 volume ;
-    T_word16 pan ;
+    T_areaSoundStruct *p_sound;
+    T_word16 volume;
+    T_word16 pan;
 
-    DebugRoutine("IUpdateActiveSounds") ;
-    AreaSoundCheck() ;
+    DebugRoutine("IUpdateActiveSounds");
+    AreaSoundCheck();
 
-    p_sound = P_firstAreaSound ;
-    while (p_sound != NULL)  {
-        DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+    p_sound = P_firstAreaSound;
+    while (p_sound != NULL)
+    {
+        DebugCheck(p_sound->tag == AREA_SOUND_ID);
 
         /* Look for area sounds that are assigned to a channel. */
-        if (p_sound->channel != SOUND_BAD)  {
+        if (p_sound->channel != SOUND_BAD)
+        {
             /* OK, found one. */
-            volume = p_sound->currentVolume ;
+            volume = p_sound->currentVolume;
 
-            if (volume != 0)  {
+            if (volume != 0)
+            {
                 /* Change the volume level. */
-                SoundSetVolume(p_sound->channel, ((volume * SoundGetEffectsVolume())>>8)) ;
-                pan = IAreaSoundDeterminePan(p_sound, listenX, listenY) ;
-                SoundSetStereoPanLocation(p_sound->channel, pan) ;
-            } else {
+                SoundSetVolume(p_sound->channel, ((volume * SoundGetEffectsVolume()) >> 8));
+                pan = IAreaSoundDeterminePan(p_sound, listenX, listenY);
+                SoundSetStereoPanLocation(p_sound->channel, pan);
+            }
+            else
+            {
                 /* The volume is zero, there is no need to play */
                 /* this sound! */
-                SoundStop(p_sound->channel) ;
+                SoundStop(p_sound->channel);
             }
         }
-        p_sound = p_sound->next ;
+        p_sound = p_sound->next;
     }
 
     /* Sound being updated. */
-    SoundUpdate() ;
+    SoundUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -613,60 +659,69 @@ T_void IUpdateActiveSounds(T_sword16 listenX, T_sword16 listenY)
  *  @param listenY -- Y Position where sounds are heard.
  *
  *<!-----------------------------------------------------------------------*/
-T_void IUpdateInactiveSounds(T_sword16 listenX, T_sword16 listenY)
+T_void
+IUpdateInactiveSounds(T_sword16 listenX, T_sword16 listenY)
 {
-    T_areaSoundStruct *p_sound ;
-    E_Boolean allowFreqShift ;
+    T_areaSoundStruct *p_sound;
+    E_Boolean allowFreqShift;
 
-    DebugRoutine("IUpdateInactiveSounds") ;
-    AreaSoundCheck() ;
+    DebugRoutine("IUpdateInactiveSounds");
+    AreaSoundCheck();
 
     /* Keep playing area sounds if there is room for them in the */
     /* sound system. */
-    while (1)  {
+    while (1)
+    {
         /* What sound is the loudest and is not being played. */
-        p_sound = IFindLoudestNotChannelSound() ;
+        p_sound = IFindLoudestNotChannelSound();
 
         /* If no sound was found, stop doing this processing.  */
         /* There is nothing more useful to do. */
-        if (p_sound == NULL)  {
-            break ;
-        } else {
+        if (p_sound == NULL)
+        {
+            break;
+        }
+        else
+        {
         }
 
-        DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+        DebugCheck(p_sound->tag == AREA_SOUND_ID);
         /* Otherwise, we HAVE found another sound that is not being */
         /* played that needs to be played.  So, let's play it. */
-        allowFreqShift = SoundGetAllowFreqShift() ;
+        allowFreqShift = SoundGetAllowFreqShift();
         if (p_sound->type == AREA_SOUND_TYPE_ONCE)
-            SoundSetAllowFreqShift(TRUE) ;
+            SoundSetAllowFreqShift(TRUE);
         else
-            SoundSetAllowFreqShift(FALSE) ;
-        if (p_sound->type == AREA_SOUND_TYPE_ONCE)  {
+            SoundSetAllowFreqShift(FALSE);
+        if (p_sound->type == AREA_SOUND_TYPE_ONCE)
+        {
             p_sound->channel =
                 SoundPlayByNumberWithCallback(
                     p_sound->soundNum,
                     p_sound->currentVolume,
                     ISoundForAreaSoundIsDone,
-                    (T_void *)(p_sound->id)) ;
-        } else  {
+                    (T_void *) (p_sound->id));
+        }
+        else
+        {
             p_sound->channel =
                 SoundPlayLoopByNumberWithCallback(
                     p_sound->soundNum,
                     p_sound->currentVolume,
                     ISoundForAreaSoundIsDone,
-                    (T_void *)(p_sound->id)) ;
+                    (T_void *) (p_sound->id));
         }
-        SoundSetAllowFreqShift(allowFreqShift) ;
+        SoundSetAllowFreqShift(allowFreqShift);
 
         /* Stop if the channel could not be played. */
-        if (p_sound->channel == SOUND_BAD)  {
-            ISoundForAreaSoundIsDone((T_void *)(p_sound->id));
-            break ;
+        if (p_sound->channel == SOUND_BAD)
+        {
+            ISoundForAreaSoundIsDone((T_void *) (p_sound->id));
+            break;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -681,39 +736,40 @@ T_void IUpdateInactiveSounds(T_sword16 listenX, T_sword16 listenY)
  *  @param listenY -- Y Position where sounds are heard.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 ICalculateVolume(
-             T_areaSoundStruct *p_sound,
-             T_sword16 listenX,
-             T_sword16 listenY)
+T_word16
+ICalculateVolume(
+    T_areaSoundStruct *p_sound,
+    T_sword16 listenX,
+    T_sword16 listenY)
 {
-    T_word16 volume ;
-    T_word16 distance ;
+    T_word16 volume;
+    T_word16 distance;
 
-    DebugRoutine("ICalculateVolume") ;
-    DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
-    AreaSoundCheck() ;
+    DebugRoutine("ICalculateVolume");
+    DebugCheck(p_sound->tag == AREA_SOUND_ID);
+    AreaSoundCheck();
 
     /* Are far is the sound source? */
     distance = CalculateDistance(
-                    p_sound->x,
-                    p_sound->y,
-                    listenX,
-                    listenY) ;
+        p_sound->x,
+        p_sound->y,
+        listenX,
+        listenY);
 
     /* If the distance is too far, volume is zero. */
     if (distance >= p_sound->radius)
         if (p_sound->type == AREA_SOUND_TYPE_ONCE)
-            volume = 10 ;
+            volume = 10;
         else
-            volume = 0 ;
+            volume = 0;
     else
         /* If not, use the distance to scale the max sound. */
-        volume = (((T_word32)p_sound->maxVolume) *
-                     ((T_word32)(p_sound->radius - distance))) /
-                         p_sound->radius ;
-    DebugEnd() ;
+        volume = (((T_word32) p_sound->maxVolume) *
+            ((T_word32) (p_sound->radius - distance))) /
+            p_sound->radius;
+    DebugEnd();
 
-    return volume ;
+    return volume;
 }
 
 /*-------------------------------------------------------------------------*
@@ -727,30 +783,33 @@ T_word16 ICalculateVolume(
  *  @param listenY -- Y Position where sounds are heard.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ICalculateAllVolumes(T_sword16 listenX, T_sword16 listenY)
+T_void
+ICalculateAllVolumes(T_sword16 listenX, T_sword16 listenY)
 {
-    T_areaSoundStruct *p_sound ;
+    T_areaSoundStruct *p_sound;
 
-    DebugRoutine("ICalculateAllVolumes") ;
-    AreaSoundCheck() ;
+    DebugRoutine("ICalculateAllVolumes");
+    AreaSoundCheck();
 
-    p_sound = P_firstAreaSound ;
-    while (p_sound != NULL)  {
-        DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+    p_sound = P_firstAreaSound;
+    while (p_sound != NULL)
+    {
+        DebugCheck(p_sound->tag == AREA_SOUND_ID);
         /* Calculate the sounds. */
         p_sound->currentVolume =
-            ICalculateVolume(p_sound, listenX, listenY) ;
+            ICalculateVolume(p_sound, listenX, listenY);
 
         /* If in a group, make the leader equal the louder of the two. */
-        if (p_sound->group != NULL)  {
-             DebugCheck(p_sound->group->tag == AREA_SOUND_ID) ;
-             if (p_sound->currentVolume > p_sound->group->currentVolume)
-                  p_sound->group->currentVolume = p_sound->currentVolume;
+        if (p_sound->group != NULL)
+        {
+            DebugCheck(p_sound->group->tag == AREA_SOUND_ID);
+            if (p_sound->currentVolume > p_sound->group->currentVolume)
+                p_sound->group->currentVolume = p_sound->currentVolume;
         }
-        p_sound = p_sound->next ;
+        p_sound = p_sound->next;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -765,41 +824,46 @@ T_void ICalculateAllVolumes(T_sword16 listenX, T_sword16 listenY)
  *<!-----------------------------------------------------------------------*/
 T_areaSoundStruct *IFindLoudestNotChannelSound(T_void)
 {
-    T_areaSoundStruct *p_sound ;
-    T_areaSoundStruct *p_soundLoudest = NULL ;
-    T_word16 loudestVolume = 0 ;
+    T_areaSoundStruct *p_sound;
+    T_areaSoundStruct *p_soundLoudest = NULL;
+    T_word16 loudestVolume = 0;
 
-    DebugRoutine("IFindLoudestNotChannelSound") ;
-    AreaSoundCheck() ;
+    DebugRoutine("IFindLoudestNotChannelSound");
+    AreaSoundCheck();
 
-    p_sound = P_firstAreaSound ;
-    while (p_sound != NULL)  {
-        DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+    p_sound = P_firstAreaSound;
+    while (p_sound != NULL)
+    {
+        DebugCheck(p_sound->tag == AREA_SOUND_ID);
         /* Pick only sounds that are NOT being played. */
-        if (p_sound->channel == SOUND_BAD)  {
+        if (p_sound->channel == SOUND_BAD)
+        {
             /* Pick only group leaders or non group members. */
             if ((p_sound->group == NULL) ||
-                (p_sound->group == p_sound))  {
+                (p_sound->group == p_sound))
+            {
                 /* Compare volumes as we go through the list. */
-                if (p_sound->currentVolume >= loudestVolume)  {
+                if (p_sound->currentVolume >= loudestVolume)
+                {
                     /* Check if we are at volume 0.  If we are, */
                     /* volume 0 is played for one time sounds, but */
                     /* not for area snds. */
                     if ((p_sound->currentVolume != 0) ||
-                         (p_sound->type == AREA_SOUND_TYPE_ONCE))  {
-                        loudestVolume = p_sound->currentVolume ;
-                        p_soundLoudest = p_sound ;
+                        (p_sound->type == AREA_SOUND_TYPE_ONCE))
+                    {
+                        loudestVolume = p_sound->currentVolume;
+                        p_soundLoudest = p_sound;
                     }
                 }
             }
         }
 
-        p_sound = p_sound->next ;
+        p_sound = p_sound->next;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_soundLoudest ;
+    return p_soundLoudest;
 }
 
 /*-------------------------------------------------------------------------*
@@ -849,37 +913,42 @@ T_void AreaSoundCheck(T_void)
  *  @param listenY -- Position of listener
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 IAreaSoundDeterminePan(
-                    T_areaSoundStruct *p_sound,
-                    T_sword16 listenX,
-                    T_sword16 listenY)
+static T_word16
+IAreaSoundDeterminePan(
+    T_areaSoundStruct *p_sound,
+    T_sword16 listenX,
+    T_sword16 listenY)
 {
-    T_sword16 dx, dy ;
-    T_word16 pan, angle ;
+    T_sword16 dx, dy;
+    T_word16 pan, angle;
 
-    DebugRoutine("IAreaSoundDeterminePan") ;
-    DebugCheck(p_sound != NULL) ;
+    DebugRoutine("IAreaSoundDeterminePan");
+    DebugCheck(p_sound != NULL);
 
-    if (p_sound)  {
-        DebugCheck(p_sound->tag == AREA_SOUND_ID) ;
+    if (p_sound)
+    {
+        DebugCheck(p_sound->tag == AREA_SOUND_ID);
 
-        dx = p_sound->x - listenX ;
-        dy = p_sound->y - listenY ;
-        angle = MathArcTangent(dx, dy) ;
-        angle -= 0x4000 ;
-        angle -= PlayerGetAngle() ;
+        dx = p_sound->x - listenX;
+        dy = p_sound->y - listenY;
+        angle = MathArcTangent(dx, dy);
+        angle -= 0x4000;
+        angle -= PlayerGetAngle();
 
-        if (angle & 0x8000)  {
-            pan = 1+(0xFFFF-angle) ;
-        } else {
-            pan = angle ;
+        if (angle & 0x8000)
+        {
+            pan = 1 + (0xFFFF - angle);
         }
-        pan <<= 1 ;
+        else
+        {
+            pan = angle;
+        }
+        pan <<= 1;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return pan ;
+    return pan;
 }
 
 /*-------------------------------------------------------------------------*
@@ -895,53 +964,57 @@ static T_word16 IAreaSoundDeterminePan(
  *  @param p_data -- Pointer to the area sound
  *
  *<!-----------------------------------------------------------------------*/
-static T_void ISoundForAreaSoundIsDone(
-                  T_void *p_data)
+static T_void
+ISoundForAreaSoundIsDone(
+    T_void *p_data)
 {
-    T_areaSoundStruct *p_areaSound ;
-    T_word32 id ;
+    T_areaSoundStruct *p_areaSound;
+    T_word32 id;
 
-    DebugRoutine("ISoundForAreaSoundIsDone") ;
+    DebugRoutine("ISoundForAreaSoundIsDone");
 
-    id = *((T_word32*)p_data) ;
+    id = *((T_word32 *) p_data);
 //printf("Area sound %d is done\n", id) ; fflush(stdout) ;
-    p_areaSound = IFindAreaSoundByID(id) ;
+    p_areaSound = IFindAreaSoundByID(id);
 
-    if (p_areaSound)  {
-        DebugCheck(p_areaSound->tag == AREA_SOUND_ID) ;
+    if (p_areaSound)
+    {
+        DebugCheck(p_areaSound->tag == AREA_SOUND_ID);
 
         /* Mark this sound has having no channel. */
-        p_areaSound->channel = SOUND_BAD ;
+        p_areaSound->channel = SOUND_BAD;
 
         /* If the sound is done and the type is once, destroy it. */
-        if (p_areaSound->type == AREA_SOUND_TYPE_ONCE)  {
-            p_areaSound->markedForDestroy = TRUE ;
-            AreaSoundDestroy((T_areaSound)p_areaSound) ;
+        if (p_areaSound->type == AREA_SOUND_TYPE_ONCE)
+        {
+            p_areaSound->markedForDestroy = TRUE;
+            AreaSoundDestroy((T_areaSound) p_areaSound);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES: 04/09/96  Search for area sound in list by its id */
 static T_areaSoundStruct *IFindAreaSoundByID(T_word32 id)
 {
-    T_areaSoundStruct *p_find ;
+    T_areaSoundStruct *p_find;
 
-    DebugRoutine("IFindAreaSoundByID") ;
+    DebugRoutine("IFindAreaSoundByID");
 
     /* Go through the link list and stop if you find a */
     /* matching id, otherwise, progress to the end (NULL) */
-    p_find = P_firstAreaSound ;
-    while (p_find != NULL)  {
+    p_find = P_firstAreaSound;
+    while (p_find != NULL)
+    {
         if (p_find->id == id)
-            break ;
-        p_find = p_find->next ;
+            break;
+        p_find = p_find->next;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_find ;
+    return p_find;
 }
 
 /*-------------------------------------------------------------------------*
@@ -956,18 +1029,19 @@ static T_areaSoundStruct *IFindAreaSoundByID(T_word32 id)
  *  @return identifier for area sound
  *
  *<!-----------------------------------------------------------------------*/
-T_areaSound AreaSoundFindGroupLeader(T_word16 groupID)
+T_areaSound
+AreaSoundFindGroupLeader(T_word16 groupID)
 {
-    T_areaSound groupLeader = AREA_SOUND_BAD ;
+    T_areaSound groupLeader = AREA_SOUND_BAD;
 
-    DebugRoutine("AreaSoundFindGroupLeader") ;
+    DebugRoutine("AreaSoundFindGroupLeader");
 
     if (groupID != 0)
-        groupLeader = IFindGroupLeader(groupID) ;
+        groupLeader = IFindGroupLeader(groupID);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return groupLeader ;
+    return groupLeader;
 }
 
 
@@ -981,23 +1055,25 @@ T_areaSound AreaSoundFindGroupLeader(T_word16 groupID)
  *  @param groupID -- ID of the group to attach sound
  *
  *<!-----------------------------------------------------------------------*/
-T_void AreaSoundSetGroupId(T_areaSound areaSound, T_word16 groupID)
+T_void
+AreaSoundSetGroupId(T_areaSound areaSound, T_word16 groupID)
 {
-    T_areaSoundStruct *p_sound ;
+    T_areaSoundStruct *p_sound;
 
-    DebugRoutine("AreaSoundSetGroupId") ;
+    DebugRoutine("AreaSoundSetGroupId");
 //    DebugCheck(areaSound != NULL) ;
-    if (areaSound != NULL)  {
-        DebugCheck(G_areaSoundInit == TRUE) ;
-        DebugCheck(((T_areaSoundStruct *)areaSound)->tag == AREA_SOUND_ID) ;
-        AreaSoundCheck() ;
+    if (areaSound != NULL)
+    {
+        DebugCheck(G_areaSoundInit == TRUE);
+        DebugCheck(((T_areaSoundStruct *) areaSound)->tag == AREA_SOUND_ID);
+        AreaSoundCheck();
 
         /* Get a quick pointer to the sound. */
-        p_sound = (T_areaSoundStruct *)areaSound ;
+        p_sound = (T_areaSoundStruct *) areaSound;
 
-        p_sound->groupId = groupID ;
+        p_sound->groupId = groupID;
     }
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #if 0

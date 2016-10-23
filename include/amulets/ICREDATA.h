@@ -26,8 +26,8 @@
 #define CRELOGIC_DFT_EXPLODE_ON_COLILDE   FALSE
 #define CRELOGIC_DFT_CAN_HURT_SELF        FALSE
 
-
-typedef enum {
+typedef enum
+{
     NAV_LOGIC_PKG_NONE,
     NAV_LOGIC_PKG_BERSERKER_A,
     NAV_LOGIC_PKG_BERSERKER_B,
@@ -38,64 +38,68 @@ typedef enum {
     NAV_LOGIC_PKG_ROAMING_GUARD,
     NAV_LOGIC_PKG_COMBO_FIGHTER_ARCHER,
     NAV_LOGIC_PKG_UNKNOWN
-} E_navigateLogicPackage ;
+} E_navigateLogicPackage;
 
-typedef enum {
+typedef enum
+{
     TARGET_LOGIC_STATE_DO_NOTHING,
     TARGET_LOGIC_STATE_ATTACK_WHILE_IN_RANGE,
     TARGET_LOGIC_STATE_EXPLODE_WHEN_IN_RANGE,
     TARGET_LOGIC_STATE_EXPLODE_ON_COLLISION,
     TARGET_LOGIC_STATE_UNKNOWN
-} E_targetLogicState ;
+} E_targetLogicState;
 
-typedef enum {
+typedef enum
+{
     TARGET_LOGIC_PACKAGE_NONE,
     TARGET_LOGIC_PACKAGE_STANDARD_HIT_OR_SHOOT,
     TARGET_LOGIC_PACKAGE_SUICIDE_EXPLOSION,
     TARGET_LOGIC_PACKAGE_EXPLODE_ON_COLLISION,
     TARGET_LOGIC_PACKAGE_UNKNOWN
-} E_targetLogicPackage ;
+} E_targetLogicPackage;
 
-typedef T_void (*T_monsterUpdateCallback)(T_void *p_data) ;
+typedef T_void (*T_monsterUpdateCallback)(T_void *p_data);
 
-typedef enum {
+typedef enum
+{
     TREASURE_TYPE_UNKNOWN
-} E_treasureType ;
+} E_treasureType;
 
-typedef struct {
-    T_word32 objectType ;
-    E_navigateLogicPackage navigateLogic ;
-    E_targetLogicPackage targetLogic ;
-    E_Boolean canFly ;
-    E_Boolean ignoreWalls ;
-    T_word32 acceleration ;
-    T_word32 maxVelocity ;
-    T_word32 updateTime ;
-    T_word32 stepSize ;
-    T_word32 maxMeleeRange ;
-    T_word32 minMissileRange ;
-    T_word32 maxMissileRange ;
-    T_word32 meleeAttackDelay ;
-    T_word32 missileAttackDelay ;
-    T_word16 hitPoints ;
-    T_word16 regenRate ;
+typedef struct
+{
+    T_word32 objectType;
+    E_navigateLogicPackage navigateLogic;
+    E_targetLogicPackage targetLogic;
+    E_Boolean canFly;
+    E_Boolean ignoreWalls;
+    T_word32 acceleration;
+    T_word32 maxVelocity;
+    T_word32 updateTime;
+    T_word32 stepSize;
+    T_word32 maxMeleeRange;
+    T_word32 minMissileRange;
+    T_word32 maxMissileRange;
+    T_word32 meleeAttackDelay;
+    T_word32 missileAttackDelay;
+    T_word16 hitPoints;
+    T_word16 regenRate;
 //    E_effectMissileType missileType ;
-    T_word16 missileType ;
-    E_effectDamageType damageType ;
+    T_word16 missileType;
+    E_effectDamageType damageType;
     T_word16 meleeDamage;
-    T_monsterUpdateCallback callback ;
-    E_effectDamageType damageResist ;
-    T_word32 hurtHealth ;
-    E_equipArmorTypes armorType ;
-    E_treasureType treasureToDrop ;
-    T_word32 visionField ;
+    T_monsterUpdateCallback callback;
+    E_effectDamageType damageResist;
+    T_word32 hurtHealth;
+    E_equipArmorTypes armorType;
+    E_treasureType treasureToDrop;
+    T_word32 visionField;
     T_word32 wanderSound;
     T_word32 attackSound;
     T_word32 hurtSound;
     T_word32 targetSound;
     T_word32 dieSound;
-    T_word16 faceDelay ;
-    E_Boolean explodeOnCollision ;
-    E_Boolean canHurtSelf ;
-} T_creatureLogic ;
+    T_word16 faceDelay;
+    E_Boolean explodeOnCollision;
+    E_Boolean canHurtSelf;
+} T_creatureLogic;
 

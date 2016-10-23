@@ -14,9 +14,13 @@ typedef struct
     T_byte8 picturename[64];
 } T_lookDataStruct;
 
-T_void LookInit               (T_void);
-T_void LookUpdateCreatureInfo (T_3dObject *p_obj);
-T_void LookRequestPlayerInfo  (T_3dObject *p_obj);
-T_void LookUpdatePlayerInfo   (T_lookDataStruct *p_lookData);
+T_void
+LookInit(T_void);
+T_void
+LookUpdateCreatureInfo(T_3dObject *p_obj);
+T_void
+LookRequestPlayerInfo(T_3dObject *p_obj);
+T_void
+LookUpdatePlayerInfo(T_lookDataStruct *p_lookData);
 
 #endif

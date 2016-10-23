@@ -6,9 +6,11 @@
 
 #include "GENERAL.H"
 
-T_word16 RandomValue(T_void) ;
+T_word16
+RandomValue(T_void);
 
-T_void RandomReset(T_void) ;
+T_void
+RandomReset(T_void);
 
 #endif // _RANDOM_H_
 /****************************************************************************/

@@ -17,7 +17,6 @@
 #include "3D_COLLI.H"
 #include "3D_IO.H"
 #include "3D_TRIG.H"
-#include "3D_VIEW.H"
 #include "ACTIVITY.H"
 #include "AREASND.H"
 #include "CRELOGIC.H"
@@ -41,36 +40,39 @@
 #include "TICKER.H"
 #include "UPDATE.H"
 
-static E_Boolean G_mapLoaded = FALSE ;
-static T_byte8 G_outsideLighting = 255 ;
-static T_lightTable G_mapLightTable = LIGHT_TABLE_BAD ;
-static T_mapAnimation G_mapAnimation = MAP_ANIMATION_BAD ;
-static T_byte8 *G_realBackdrop = NULL ;
-static T_word32 G_lastUpdateMapAnimate = 0 ;
-static T_activitiesHandle G_activitiesHandle = ACTIVITY_HANDLE_BAD ;
+static E_Boolean G_mapLoaded = FALSE;
+static T_byte8 G_outsideLighting = 255;
+static T_lightTable G_mapLightTable = LIGHT_TABLE_BAD;
+static T_mapAnimation G_mapAnimation = MAP_ANIMATION_BAD;
+static T_byte8 *G_realBackdrop = NULL;
+static T_word32 G_lastUpdateMapAnimate = 0;
+static T_activitiesHandle G_activitiesHandle = ACTIVITY_HANDLE_BAD;
 
-static T_sword16 G_mapSetFloorHighest ;
+static T_sword16 G_mapSetFloorHighest;
 
-static T_byte8 G_noName[] = "--------" ;
+static T_byte8 G_noName[] = "--------";
 
 /* HARD CODED JUNK TO BE REMOVED! */
 //static T_resource R_waterTexture[5] ;
 //static T_byte8 *P_waterTexture[5] ;
 
 /* Internal prototypes: */
-static E_Boolean IMoveUpObjects(
-                     T_3dObject *p_obj,
-                     T_word32 heightAndSector) ;
-static E_Boolean IMapSetFloorCheckObject(
-                     T_3dObject *p_obj,
-                     T_word32 heightAndSector) ;
-static T_word32 G_dayTickOffset = 0 ;
+static E_Boolean
+IMoveUpObjects(
+    T_3dObject *p_obj,
+    T_word32 heightAndSector);
+static E_Boolean
+IMapSetFloorCheckObject(
+    T_3dObject *p_obj,
+    T_word32 heightAndSector);
+static T_word32 G_dayTickOffset = 0;
 
-static T_word32 G_mapSpecial = MAP_SPECIAL_NONE ;
+static T_word32 G_mapSpecial = MAP_SPECIAL_NONE;
 
-static T_void IMapPushUpObjects(
-                  T_3dObject *p_movingObject,
-                  T_sword16 newHeight) ;
+static T_void
+IMapPushUpObjects(
+    T_3dObject *p_movingObject,
+    T_sword16 newHeight);
 
 /*-------------------------------------------------------------------------*
  * Routine:  MapInitialize
@@ -80,11 +82,12 @@ static T_void IMapPushUpObjects(
  *  Map Module.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapInitialize(T_void)
+T_void
+MapInitialize(T_void)
 {
 //    T_word16 i ;
 
-    DebugRoutine("MapInitialize") ;
+    DebugRoutine("MapInitialize");
 
     /* Code to initialize map module. */
 
@@ -94,7 +97,7 @@ T_void MapInitialize(T_void)
 //        P_waterTexture[i] = PictureLock(filename, &R_waterTexture[i]) ;
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -105,9 +108,10 @@ T_void MapInitialize(T_void)
  *  Map Module.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapFinish(T_void)
+T_void
+MapFinish(T_void)
 {
-    DebugRoutine("MapFinish") ;
+    DebugRoutine("MapFinish");
 
     /* Code to initialize map module. */
 
@@ -119,10 +123,11 @@ T_void MapFinish(T_void)
     }
 */
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_word32 FreeMemory(T_void) ;
+T_word32
+FreeMemory(T_void);
 
 /*-------------------------------------------------------------------------*
  * Routine:  MapLoad
@@ -135,171 +140,175 @@ T_word32 FreeMemory(T_void) ;
  *  @param mapNumber -- Number of the map to load
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapLoad(T_word32 mapNumber)
+T_void
+MapLoad(T_word32 mapNumber)
 {
-    T_byte8 filename[20] ;
+    T_byte8 filename[20];
 //    T_word16 sector ;
-    T_byte8 *p_backdrop ;
-    T_resource res ;
-    T_3dObject *p_obj ;
-    T_byte8 G_songName[20] ;
-    T_byte8 infoFileName[20] ;
-    T_byte8 *p_infoFile ;
-    T_resource r_infoFile ;
-    T_byte8 backgroundName[20] ;
-    T_byte8 backgroundFullName[30] ;
-    extern E_Boolean G_serverActive ;
-    T_word32 dummyvar ;
+    T_byte8 *p_backdrop;
+    T_resource res;
+    T_3dObject *p_obj;
+    T_byte8 G_songName[20];
+    T_byte8 infoFileName[20];
+    T_byte8 *p_infoFile;
+    T_resource r_infoFile;
+    T_byte8 backgroundName[20];
+    T_byte8 backgroundFullName[30];
+    extern E_Boolean G_serverActive;
+    T_word32 dummyvar;
 
-    DebugRoutine("MapLoad") ;
+    DebugRoutine("MapLoad");
 
-    SoundStopBackgroundMusic() ;
+    SoundStopBackgroundMusic();
 
-    PromptStatusBarInit ("Please wait .. loading level",100);
+    PromptStatusBarInit("Please wait .. loading level", 100);
 
     /* Reset the sync memory. */
-    SyncMemClear() ;
+    SyncMemClear();
 
 //printf("Loading level %d\n", mapNumber) ;  fflush(stdout) ;
 
-    DebugCheck(mapNumber <= (T_word32)9999999) ;
-    DebugCheck(G_mapLoaded == FALSE) ;
+    DebugCheck(mapNumber <= (T_word32) 9999999);
+    DebugCheck(G_mapLoaded == FALSE);
 
 //puts("MapLoad: ClientSyncInit") ;  fflush(stdout) ;
-    ClientSyncInit() ;
+    ClientSyncInit();
 
 //puts("MapLoad: Check memory") ; fflush(stdout) ;
 #if 0
-p_memTest = MemAlloc(250000) ;
-if (p_memTest == NULL)  {
-    printf("Not enough memory to load map!") ;
-    printf("Free memory: %ld\n", FreeMemory()) ;
-    fflush(stdout) ;
-//puts("MapLoad: DumpDiscarded") ; fflush(stdout) ;
-//    MemDumpDiscarded() ;
-    fflush(stdout) ;
-    fprintf(stderr, "Not enough memory to load map!") ;
-    fflush(stderr) ;
-    exit(1) ;
-}
-MemFree(p_memTest) ;
+    p_memTest = MemAlloc(250000) ;
+    if (p_memTest == NULL)  {
+        printf("Not enough memory to load map!") ;
+        printf("Free memory: %ld\n", FreeMemory()) ;
+        fflush(stdout) ;
+    //puts("MapLoad: DumpDiscarded") ; fflush(stdout) ;
+    //    MemDumpDiscarded() ;
+        fflush(stdout) ;
+        fprintf(stderr, "Not enough memory to load map!") ;
+        fflush(stderr) ;
+        exit(1) ;
+    }
+    MemFree(p_memTest) ;
 #endif
 
 
 //    puts("MapLoad: Loading backdrop and music") ;
-    sprintf(infoFileName, "L%ld.I", mapNumber) ;
-    p_infoFile = PictureLockData(infoFileName, &r_infoFile) ;
-    strcpy(backgroundName, "CLOUDS2.PIC") ;
-    if (p_infoFile)  {
-        G_mapSpecial = MAP_SPECIAL_NONE ;
-        sscanf(p_infoFile, "%s%s%d", G_songName, backgroundName, &G_mapSpecial) ;
-        DebugCheck(G_mapSpecial < MAP_SPECIAL_UNKNOWN) ;
+    sprintf(infoFileName, "L%ld.I", mapNumber);
+    p_infoFile = PictureLockData(infoFileName, &r_infoFile);
+    strcpy(backgroundName, "CLOUDS2.PIC");
+    if (p_infoFile)
+    {
+        G_mapSpecial = MAP_SPECIAL_NONE;
+        sscanf(p_infoFile, "%s%s%d", G_songName, backgroundName, &G_mapSpecial);
+        DebugCheck(G_mapSpecial < MAP_SPECIAL_UNKNOWN);
 //        sprintf(G_songName, "L%ld.HMI", mapNumber) ;
         /** Change the tune. **/
 //        sprintf(G_songName, "MUSIC/l%ld.hmi", mapNumber) ;
 //        SoundSetBackgroundMusic(G_songName) ;
 
-        PictureUnlockAndUnfind(r_infoFile) ;
+        PictureUnlockAndUnfind(r_infoFile);
     }
 
-    TickerPause() ;
-    PromptStatusBarUpdate (5);
-    sprintf(filename, "l%u.map", mapNumber) ;
+    TickerPause();
+    PromptStatusBarUpdate(5);
+    sprintf(filename, "l%u.map", mapNumber);
 
 //puts("MapLoad: Door Init") ; fflush(stdout) ;
-    DoorInitialize() ;
-    PromptStatusBarUpdate (15);
+    DoorInitialize();
+    PromptStatusBarUpdate(15);
 
 //    puts("MapLoad: AreaSoundInit") ; fflush(stdout) ;
-    AreaSoundInitialize() ;
-    PromptStatusBarUpdate (25);
+    AreaSoundInitialize();
+    PromptStatusBarUpdate(25);
 
-    SliderInitialize() ;
+    SliderInitialize();
 
     /* Start up the creatures list -- it will be filled as */
     /* objects are created in the map (loaded). */
 //puts("MapLoad: CreaturesInit") ; fflush(stdout) ;
-    CreaturesInitialize() ;
+    CreaturesInitialize();
 
-    ObjectsResetIds() ;
-    View3dLoadMap(filename) ;
-    PromptStatusBarUpdate (60);
-    CreaturesCheck() ;
+    ObjectsResetIds();
+    View3dLoadMap(filename);
+    PromptStatusBarUpdate(60);
+    CreaturesCheck();
 
 //puts("MapLoad: DoorLoad") ; fflush(stdout) ;
-    DoorLoad(mapNumber) ;
-    PromptStatusBarUpdate (65);
+    DoorLoad(mapNumber);
+    PromptStatusBarUpdate(65);
 
-    AreaSoundLoad(mapNumber) ;
-    G_activitiesHandle = ActivitiesLoad(mapNumber) ;
-    PromptStatusBarUpdate (75);
+    AreaSoundLoad(mapNumber);
+    G_activitiesHandle = ActivitiesLoad(mapNumber);
+    PromptStatusBarUpdate(75);
 
 //    puts("MapLoad: Backdrop") ; fflush(stdout) ;
-    sprintf(backgroundFullName, "BACKDROP/%s", backgroundName) ;
-    p_backdrop = PictureLock(backgroundFullName, &res) ;
-    MapSetBackdrop(p_backdrop) ;
-    PictureUnlock(res) ;
-    PictureUnfind(res) ;
-    PromptStatusBarUpdate (80);
+    sprintf(backgroundFullName, "BACKDROP/%s", backgroundName);
+    p_backdrop = PictureLock(backgroundFullName, &res);
+    MapSetBackdrop(p_backdrop);
+    PictureUnlock(res);
+    PictureUnfind(res);
+    PromptStatusBarUpdate(80);
 
     /* Load in the creatures. */
 //    CreaturesLoad(mapNumber) ;
-    PromptStatusBarUpdate (90);
+    PromptStatusBarUpdate(90);
 
-    ObjectsRemoveExtra() ;
-    PromptStatusBarUpdate (99);
+    ObjectsRemoveExtra();
+    PromptStatusBarUpdate(99);
 
     /* Note that we now have a map in memory. */
-    G_mapLoaded = TRUE ;
+    G_mapLoaded = TRUE;
 
     PromptStatusBarClose();
-    TickerContinue() ;
-    ObjectGeneratorLoad(mapNumber) ;
+    TickerContinue();
+    ObjectGeneratorLoad(mapNumber);
 
     /* Load up the animations for this level. */
-    G_mapAnimation = MapAnimateLoad(mapNumber) ;
+    G_mapAnimation = MapAnimateLoad(mapNumber);
 
-    View3dResolveSpecialObjects() ;
-    CreaturesCheck() ;
+    View3dResolveSpecialObjects();
+    CreaturesCheck();
 
     /* Get our lighting table. */
-    G_mapLightTable = LightTableLoad(mapNumber) ;
-    LightTableRecalculate(G_mapLightTable, G_outsideLighting) ;
+    G_mapLightTable = LightTableLoad(mapNumber);
+    LightTableRecalculate(G_mapLightTable, G_outsideLighting);
 
-    UpdateMapBegin() ;
+    UpdateMapBegin();
 
-    G_serverActive = TRUE ;
+    G_serverActive = TRUE;
 
 #   ifdef COMPILE_OPTION_ALLOW_SHIFT_TEXTURES
     MapShiftTextureOpenFile() ;
 #   endif
 
-    if (ClientSyncGetNumberPlayers() != 1)  {
+    if (ClientSyncGetNumberPlayers() != 1)
+    {
         /* Cache in all types of piecewise objects. */
         /* But only do it if we are more than 1 person. */
-        p_obj = ObjectCreateFake() ;
-        ObjectSetType(p_obj, 510) ;
-        ObjectDestroy(p_obj) ;
-        p_obj = ObjectCreateFake() ;
-        ObjectSetType(p_obj, 520) ;
-        ObjectDestroy(p_obj) ;
-        p_obj = ObjectCreateFake() ;
-        ObjectSetType(p_obj, 530) ;
-        ObjectDestroy(p_obj) ;
+        p_obj = ObjectCreateFake();
+        ObjectSetType(p_obj, 510);
+        ObjectDestroy(p_obj);
+        p_obj = ObjectCreateFake();
+        ObjectSetType(p_obj, 520);
+        ObjectDestroy(p_obj);
+        p_obj = ObjectCreateFake();
+        ObjectSetType(p_obj, 530);
+        ObjectDestroy(p_obj);
     }
 
-    ActivitiesRun(0) ;
-    CreaturesCheck() ;
+    ActivitiesRun(0);
+    CreaturesCheck();
 
-    sprintf(infoFileName, "L%ld.I", mapNumber) ;
-    p_infoFile = PictureLockData(infoFileName, &r_infoFile) ;
-    if (p_infoFile)  {
-        sscanf(p_infoFile, "%s%s%d", G_songName, backgroundName, &dummyvar) ;
-        SoundSetBackgroundMusic(G_songName) ;
+    sprintf(infoFileName, "L%ld.I", mapNumber);
+    p_infoFile = PictureLockData(infoFileName, &r_infoFile);
+    if (p_infoFile)
+    {
+        sscanf(p_infoFile, "%s%s%d", G_songName, backgroundName, &dummyvar);
+        SoundSetBackgroundMusic(G_songName);
 
-        PictureUnlockAndUnfind(r_infoFile) ;
+        PictureUnlockAndUnfind(r_infoFile);
     }
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -316,15 +325,16 @@ MemFree(p_memTest) ;
  *  @param mapNumber -- Number of the map to save
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSave(T_word32 mapNumber)
+T_void
+MapSave(T_word32 mapNumber)
 {
-    DebugRoutine("MapSave") ;
-    DebugCheck(mapNumber <= (T_word32)9999999) ;
-    DebugCheck(G_mapLoaded == TRUE) ;
+    DebugRoutine("MapSave");
+    DebugCheck(mapNumber <= (T_word32) 9999999);
+    DebugCheck(G_mapLoaded == TRUE);
 
     /// Does nothing yet. !!!!
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -336,68 +346,69 @@ T_void MapSave(T_word32 mapNumber)
  *  removed from memory.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapUnload(T_void)
+T_void
+MapUnload(T_void)
 {
-    extern E_Boolean G_serverActive ;
+    extern E_Boolean G_serverActive;
 
-    DebugRoutine("MapUnload") ;
+    DebugRoutine("MapUnload");
 
     /* Only unload the map if there is a map to unload. */
-    if (G_mapLoaded == TRUE)  {
-        G_serverActive = FALSE ;
+    if (G_mapLoaded == TRUE)
+    {
+        G_serverActive = FALSE;
         /* Get rid of all the animations for this level. */
-        MapAnimateUnload(G_mapAnimation) ;
-        G_mapAnimation = MAP_ANIMATION_BAD ;
+        MapAnimateUnload(G_mapAnimation);
+        G_mapAnimation = MAP_ANIMATION_BAD;
 
         /* Get rid of that previous light table. */
-        LightTableUnload(G_mapLightTable) ;
+        LightTableUnload(G_mapLightTable);
 
-        ObjectGeneratorUnload() ;
+        ObjectGeneratorUnload();
 
+        ScheduleClearEvents();
 
-        ScheduleClearEvents() ;
+        AreaSoundFinish();
+        SoundStopAllSounds();
 
-        AreaSoundFinish() ;
-        SoundStopAllSounds() ;
+        DoorFinish();
 
-        DoorFinish() ;
+        SliderFinish();
 
-        SliderFinish() ;
+        ActivitiesUnload();
 
-        ActivitiesUnload() ;
+        ObjectsUnload();
 
-        ObjectsUnload() ;
-
-        MapSetBackdrop(NULL) ;
+        MapSetBackdrop(NULL);
 
         /* Unload everything that the map is using. */
-        View3dUnloadMap() ;
+        View3dUnloadMap();
 
         /* This call is made to destroy the creature list. */
         /* Since all objects are destroyed already, this */
         /* should be a minor clean-up. */
-        CreaturesFinish() ;
+        CreaturesFinish();
 
         /* Note that a map is no longer in memory. */
-        G_mapLoaded = FALSE ;
+        G_mapLoaded = FALSE;
 
 // LED 2/28/2013 -- Had a crash here when UpdateMapEnd called EfxFinish, it tried to
 // call EfxDestroy which called ObjectMarkForDestroy -- but the object was already destroyed!
 // by ObjectsUnload?  What efx was in use?  Looks like I got hurt as I was exiting the level
 // at the same time!  (EfxUpdateBloodSplat on updateCallback of p_efx (T_efxStruct *))
-        UpdateMapEnd() ;
+        UpdateMapEnd();
 
-        ClientSyncFinish() ;
+        ClientSyncFinish();
     }
 
     /* Get rid of everything discardable to clean up the memory. */
-    MemFlushDiscardable() ;
+    MemFlushDiscardable();
 
 #   ifdef COMPILE_OPTION_ALLOW_SHIFT_TEXTURES
     MapShiftTextureCloseFile() ;
 #   endif
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -414,23 +425,25 @@ T_void MapUnload(T_void)
  *  @param p_backdrop -- Pointer to backdrop
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetBackdrop(T_byte8 *p_backdrop)
+T_void
+MapSetBackdrop(T_byte8 *p_backdrop)
 {
-    T_word16 sizeX, sizeY ;
-    extern T_byte8 *G_backdrop ;
-    T_word32 x, y, offset ;
-    T_byte8 *p_back ;
+    T_word16 sizeX, sizeY;
+    extern T_byte8 *G_backdrop;
+    T_word32 x, y, offset;
+    T_byte8 *p_back;
 
-    DebugRoutine("MapSetBackdrop") ;
+    DebugRoutine("MapSetBackdrop");
 
 //puts("Preparing backdrop") ;
     /* Free up the backdrop if needed. */
-    if (G_realBackdrop != NULL)  {
-        MemFree(G_realBackdrop) ;
+    if (G_realBackdrop != NULL)
+    {
+        MemFree(G_realBackdrop);
 
         /* Note that the backdrop is gone. */
-        G_backdrop = NULL ;
-        G_realBackdrop = NULL ;
+        G_backdrop = NULL;
+        G_realBackdrop = NULL;
     }
 
 #if 0
@@ -457,37 +470,43 @@ T_void MapSetBackdrop(T_byte8 *p_backdrop)
         }
     }
 #endif
-    if (p_backdrop != NULL)  {
-        PictureGetXYSize(p_backdrop, &sizeX, &sizeY) ;
+    if (p_backdrop != NULL)
+    {
+        PictureGetXYSize(p_backdrop, &sizeX, &sizeY);
 
         /* Allocate memory for the resized backdrop. */
-        p_back = G_backdrop = MemAlloc(2*VIEW3D_WIDTH*VIEW3D_HEIGHT) ;
-        DebugCheck(G_backdrop != NULL) ;
+        p_back = G_backdrop = MemAlloc(2 * VIEW3D_WIDTH * VIEW3D_HEIGHT);
+        DebugCheck(G_backdrop != NULL);
 
         /* Resize the background. */
-        for (y=0; y<(T_word16)VIEW3D_HEIGHT; y++)  {
-            for (x=0; x<(T_word16)(VIEW3D_WIDTH<<1); x++, p_back++)  {
-                if (x < (T_word16)VIEW3D_WIDTH)  {
-                    offset = ((y*sizeY)/VIEW3D_HEIGHT)*sizeX +
-                              ((x*sizeX)/VIEW3D_WIDTH) ;
-
-                } else {
-                    offset = ((y*sizeY)/VIEW3D_HEIGHT)*sizeX +
-                              (((((VIEW3D_WIDTH<<1)-1)-x)
-                               *sizeX)/VIEW3D_WIDTH) ;
+        for (y = 0; y < (T_word16) VIEW3D_HEIGHT; y++)
+        {
+            for (x = 0; x < (T_word16) (VIEW3D_WIDTH << 1); x++, p_back++)
+            {
+                if (x < (T_word16) VIEW3D_WIDTH)
+                {
+                    offset = ((y * sizeY) / VIEW3D_HEIGHT) * sizeX +
+                        ((x * sizeX) / VIEW3D_WIDTH);
 
                 }
-                *p_back = p_backdrop[offset] ;
+                else
+                {
+                    offset = ((y * sizeY) / VIEW3D_HEIGHT) * sizeX +
+                        (((((VIEW3D_WIDTH << 1) - 1) - x)
+                            * sizeX) / VIEW3D_WIDTH);
+
+                }
+                *p_back = p_backdrop[offset];
             }
         }
     }
 
-    G_realBackdrop = G_backdrop ;
-    G_backdrop += VIEW3D_HEIGHT * VIEW3D_WIDTH ;
+    G_realBackdrop = G_backdrop;
+    G_backdrop += VIEW3D_HEIGHT * VIEW3D_WIDTH;
 
 //puts("Done with backdrop") ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -507,48 +526,54 @@ T_void MapSetBackdrop(T_byte8 *p_backdrop)
  *  @return Activation number
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MapGetForwardWallActivation(T_3dObject *p_obj)
+T_word16
+MapGetForwardWallActivation(T_3dObject *p_obj)
 {
-    T_word16 action = 0 ;
-    T_sword32 newX, newY ;
-    T_sword16 hitLines[40] ;
-    T_word16 closest ;
-    T_word16 i ;
-    T_word16 num ;
-    T_word16 dist ;
+    T_word16 action = 0;
+    T_sword32 newX, newY;
+    T_sword16 hitLines[40];
+    T_word16 closest;
+    T_word16 i;
+    T_word16 num;
+    T_word16 dist;
 
-    DebugRoutine("MapGetForwardWallActivation") ;
+    DebugRoutine("MapGetForwardWallActivation");
 
-    newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj))*64L ;
-    newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj))*64L ;
+    newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj)) * 64L;
+    newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj)) * 64L;
 
     if ((num = View3dFindLineHits(
-                   ObjectGetX(p_obj)>>16,
-                   ObjectGetY(p_obj)>>16,
-                   newX>>16,
-                   newY>>16,
-                   20,
-                   hitLines)) != 0)  {
-        i = 0 ;
-        num <<= 1 ;
+        ObjectGetX(p_obj) >> 16,
+        ObjectGetY(p_obj) >> 16,
+        newX >> 16,
+        newY >> 16,
+        20,
+        hitLines)) != 0)
+    {
+        i = 0;
+        num <<= 1;
 
-        dist = hitLines[1] ;
-        closest = hitLines[0] ;
-        for (i=2; i<num; i+=2)  {
-            if (hitLines[i+1] < dist)  {
-                dist = hitLines[i+1] ;
-                closest = hitLines[i] ;
+        dist = hitLines[1];
+        closest = hitLines[0];
+        for (i = 2; i < num; i += 2)
+        {
+            if (hitLines[i + 1] < dist)
+            {
+                dist = hitLines[i + 1];
+                closest = hitLines[i];
             }
         }
 
-        action = G_3dLineArray[closest].special ;
+        action = G_3dLineArray[closest].special;
 //MessagePrintf("Getting action %d off of line %d", action, closest) ;
-    } else {
+    }
+    else
+    {
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return action ;
+    return action;
 }
 
 /*-------------------------------------------------------------------------*
@@ -564,19 +589,20 @@ T_word16 MapGetForwardWallActivation(T_3dObject *p_obj)
  *  @param offY -- Offset in Y (top to bottom) direction.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetWallBitmapTextureXY(
-           T_word16 wallNum,
-           T_word16 side,
-           T_sword16 offX,
-           T_sword16 offY)
+T_void
+MapSetWallBitmapTextureXY(
+    T_word16 wallNum,
+    T_word16 side,
+    T_sword16 offX,
+    T_sword16 offY)
 {
-    DebugRoutine("MapSetWallBitmapTextureXY") ;
-    DebugCheck(wallNum < G_Num3dLines) ;
+    DebugRoutine("MapSetWallBitmapTextureXY");
+    DebugCheck(wallNum < G_Num3dLines);
 
-    G_3dSideArray[G_3dLineArray[wallNum].side[side]].tmXoffset = offX ;
-    G_3dSideArray[G_3dLineArray[wallNum].side[side]].tmYoffset = offY ;
+    G_3dSideArray[G_3dLineArray[wallNum].side[side]].tmXoffset = offX;
+    G_3dSideArray[G_3dLineArray[wallNum].side[side]].tmYoffset = offY;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #endif /** SERVER_ONLY **/
@@ -593,18 +619,19 @@ T_void MapSetWallBitmapTextureXY(
  *  @return Activation number for sector
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MapGetSectorAction(T_word16 sector)
+T_word16
+MapGetSectorAction(T_word16 sector)
 {
-    T_word16 activity ;
+    T_word16 activity;
 
-    DebugRoutine("MapGetSectorAction") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("MapGetSectorAction");
+    DebugCheck(sector < G_Num3dSectors);
 
-    activity = G_3dSectorArray[sector].type ;
+    activity = G_3dSectorArray[sector].type;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return activity ;
+    return activity;
 }
 
 /*-------------------------------------------------------------------------*
@@ -618,196 +645,212 @@ T_word16 MapGetSectorAction(T_word16 sector)
  *  @param height -- New height for floor.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetFloorHeight(T_word16 sector, T_sword16 height)
+T_void
+MapSetFloorHeight(T_word16 sector, T_sword16 height)
 {
-    DebugRoutine("MapSetFloorHeight") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("MapSetFloorHeight");
+    DebugCheck(sector < G_Num3dSectors);
 
-    G_mapSetFloorHighest = 0x7FFF ;
+    G_mapSetFloorHighest = 0x7FFF;
     ObjectsDoToAll(
         IMapSetFloorCheckObject,
-        (MapGetCeilingHeight(sector) << 16) | sector) ;
+        (MapGetCeilingHeight(sector) << 16) | sector);
     if (height > G_mapSetFloorHighest)
-        height = G_mapSetFloorHighest ;
+        height = G_mapSetFloorHighest;
 
     ObjectsDoToAll(
         IMoveUpObjects,
-        (height<<16) | sector) ;
-    G_3dSectorArray[sector].floorHt = height ;
+        (height << 16) | sector);
+    G_3dSectorArray[sector].floorHt = height;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-static E_Boolean IMoveUpObjects(
-                     T_3dObject *p_obj,
-                     T_word32 heightAndSector)
+static E_Boolean
+IMoveUpObjects(
+    T_3dObject *p_obj,
+    T_word32 heightAndSector)
 {
-    T_word16 num ;
-    T_word16 i ;
-    T_sword16 height ;
-    T_word16 sector ;
+    T_word16 num;
+    T_word16 i;
+    T_sword16 height;
+    T_word16 sector;
 
-    height = ((T_sword32) heightAndSector)>>16 ;
-    sector = heightAndSector & 0xFFFF ;
+    height = ((T_sword32) heightAndSector) >> 16;
+    sector = heightAndSector & 0xFFFF;
 
     /* Don't do objects that stick to the ceiling. */
-    if (!(ObjectGetMoveFlags(p_obj) & OBJMOVE_FLAG_STICK_TO_CEILING))  {
+    if (!(ObjectGetMoveFlags(p_obj) & OBJMOVE_FLAG_STICK_TO_CEILING))
+    {
         /* Get the number of area sectors that this object is over. */
-        num = ObjectGetNumAreaSectors(p_obj) ;
+        num = ObjectGetNumAreaSectors(p_obj);
 
         /* Go through the list of sectors. */
-        for (i=0; i<num; i++)  {
+        for (i = 0; i < num; i++)
+        {
             /* Look for a match.  Break if there is one. */
             if (sector == ObjectGetNthAreaSector(p_obj, i))
-                break ;
+                break;
         }
 
         /* Did we find a match? */
-        if (i != num)  {
+        if (i != num)
+        {
             /* Mark the object as possibly needing to move. */
-            ObjectForceUpdate(p_obj) ;
+            ObjectForceUpdate(p_obj);
 
             /* If object is under lift, force us up. */
-            if (ObjectGetZ16(p_obj) < height)  {
-                ObjectSetZ16(p_obj, height) ;
-    //            if ((((T_sword32)height)<<16) >
-    //                   p_obj->objMove.lowestPoint>>16)
-                p_obj->objMove.lowestPoint = (((T_sword32)height)<<16) ;
-                IMapPushUpObjects(p_obj, height) ;
+            if (ObjectGetZ16(p_obj) < height)
+            {
+                ObjectSetZ16(p_obj, height);
+                //            if ((((T_sword32)height)<<16) >
+                //                   p_obj->objMove.lowestPoint>>16)
+                p_obj->objMove.lowestPoint = (((T_sword32) height) << 16);
+                IMapPushUpObjects(p_obj, height);
             }
         }
     }
 
-    return FALSE ;
+    return FALSE;
 }
 
-static E_Boolean IMapSetFloorCheckObject(
-                     T_3dObject *p_obj,
-                     T_word32 ceilingAndSector)
+static E_Boolean
+IMapSetFloorCheckObject(
+    T_3dObject *p_obj,
+    T_word32 ceilingAndSector)
 {
-    T_word16 num ;
-    T_word16 i ;
-    T_word16 sector ;
-    T_sword16 objHeight ;
-    T_sword16 z ;
-    T_sword16 ceiling ;
+    T_word16 num;
+    T_word16 i;
+    T_word16 sector;
+    T_sword16 objHeight;
+    T_sword16 z;
+    T_sword16 ceiling;
 
-    DebugRoutine("IMapSetFloorCheckObject") ;
+    DebugRoutine("IMapSetFloorCheckObject");
 
     /* Get the sector out of the data passed in. */
-    sector = ceilingAndSector & 0xFFFF ;
+    sector = ceilingAndSector & 0xFFFF;
 
     /* Get the number of area sectors that this object is over. */
-    num = ObjectGetNumAreaSectors(p_obj) ;
+    num = ObjectGetNumAreaSectors(p_obj);
 
     /* Go through the list of sectors. */
-    for (i=0; i<num; i++)  {
+    for (i = 0; i < num; i++)
+    {
         /* Look for a match.  Break if there is one. */
         if (sector == ObjectGetNthAreaSector(p_obj, i))
-            break ;
+            break;
     }
 
     /* Did we find a match? */
-    if (i != num)  {
+    if (i != num)
+    {
         /* Yep, found a match. */
-        ceiling = ((T_sword32)ceilingAndSector)>>16 ;
+        ceiling = ((T_sword32) ceilingAndSector) >> 16;
 
         /* Check its height. */
-        z = ObjectGetZ16(p_obj) ;
-        objHeight = ObjectGetHeight(p_obj) ;
+        z = ObjectGetZ16(p_obj);
+        objHeight = ObjectGetHeight(p_obj);
         if (z + objHeight > ceiling)
             if (z < G_mapSetFloorHighest)
-                G_mapSetFloorHighest = z ;
+                G_mapSetFloorHighest = z;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return FALSE ;
+    return FALSE;
 }
 
-static T_void IMapPushUpObjects(
-                  T_3dObject *p_movingObject,
-                  T_sword16 newHeight)
+static T_void
+IMapPushUpObjects(
+    T_3dObject *p_movingObject,
+    T_sword16 newHeight)
 {
-    T_sword16 newTop ;
-    T_doubleLinkListElement element ;
-    T_sword16 hashX, hashY ;
-    T_sword16 startHashX, startHashY ;
-    T_word16 group ;
-    T_word16 groupWidth ;
-    T_sword16 objX, objY ;
-    T_word16 halfwidth ;
-    T_3dObject *p_obj ;
-    T_sword16 objBottom, objTop ;
-    T_word16 radius ;
-    T_sword16 x, y ;
+    T_sword16 newTop;
+    T_doubleLinkListElement element;
+    T_sword16 hashX, hashY;
+    T_sword16 startHashX, startHashY;
+    T_word16 group;
+    T_word16 groupWidth;
+    T_sword16 objX, objY;
+    T_word16 halfwidth;
+    T_3dObject *p_obj;
+    T_sword16 objBottom, objTop;
+    T_word16 radius;
+    T_sword16 x, y;
 
-    DebugRoutine("IMapPushUpObjects") ;
+    DebugRoutine("IMapPushUpObjects");
 
     /* Only do this whole routine if we are NOT passable. */
-    if (ObjectIsPassable(p_movingObject))  {
-        DebugEnd() ;
-        return ;
+    if (ObjectIsPassable(p_movingObject))
+    {
+        DebugEnd();
+        return;
     }
 
     /* Compute the new moving object's top. */
-    newTop = newHeight + ObjectGetHeight(p_movingObject) ;
-    x = ObjectGetX16(p_movingObject) ;
-    y = ObjectGetY16(p_movingObject) ;
-    radius = ObjectGetRadius(p_movingObject) ;
+    newTop = newHeight + ObjectGetHeight(p_movingObject);
+    x = ObjectGetX16(p_movingObject);
+    y = ObjectGetY16(p_movingObject);
+    radius = ObjectGetRadius(p_movingObject);
 
     /* Ok, push all objects above this object up, excluding this one */
-    groupWidth = 2+(ObjectGetRadius(p_movingObject) >> 5) ;
+    groupWidth = 2 + (ObjectGetRadius(p_movingObject) >> 5);
     startHashX = ((ObjectGetX16(p_movingObject) -
-                  G_3dBlockMapHeader->xOrigin) >> 6) ;
+        G_3dBlockMapHeader->xOrigin) >> 6);
     startHashY = ((ObjectGetY16(p_movingObject) -
-                  G_3dBlockMapHeader->yOrigin) >> 6) ;
-    for (hashY=-groupWidth; hashY<=groupWidth; hashY++)  {
+        G_3dBlockMapHeader->yOrigin) >> 6);
+    for (hashY = -groupWidth; hashY <= groupWidth; hashY++)
+    {
         /* Don't do ones that are out of bounds. */
         if ((startHashY + hashY) < 0)
-            continue ;
+            continue;
         if ((startHashY + hashY) >= G_objCollisionNumY)
-            continue ;
-        for (hashX=-groupWidth; hashX<=groupWidth; hashX++)  {
+            continue;
+        for (hashX = -groupWidth; hashX <= groupWidth; hashX++)
+        {
             /* Don't do ones that are out of bounds. */
             if ((startHashX + hashX) < 0)
-                continue ;
+                continue;
             if ((startHashX + hashX) >= G_objCollisionNumX)
-                continue ;
+                continue;
 
             /* Calculate the group we need to check. */
-            group =  (startHashY + hashY) * G_objCollisionNumX +
-                         (startHashX + hashX) ;
-            element = DoubleLinkListGetFirst(G_3dObjCollisionLists[group]) ;
-            while (element != DOUBLE_LINK_LIST_ELEMENT_BAD)  {
-                p_obj = (T_3dObject *)DoubleLinkListElementGetData(element) ;
-                element = DoubleLinkListElementGetNext(element) ;
+            group = (startHashY + hashY) * G_objCollisionNumX +
+                (startHashX + hashX);
+            element = DoubleLinkListGetFirst(G_3dObjCollisionLists[group]);
+            while (element != DOUBLE_LINK_LIST_ELEMENT_BAD)
+            {
+                p_obj = (T_3dObject *) DoubleLinkListElementGetData(element);
+                element = DoubleLinkListElementGetNext(element);
 
                 /* Skip this object */
                 if (p_obj == p_movingObject)
-                    continue ;
+                    continue;
 
                 /* Determine "square" distance to be in */
-                halfwidth = ObjectGetRadius(p_obj) + radius ;
-                objX = ObjectGetX16(p_obj) ;
-                objY = ObjectGetY16(p_obj) ;
+                halfwidth = ObjectGetRadius(p_obj) + radius;
+                objX = ObjectGetX16(p_obj);
+                objY = ObjectGetY16(p_obj);
 
                 /* See if the two objects collide in the x & y plane */
-                if ((x <= objX+halfwidth) &&
-                    (x >= objX-halfwidth) &&
-                    (y <= objY+halfwidth) &&
-                    (y >= objY-halfwidth))  {
+                if ((x <= objX + halfwidth) &&
+                    (x >= objX - halfwidth) &&
+                    (y <= objY + halfwidth) &&
+                    (y >= objY - halfwidth))
+                {
 
                     /* Find the top and bottom of this object */
-                    objBottom = ObjectGetZ16(p_obj) ;
-                    objTop = objBottom + ObjectGetHeight(p_obj) ;
+                    objBottom = ObjectGetZ16(p_obj);
+                    objTop = objBottom + ObjectGetHeight(p_obj);
 
                     /* Move this object up if its bottom is below our */
                     /* moving top. */
-                    if ((objBottom < newTop) && (objTop > newHeight))  {
+                    if ((objBottom < newTop) && (objTop > newHeight))
+                    {
                         /* Move that object up! */
-                        ObjectSetZ16(p_obj, newTop) ;
-                        p_obj->objMove.lowestPoint = (((T_sword32)newTop)<<16) ;
+                        ObjectSetZ16(p_obj, newTop);
+                        p_obj->objMove.lowestPoint = (((T_sword32) newTop) << 16);
 
                         /* Move all objects on top of this up. */
                         /* NOTE:  This is recursive, but it should not */
@@ -815,15 +858,14 @@ static T_void IMapPushUpObjects(
                         /* object have already been processed ... thus, */
                         /* the computations are less (unless you have a 0 */
                         /* height object!). */
-                        IMapPushUpObjects(p_obj, newTop) ;
+                        IMapPushUpObjects(p_obj, newTop);
                     }
                 }
             }
         }
     }
 
-
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -835,26 +877,27 @@ static T_void IMapPushUpObjects(
  *  @param sector -- Sector's floor to get.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MapGetFloorHeight(T_word16 sector)
+T_sword16
+MapGetFloorHeight(T_word16 sector)
 {
-    T_sword16 height ;
+    T_sword16 height;
 
-    DebugRoutine("MapGetFloorHeight") ;
+    DebugRoutine("MapGetFloorHeight");
 #ifndef NDEBUG
-if (sector >= G_Num3dSectors)  {
- printf("Bad sector %d\n", sector) ;
-}
+    if (sector >= G_Num3dSectors)  {
+     printf("Bad sector %d\n", sector) ;
+    }
 #endif
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugCheck(sector < G_Num3dSectors);
 
     if (sector < G_Num3dSectors)
-        height = G_3dSectorArray[sector].floorHt ;
+        height = G_3dSectorArray[sector].floorHt;
     else
-        height = -10000 ;
+        height = -10000;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return height ;
+    return height;
 }
 
 /*-------------------------------------------------------------------------*
@@ -869,30 +912,34 @@ if (sector >= G_Num3dSectors)  {
  *  @param sector -- Sector's floor to get.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MapGetWalkingFloorHeight(T_objMoveStruct *p_objMove, T_word16 sector)
+T_sword16
+MapGetWalkingFloorHeight(T_objMoveStruct *p_objMove, T_word16 sector)
 {
-    T_sword16 height ;
+    T_sword16 height;
 
-    DebugRoutine("MapGetWalkingFloorHeight") ;
+    DebugRoutine("MapGetWalkingFloorHeight");
 #ifndef NDEBUG
-if (sector >= G_Num3dSectors)  {
- printf("Bad sector %d\n", sector) ;
- printf("Caller: %s\n", DebugGetCallerName()) ;
-}
+    if (sector >= G_Num3dSectors)  {
+     printf("Bad sector %d\n", sector) ;
+     printf("Caller: %s\n", DebugGetCallerName()) ;
+    }
 #endif
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugCheck(sector < G_Num3dSectors);
 
-    if (sector < G_Num3dSectors)  {
-        height = G_3dSectorArray[sector].floorHt ;
-      	if (!(p_objMove->Flags & OBJMOVE_FLAG_DO_NOT_SINK))
-            height -= G_3dSectorInfoArray[sector].depth ;
-    } else  {
-        height = 10000 ;
+    if (sector < G_Num3dSectors)
+    {
+        height = G_3dSectorArray[sector].floorHt;
+        if (!(p_objMove->Flags & OBJMOVE_FLAG_DO_NOT_SINK))
+            height -= G_3dSectorInfoArray[sector].depth;
+    }
+    else
+    {
+        height = 10000;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return height ;
+    return height;
 }
 
 /*-------------------------------------------------------------------------*
@@ -906,35 +953,40 @@ if (sector >= G_Num3dSectors)  {
  *  @param height -- New height for ceiling.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetCeilingHeight(T_word16 sector, T_sword16 height)
+T_void
+MapSetCeilingHeight(T_word16 sector, T_sword16 height)
 {
-    T_3dObject *p_obj ;
-    T_word16 i ;
+    T_3dObject *p_obj;
+    T_word16 i;
 
-    DebugRoutine("MapSetCeilingHeight") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("MapSetCeilingHeight");
+    DebugCheck(sector < G_Num3dSectors);
 
-    G_3dSectorArray[sector].ceilingHt = height ;
+    G_3dSectorArray[sector].ceilingHt = height;
 
     /* Move any attached ceiling objects. */
-    p_obj = ObjectsGetFirst() ;
-    while (p_obj)  {
+    p_obj = ObjectsGetFirst();
+    while (p_obj)
+    {
         /* Move objects that are told to stick to the ceiling. */
-        if (ObjectGetMoveFlags(p_obj) & OBJMOVE_FLAG_STICK_TO_CEILING)  {
+        if (ObjectGetMoveFlags(p_obj) & OBJMOVE_FLAG_STICK_TO_CEILING)
+        {
             /* See if this ceiling object is connected */
             /* to this ceiling. */
-            for (i=0; i<ObjectGetNumAreaSectors(p_obj); i++)  {
-                if (ObjectGetNthAreaSector(p_obj, i) == sector)  {
+            for (i = 0; i < ObjectGetNumAreaSectors(p_obj); i++)
+            {
+                if (ObjectGetNthAreaSector(p_obj, i) == sector)
+                {
                     /* Move the object up to its correct location. */
-                    ObjectSetZ16(p_obj, height - ObjectGetHeight(p_obj)) ;
-                    break ;
+                    ObjectSetZ16(p_obj, height - ObjectGetHeight(p_obj));
+                    break;
                 }
             }
         }
-        p_obj = ObjectGetNext(p_obj) ;
+        p_obj = ObjectGetNext(p_obj);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -946,23 +998,24 @@ T_void MapSetCeilingHeight(T_word16 sector, T_sword16 height)
  *  @param sector -- Sector's ceiling to change.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MapGetCeilingHeight(T_word16 sector)
+T_sword16
+MapGetCeilingHeight(T_word16 sector)
 {
-    T_sword16 height ;
+    T_sword16 height;
 
-    DebugRoutine("MapGetCeilingHeight") ;
+    DebugRoutine("MapGetCeilingHeight");
 #ifndef NDEBUG
     if (sector >= G_Num3dSectors)  {
         printf("Bad sector #%d\n", sector) ;
     }
 #endif
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugCheck(sector < G_Num3dSectors);
 
-    height = G_3dSectorArray[sector].ceilingHt ;
+    height = G_3dSectorArray[sector].ceilingHt;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return height ;
+    return height;
 }
 
 /*-------------------------------------------------------------------------*
@@ -975,14 +1028,15 @@ T_sword16 MapGetCeilingHeight(T_word16 sector)
  *  @param lightLevel -- new lighting level
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetSectorLighting(T_word16 sector, T_byte8 lightLevel)
+T_void
+MapSetSectorLighting(T_word16 sector, T_byte8 lightLevel)
 {
-    DebugRoutine("MapSetSectorLighting") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("MapSetSectorLighting");
+    DebugCheck(sector < G_Num3dSectors);
 
-    G_3dSectorArray[sector].light = lightLevel ;
+    G_3dSectorArray[sector].light = lightLevel;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -994,18 +1048,19 @@ T_void MapSetSectorLighting(T_word16 sector, T_byte8 lightLevel)
  *  @param sector -- Number of sector
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 MapGetSectorLighting(T_word16 sector)
+T_byte8
+MapGetSectorLighting(T_word16 sector)
 {
-    T_byte8 light ;
+    T_byte8 light;
 
-    DebugRoutine("MapGetSectorLighting") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("MapGetSectorLighting");
+    DebugCheck(sector < G_Num3dSectors);
 
-    light = (T_byte8)G_3dSectorArray[sector].light ;
+    light = (T_byte8) G_3dSectorArray[sector].light;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return light ;
+    return light;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1022,42 +1077,48 @@ T_byte8 MapGetSectorLighting(T_word16 sector)
  *      be crushed, or FALSE for ok.
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MapCheckCrushByCeiling(T_word16 sector, T_sword16 newHeight)
+E_Boolean
+MapCheckCrushByCeiling(T_word16 sector, T_sword16 newHeight)
 {
-    E_Boolean status = FALSE ;
-    T_word16 j ;
-    T_sword16 height ;
-    T_word16 num ;
-    T_3dObject *p_obj ;
+    E_Boolean status = FALSE;
+    T_word16 j;
+    T_sword16 height;
+    T_word16 num;
+    T_3dObject *p_obj;
 
-    DebugRoutine("MapCheckCrushByCeiling") ;
+    DebugRoutine("MapCheckCrushByCeiling");
 
-    p_obj = G_First3dObject ;
-    while ((p_obj != NULL) && (!status))  {
+    p_obj = G_First3dObject;
+    while ((p_obj != NULL) && (!status))
+    {
         /* Only check non-passable objects. */
-        if (!ObjectIsPassable(p_obj))  {
-            num = ObjectGetNumAreaSectors(p_obj) ;
-            for (j=0; j<num; j++)  {
-                if (ObjectGetNthAreaSector(p_obj, j) == sector)  {
+        if (!ObjectIsPassable(p_obj))
+        {
+            num = ObjectGetNumAreaSectors(p_obj);
+            for (j = 0; j < num; j++)
+            {
+                if (ObjectGetNthAreaSector(p_obj, j) == sector)
+                {
                     /* Where is the top of this object? */
-                    height = ObjectGetZ16(p_obj) + ObjectGetHeight(p_obj) ;
+                    height = ObjectGetZ16(p_obj) + ObjectGetHeight(p_obj);
 
                     /* Is this new height equal or less? */
-                    if (newHeight <= height)  {
+                    if (newHeight <= height)
+                    {
                         /* Yes, we are being crushed. */
-                        status = TRUE ;
-                        break ;
+                        status = TRUE;
+                        break;
                     }
                 }
             }
         }
 
-        p_obj = p_obj->nextObj ;
+        p_obj = p_obj->nextObj;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 
@@ -1075,78 +1136,89 @@ E_Boolean MapCheckCrushByCeiling(T_word16 sector, T_sword16 newHeight)
  *      be crushed, or FALSE for ok.
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MapCheckCrushByFloor(T_word16 sector, T_sword16 newHeight)
+E_Boolean
+MapCheckCrushByFloor(T_word16 sector, T_sword16 newHeight)
 {
-    T_word16 j ;
-    T_sword16 height ;
-    T_word16 num ;
-    T_3dObject *p_obj ;
-    T_sword16 bottom ;
-    T_sword16 ceiling ;
-    E_Boolean foundObj ;
-    T_sword16 lowest ;
-    T_word16 nth ;
-    E_Boolean status ;
-    char buffer[20] ;
+    T_word16 j;
+    T_sword16 height;
+    T_word16 num;
+    T_3dObject *p_obj;
+    T_sword16 bottom;
+    T_sword16 ceiling;
+    E_Boolean foundObj;
+    T_sword16 lowest;
+    T_word16 nth;
+    E_Boolean status;
+    char buffer[20];
 
-    DebugRoutine("MapCheckCrushByFloor") ;
+    DebugRoutine("MapCheckCrushByFloor");
 
-    status = FALSE ; /* Assume not being crushed */
-    p_obj = ObjectsGetFirst() ;
-    while ((p_obj != NULL) && (!status))  {
+    status = FALSE; /* Assume not being crushed */
+    p_obj = ObjectsGetFirst();
+    while ((p_obj != NULL) && (!status))
+    {
         /* Only check non-passable objects. */
-        if (!ObjectIsPassable(p_obj))  {
-            foundObj = FALSE ;
-            num = ObjectGetNumAreaSectors(p_obj) ;
-            for (j=0; j<num; j++)  {
-                if (ObjectGetNthAreaSector(p_obj, j) == sector)  {
-                    foundObj = TRUE ;
-                    break ;
+        if (!ObjectIsPassable(p_obj))
+        {
+            foundObj = FALSE;
+            num = ObjectGetNumAreaSectors(p_obj);
+            for (j = 0; j < num; j++)
+            {
+                if (ObjectGetNthAreaSector(p_obj, j) == sector)
+                {
+                    foundObj = TRUE;
+                    break;
                 }
             }
-            if (foundObj == TRUE)  {
+            if (foundObj == TRUE)
+            {
                 /* Where is the bottom of this object? */
-                bottom = ObjectGetZ16(p_obj) ;
+                bottom = ObjectGetZ16(p_obj);
 
                 /* Where is the top of this object? */
                 /* If moved up, change height too. */
-                if (bottom < newHeight)  {
-                    height = newHeight + ObjectGetHeight(p_obj) ;
-                }  else  {
-                    height = bottom + ObjectGetHeight(p_obj) ;
+                if (bottom < newHeight)
+                {
+                    height = newHeight + ObjectGetHeight(p_obj);
+                }
+                else
+                {
+                    height = bottom + ObjectGetHeight(p_obj);
                 }
 
                 /* Find the lowest ceiling */
-                lowest = 0x7FFE ;
-                for (j=0; j<num; j++)  {
+                lowest = 0x7FFE;
+                for (j = 0; j < num; j++)
+                {
                     /* How far away is that ceiling? */
-                    nth = ObjectGetNthAreaSector(p_obj, j) ;
-                    ceiling = MapGetCeilingHeight(nth) ;
-                    if (ceiling < lowest)  {
-                        lowest = ceiling ;
+                    nth = ObjectGetNthAreaSector(p_obj, j);
+                    ceiling = MapGetCeilingHeight(nth);
+                    if (ceiling < lowest)
+                    {
+                        lowest = ceiling;
 //MessagePrintf("Check s:%d f:%d c:%d h:%d", ObjectGetNthAreaSector(p_obj, j), newHeight, ceiling, height) ;
                     }
                 }
 
                 /* Does the head of the object equal or go over the */
                 /* ceiling?  If so, it crushes. */
-                if (height >= lowest)  {
+                if (height >= lowest)
+                {
                     /* Yes, we are being crushed. */
-                    status = TRUE ;
-                    break ;
+                    status = TRUE;
+                    break;
                 }
             }
         }
 
-        p_obj = ObjectGetNext(p_obj) ;
+        p_obj = ObjectGetNext(p_obj);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    sprintf(buffer, "%d", status) ;  // Don't remove this hack to get the compiler to correctly compile
-    return status ;
+    sprintf(buffer, "%d", status);  // Don't remove this hack to get the compiler to correctly compile
+    return status;
 }
-
 
 #if 0
 /*-------------------------------------------------------------------------*
@@ -1189,17 +1261,17 @@ T_void MapAnimate(T_void)
         distX = ((ObjectGetX(p_obj) - PlayerGetX())>>16) ;
 
         if (distX < 0)
-		    distX = -distX ;
+            distX = -distX ;
 
         /* Is the X close enough for picking up? */
         if (distX < DISTANCE_TO_PICKUP)  {
             /* How far away is the object in the Y direction? */
-		    distY = ((ObjectGetY(p_obj) - PlayerGetY()) >> 16) ;
+            distY = ((ObjectGetY(p_obj) - PlayerGetY()) >> 16) ;
             if (distY < 0)
-		        distY = -distY ;
+                distY = -distY ;
 
             /* Can the object be picked up? */
-		    if (distY < DISTANCE_TO_PICKUP)  {
+            if (distY < DISTANCE_TO_PICKUP)  {
                 /* Yes, the object is under us. */
 //                ClientIsOver(p_obj, ObjectGetType(p_obj)) ;
             }
@@ -1220,8 +1292,8 @@ T_void MapAnimate(T_void)
             *((T_byte8 **)(&G_3dSectorArray[i].floorTx[1])) =
                 P_waterTexture[water] ;
         }
-	if (G_3dSectorArray[i].trigger & SECTOR_SHIFT_X_FLAG)  {
-	    G_3dSectorInfoArray[i].textureXOffset = time & 255 ;
+    if (G_3dSectorArray[i].trigger & SECTOR_SHIFT_X_FLAG)  {
+        G_3dSectorInfoArray[i].textureXOffset = time & 255 ;
         }
         if (G_3dSectorArray[i].trigger & SECTOR_SHIFT_Y_FLAG)  {
             G_3dSectorInfoArray[i].textureYOffset = (-time) & 255 ;
@@ -1249,26 +1321,27 @@ T_void MapAnimate(T_void)
  *  @param p_angle -- Angle of starting location
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapGetStartLocation(
-           T_word16 num,
-           T_sword16 *p_x,
-           T_sword16 *p_y,
-           T_word16 *p_angle)
+T_void
+MapGetStartLocation(
+    T_word16 num,
+    T_sword16 *p_x,
+    T_sword16 *p_y,
+    T_word16 *p_angle)
 {
-    DebugRoutine("MapGetStartLocation") ;
-    DebugCheck(p_x != NULL) ;
-    DebugCheck(p_y != NULL) ;
-    DebugCheck(p_angle != NULL) ;
+    DebugRoutine("MapGetStartLocation");
+    DebugCheck(p_x != NULL);
+    DebugCheck(p_y != NULL);
+    DebugCheck(p_angle != NULL);
 
 //printf("MapGetStartLocation: %d (%s)\n", num, DebugGetCallerName()) ;
     /* Choose only 0-3 */
-    num &= 3 ;
+    num &= 3;
 //    *p_x = 4368 ;
 //    *p_y = 4873 ;
 //    View3dGetView(p_x, p_y, &height, p_angle) ;
-    View3dGetStartLocation(num, p_x, p_y, p_angle) ;
+    View3dGetStartLocation(num, p_x, p_y, p_angle);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1282,22 +1355,24 @@ T_void MapGetStartLocation(
  *  @param p_nextMapPlace -- Place to store next place number
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapGetNextMapAndPlace(
-           T_word16 sector,
-           T_word16 *p_nextMap,
-           T_word16 *p_nextMapPlace)
+T_void
+MapGetNextMapAndPlace(
+    T_word16 sector,
+    T_word16 *p_nextMap,
+    T_word16 *p_nextMapPlace)
 {
-    DebugRoutine("MapGetNextMapAndPlace") ;
-    DebugCheck(sector < G_Num3dSectors) ;
-    DebugCheck(p_nextMap != NULL) ;
-    DebugCheck(p_nextMapPlace != NULL) ;
+    DebugRoutine("MapGetNextMapAndPlace");
+    DebugCheck(sector < G_Num3dSectors);
+    DebugCheck(p_nextMap != NULL);
+    DebugCheck(p_nextMapPlace != NULL);
 
-    if (sector < G_Num3dSectors)  {
-        *p_nextMap = G_3dSectorInfoArray[sector].nextMap ;
-        *p_nextMapPlace = G_3dSectorInfoArray[sector].nextMapStart ;
+    if (sector < G_Num3dSectors)
+    {
+        *p_nextMap = G_3dSectorInfoArray[sector].nextMap;
+        *p_nextMapPlace = G_3dSectorInfoArray[sector].nextMapStart;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1309,9 +1384,10 @@ T_void MapGetNextMapAndPlace(
  *  @param outsideLight -- Light level of outside
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetOutsideLighting(T_byte8 outsideLight)
+T_void
+MapSetOutsideLighting(T_byte8 outsideLight)
 {
-    G_outsideLighting = outsideLight ;
+    G_outsideLighting = outsideLight;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1323,9 +1399,10 @@ T_void MapSetOutsideLighting(T_byte8 outsideLight)
  *  @return Light level of outside
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 MapGetOutsideLighting(T_void)
+T_byte8
+MapGetOutsideLighting(T_void)
 {
-    return G_outsideLighting ;
+    return G_outsideLighting;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1337,83 +1414,86 @@ T_byte8 MapGetOutsideLighting(T_void)
  *<!-----------------------------------------------------------------------*/
 #define TICKS_PER_DAY  0x7FFFFL
 
-T_void MapUpdateLighting(T_void)
+T_void
+MapUpdateLighting(T_void)
 {
-    T_sword32 tickInDay ;
+    T_sword32 tickInDay;
 
-    TICKER_TIME_ROUTINE_PREPARE() ;
+    TICKER_TIME_ROUTINE_PREPARE();
 
-    TICKER_TIME_ROUTINE_START() ;
-    DebugRoutine("MapUpdateLighting") ;
+    TICKER_TIME_ROUTINE_START();
+    DebugRoutine("MapUpdateLighting");
 
     /* Recalculate all the lights. */
-    tickInDay = (SyncTimeGet()+G_dayTickOffset) & TICKS_PER_DAY ;
+    tickInDay = (SyncTimeGet() + G_dayTickOffset) & TICKS_PER_DAY;
 
-    tickInDay >>= 3 ;
-    tickInDay = ((180*MathSineLookup(tickInDay))>>16) ;
+    tickInDay >>= 3;
+    tickInDay = ((180 * MathSineLookup(tickInDay)) >> 16);
     if (tickInDay > 115)
-        tickInDay = 115 ;
+        tickInDay = 115;
     if (tickInDay < -105)
-        tickInDay = -105 ;
-    tickInDay += 140 ;
+        tickInDay = -105;
+    tickInDay += 140;
 
-    MapSetOutsideLighting(tickInDay) ;
-    LightTableRecalculate(G_mapLightTable, G_outsideLighting) ;
-    View3dUpdateSectorLightAnimation() ;
-    MapAnimateUpdate(G_mapAnimation) ;
+    MapSetOutsideLighting(tickInDay);
+    LightTableRecalculate(G_mapLightTable, G_outsideLighting);
+    View3dUpdateSectorLightAnimation();
+    MapAnimateUpdate(G_mapAnimation);
 
-    DebugEnd() ;
-    TICKER_TIME_ROUTINE_ENDM("MapUpdateLighting", 500) ;
+    DebugEnd();
+    TICKER_TIME_ROUTINE_ENDM("MapUpdateLighting", 500);
 }
 
-E_Boolean MapIsDay(T_void)
+E_Boolean
+MapIsDay(T_void)
 {
-    E_Boolean isDay = TRUE ;
-    T_sword32 tickInDay ;
-    T_word16 hour ;
-    DebugRoutine("MapIsDay") ;
+    E_Boolean isDay = TRUE;
+    T_sword32 tickInDay;
+    T_word16 hour;
+    DebugRoutine("MapIsDay");
 
     /* 0 = 6 am */
-    tickInDay = (SyncTimeGet()+G_dayTickOffset) & TICKS_PER_DAY ;
-    tickInDay *= 1440 ;
-    tickInDay /= TICKS_PER_DAY ;
-    hour = tickInDay / 60 ;
+    tickInDay = (SyncTimeGet() + G_dayTickOffset) & TICKS_PER_DAY;
+    tickInDay *= 1440;
+    tickInDay /= TICKS_PER_DAY;
+    hour = tickInDay / 60;
 
     /* 14 is 8:00 pm,  28 is 4:00 am,  14 to 28 is night time */
     if ((hour >= 14) && (hour <= 28))
-        isDay = FALSE ;
+        isDay = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isDay ;
+    return isDay;
 }
 
-T_void MapOutputTimeOfDay(T_void)
+T_void
+MapOutputTimeOfDay(T_void)
 {
-    T_sword32 tickInDay ;
-    T_word16 hour ;
-    T_word16 min ;
-    DebugRoutine("MapOutputTImeOfDay") ;
+    T_sword32 tickInDay;
+    T_word16 hour;
+    T_word16 min;
+    DebugRoutine("MapOutputTImeOfDay");
 
     /* 0 = 6 am */
-    tickInDay = ((SyncTimeGet()+G_dayTickOffset)+(TICKS_PER_DAY/4)) & TICKS_PER_DAY ;
+    tickInDay = ((SyncTimeGet() + G_dayTickOffset) + (TICKS_PER_DAY / 4)) & TICKS_PER_DAY;
 
-    tickInDay *= 1440 ;
-    tickInDay /= TICKS_PER_DAY ;
+    tickInDay *= 1440;
+    tickInDay /= TICKS_PER_DAY;
 
-    hour = tickInDay / 60 ;
-    min = tickInDay % 60 ;
+    hour = tickInDay / 60;
+    min = tickInDay % 60;
     if (hour > 12)
-        hour -= 12 ;
+        hour -= 12;
     if (hour == 0)
-        hour = 12 ;
+        hour = 12;
 
     MessagePrintf("game time: %d:%02d %s",
-        hour,
-        min,
-        ((tickInDay/60)>=12)?"pm":"am") ;
+                  hour,
+                  min,
+                  ((tickInDay / 60) >= 12) ? "pm" : "am");
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1427,25 +1507,27 @@ T_void MapOutputTimeOfDay(T_void)
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetMainTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
+T_void
+MapSetMainTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
 {
-    T_3dSide *p_side ;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapSetMainTextureForSide") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapSetMainTextureForSide");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = &G_3dSideArray[sideNum] ;
+    p_side = &G_3dSideArray[sideNum];
 
-    if (p_side->mainTx[0] != '-')  {
-        PictureUnlockAndUnfind(G_3dMainResourceArray[sideNum]) ;
+    if (p_side->mainTx[0] != '-')
+    {
+        PictureUnlockAndUnfind(G_3dMainResourceArray[sideNum]);
     }
 
-    p_side->mainTx[0] = p_textureName[0] ;
+    p_side->mainTx[0] = p_textureName[0];
 
     if (p_textureName[0] != '-')
-        *((T_byte8 **)(&p_side->mainTx[1])) =
-                PictureLock(p_textureName, &G_3dMainResourceArray[sideNum]) ;
-    DebugEnd() ;
+        *((T_byte8 **) (&p_side->mainTx[1])) =
+            PictureLock(p_textureName, &G_3dMainResourceArray[sideNum]);
+    DebugEnd();
 }
 
 
@@ -1460,26 +1542,28 @@ T_void MapSetMainTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetLowerTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
+T_void
+MapSetLowerTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
 {
-    T_3dSide *p_side ;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapSetLowerTextureForSide") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapSetLowerTextureForSide");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = &G_3dSideArray[sideNum] ;
+    p_side = &G_3dSideArray[sideNum];
 
-    if (p_side->lowerTx[0] != '-')  {
-        PictureUnlockAndUnfind(G_3dLowerResourceArray[sideNum]) ;
+    if (p_side->lowerTx[0] != '-')
+    {
+        PictureUnlockAndUnfind(G_3dLowerResourceArray[sideNum]);
     }
 
-    p_side->lowerTx[0] = p_textureName[0] ;
+    p_side->lowerTx[0] = p_textureName[0];
 
     if (p_textureName[0] != '-')
-        *((T_byte8 **)(&p_side->lowerTx[1])) =
-                PictureLock(p_textureName, &G_3dLowerResourceArray[sideNum]) ;
+        *((T_byte8 **) (&p_side->lowerTx[1])) =
+            PictureLock(p_textureName, &G_3dLowerResourceArray[sideNum]);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1493,26 +1577,28 @@ T_void MapSetLowerTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetUpperTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
+T_void
+MapSetUpperTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
 {
-    T_3dSide *p_side ;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapSetUpperTextureForSide") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapSetUpperTextureForSide");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = &G_3dSideArray[sideNum] ;
+    p_side = &G_3dSideArray[sideNum];
 
-    if (p_side->upperTx[0] != '-')  {
-        PictureUnlockAndUnfind(G_3dUpperResourceArray[sideNum]) ;
+    if (p_side->upperTx[0] != '-')
+    {
+        PictureUnlockAndUnfind(G_3dUpperResourceArray[sideNum]);
     }
 
-    p_side->upperTx[0] = p_textureName[0] ;
+    p_side->upperTx[0] = p_textureName[0];
 
     if (p_textureName[0] != '-')
-        *((T_byte8 **)(&p_side->upperTx[1])) =
-                PictureLock(p_textureName, &G_3dUpperResourceArray[sideNum]) ;
+        *((T_byte8 **) (&p_side->upperTx[1])) =
+            PictureLock(p_textureName, &G_3dUpperResourceArray[sideNum]);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1528,25 +1614,31 @@ T_void MapSetUpperTextureForSide(T_word16 sideNum, T_byte8 *p_textureName)
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetWallTexture(T_word16 sideNum, T_byte8 *p_textureName)
+T_void
+MapSetWallTexture(T_word16 sideNum, T_byte8 *p_textureName)
 {
-    T_3dSide *p_side ;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapSetWallTexture") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapSetWallTexture");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = &G_3dSideArray[sideNum] ;
+    p_side = &G_3dSideArray[sideNum];
 
     /* Try in this order:  main, lower, & upper */
-    if (p_side->mainTx[0] != '-')  {
-        MapSetMainTextureForSide(sideNum, p_textureName) ;
-    } else if (p_side->lowerTx[0] != '-')  {
-        MapSetLowerTextureForSide(sideNum, p_textureName) ;
-    } else if (p_side->upperTx[0] != '-')  {
-        MapSetUpperTextureForSide(sideNum, p_textureName) ;
+    if (p_side->mainTx[0] != '-')
+    {
+        MapSetMainTextureForSide(sideNum, p_textureName);
+    }
+    else if (p_side->lowerTx[0] != '-')
+    {
+        MapSetLowerTextureForSide(sideNum, p_textureName);
+    }
+    else if (p_side->upperTx[0] != '-')
+    {
+        MapSetUpperTextureForSide(sideNum, p_textureName);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1560,23 +1652,24 @@ T_void MapSetWallTexture(T_word16 sideNum, T_byte8 *p_textureName)
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetFloorTextureForSector(
-           T_word16 sectorNum,
-           T_byte8 *p_textureName)
+T_void
+MapSetFloorTextureForSector(
+    T_word16 sectorNum,
+    T_byte8 *p_textureName)
 {
-    T_3dSector *p_sector ;
+    T_3dSector *p_sector;
 
-    DebugRoutine("MapSetFloorTextureForSector") ;
-    DebugCheck(sectorNum < G_Num3dSectors) ;
+    DebugRoutine("MapSetFloorTextureForSector");
+    DebugCheck(sectorNum < G_Num3dSectors);
 
-    p_sector = &G_3dSectorArray[sectorNum] ;
+    p_sector = &G_3dSectorArray[sectorNum];
 
-    PictureUnlockAndUnfind(G_3dFloorResourceArray[sectorNum]) ;
+    PictureUnlockAndUnfind(G_3dFloorResourceArray[sectorNum]);
 
-    *((T_byte8 **)(&p_sector->floorTx[1])) =
-        PictureLock(p_textureName, &G_3dFloorResourceArray[sectorNum]) ;
+    *((T_byte8 **) (&p_sector->floorTx[1])) =
+        PictureLock(p_textureName, &G_3dFloorResourceArray[sectorNum]);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1590,23 +1683,24 @@ T_void MapSetFloorTextureForSector(
  *  @param p_textureName -- Name of texture to use.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapSetCeilingTextureForSector(
-           T_word16 sectorNum,
-           T_byte8 *p_textureName)
+T_void
+MapSetCeilingTextureForSector(
+    T_word16 sectorNum,
+    T_byte8 *p_textureName)
 {
-    T_3dSector *p_sector ;
+    T_3dSector *p_sector;
 
-    DebugRoutine("MapSetCeilingTextureForSector") ;
-    DebugCheck(sectorNum < G_Num3dSectors) ;
+    DebugRoutine("MapSetCeilingTextureForSector");
+    DebugCheck(sectorNum < G_Num3dSectors);
 
-    p_sector = &G_3dSectorArray[sectorNum] ;
+    p_sector = &G_3dSectorArray[sectorNum];
 
-    PictureUnlockAndUnfind(G_3dCeilingResourceArray[sectorNum]) ;
+    PictureUnlockAndUnfind(G_3dCeilingResourceArray[sectorNum]);
 
-    *((T_byte8 **)(&p_sector->ceilingTx[1])) =
-        PictureLock(p_textureName, &G_3dCeilingResourceArray[sectorNum]) ;
+    *((T_byte8 **) (&p_sector->ceilingTx[1])) =
+        PictureLock(p_textureName, &G_3dCeilingResourceArray[sectorNum]);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1618,31 +1712,33 @@ T_void MapSetCeilingTextureForSector(
  *  @return TRUE=Map does exist
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MapExist(T_word32 num)
+E_Boolean
+MapExist(T_word32 num)
 {
-    E_Boolean mapExist = FALSE ;
-    T_byte8 filename[20] ;
+    E_Boolean mapExist = FALSE;
+    T_byte8 filename[20];
 
-    DebugRoutine("MapExist") ;
-    sprintf(filename, "l%u.map", num) ;
+    DebugRoutine("MapExist");
+    sprintf(filename, "l%u.map", num);
 
-    if (FileExist(filename))  {
-        mapExist = TRUE ;
+    if (FileExist(filename))
+    {
+        mapExist = TRUE;
     }
 #ifndef NDEBUG
-    else  {
+        else  {
 #ifndef SERVER_ONLY
-        MessageAdd("Map does NOT exist!") ;
+            MessageAdd("Map does NOT exist!") ;
 #else
-        printf("Map does NOT exist!") ;
-        DebugCheck(FALSE) ;
+            printf("Map does NOT exist!") ;
+            DebugCheck(FALSE) ;
 #endif
-    }
+        }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return mapExist ;
+    return mapExist;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1657,26 +1753,30 @@ E_Boolean MapExist(T_word32 num)
  *  @return Pointer to 8 characters for name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *MapGetUpperTextureName(T_word16 sideNum)
+T_byte8 *
+MapGetUpperTextureName(T_word16 sideNum)
 {
-    T_byte8 *p_pic ;
-    T_byte8 *p_name ;
-    T_3dSide *p_side ;
+    T_byte8 *p_pic;
+    T_byte8 *p_name;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapGetUpperTextureName") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapGetUpperTextureName");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = G_3dSideArray + sideNum ;
-    if (p_side->upperTx[0] == '-')  {
-        p_name = G_noName ;
-    } else {
-        p_pic = *((T_byte8 **)(p_side->upperTx + 1)) ;
-        p_name = PictureGetName(p_pic) ;
+    p_side = G_3dSideArray + sideNum;
+    if (p_side->upperTx[0] == '-')
+    {
+        p_name = G_noName;
+    }
+    else
+    {
+        p_pic = *((T_byte8 **) (p_side->upperTx + 1));
+        p_name = PictureGetName(p_pic);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1691,26 +1791,30 @@ T_byte8 *MapGetUpperTextureName(T_word16 sideNum)
  *  @return Pointer to 8 characters for name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *MapGetLowerTextureName(T_word16 sideNum)
+T_byte8 *
+MapGetLowerTextureName(T_word16 sideNum)
 {
-    T_byte8 *p_pic ;
-    T_byte8 *p_name ;
-    T_3dSide *p_side ;
+    T_byte8 *p_pic;
+    T_byte8 *p_name;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapGetLowerTextureName") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapGetLowerTextureName");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = G_3dSideArray + sideNum ;
-    if (p_side->lowerTx[0] == '-')  {
-        p_name = G_noName ;
-    } else {
-        p_pic = *((T_byte8 **)(p_side->lowerTx + 1)) ;
-        p_name = PictureGetName(p_pic) ;
+    p_side = G_3dSideArray + sideNum;
+    if (p_side->lowerTx[0] == '-')
+    {
+        p_name = G_noName;
+    }
+    else
+    {
+        p_pic = *((T_byte8 **) (p_side->lowerTx + 1));
+        p_name = PictureGetName(p_pic);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1725,26 +1829,30 @@ T_byte8 *MapGetLowerTextureName(T_word16 sideNum)
  *  @return Pointer to 8 characters for name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *MapGetMainTextureName(T_word16 sideNum)
+T_byte8 *
+MapGetMainTextureName(T_word16 sideNum)
 {
-    T_byte8 *p_pic ;
-    T_byte8 *p_name ;
-    T_3dSide *p_side ;
+    T_byte8 *p_pic;
+    T_byte8 *p_name;
+    T_3dSide *p_side;
 
-    DebugRoutine("MapGetMainTextureName") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapGetMainTextureName");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = G_3dSideArray + sideNum ;
-    if (p_side->mainTx[0] == '-')  {
-        p_name = G_noName ;
-    } else {
-        p_pic = *((T_byte8 **)(p_side->mainTx + 1)) ;
-        p_name = PictureGetName(p_pic) ;
+    p_side = G_3dSideArray + sideNum;
+    if (p_side->mainTx[0] == '-')
+    {
+        p_name = G_noName;
+    }
+    else
+    {
+        p_pic = *((T_byte8 **) (p_side->mainTx + 1));
+        p_name = PictureGetName(p_pic);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1759,22 +1867,23 @@ T_byte8 *MapGetMainTextureName(T_word16 sideNum)
  *  @return Pointer to 8 characters for name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *MapGetFloorTextureName(T_word16 sectorNum)
+T_byte8 *
+MapGetFloorTextureName(T_word16 sectorNum)
 {
-    T_3dSector *p_sector ;
-    T_byte8 *p_pic ;
-    T_byte8 *p_name ;
+    T_3dSector *p_sector;
+    T_byte8 *p_pic;
+    T_byte8 *p_name;
 
-    DebugRoutine("MapGetFloorTextureName") ;
-    DebugCheck(sectorNum < G_Num3dSectors) ;
+    DebugRoutine("MapGetFloorTextureName");
+    DebugCheck(sectorNum < G_Num3dSectors);
 
-    p_sector = G_3dSectorArray + sectorNum ;
-    p_pic = *((T_byte8 **)(p_sector->floorTx + 1)) ;
-    p_name = PictureGetName(p_pic) ;
+    p_sector = G_3dSectorArray + sectorNum;
+    p_pic = *((T_byte8 **) (p_sector->floorTx + 1));
+    p_name = PictureGetName(p_pic);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1789,22 +1898,23 @@ T_byte8 *MapGetFloorTextureName(T_word16 sectorNum)
  *  @return Pointer to 8 characters for name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *MapGetCeilingTextureName(T_word16 sectorNum)
+T_byte8 *
+MapGetCeilingTextureName(T_word16 sectorNum)
 {
-    T_3dSector *p_sector ;
-    T_byte8 *p_pic ;
-    T_byte8 *p_name ;
+    T_3dSector *p_sector;
+    T_byte8 *p_pic;
+    T_byte8 *p_name;
 
-    DebugRoutine("MapGetCeilingTextureName") ;
-    DebugCheck(sectorNum < G_Num3dSectors) ;
+    DebugRoutine("MapGetCeilingTextureName");
+    DebugCheck(sectorNum < G_Num3dSectors);
 
-    p_sector = G_3dSectorArray + sectorNum ;
-    p_pic = *((T_byte8 **)(p_sector->ceilingTx + 1)) ;
-    p_name = PictureGetName(p_pic) ;
+    p_sector = G_3dSectorArray + sectorNum;
+    p_pic = *((T_byte8 **) (p_sector->ceilingTx + 1));
+    p_name = PictureGetName(p_pic);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1818,20 +1928,21 @@ T_byte8 *MapGetCeilingTextureName(T_word16 sectorNum)
  *  @return Texture shift in X direction
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MapGetTextureXOffset(T_word16 sideNum)
+T_word16
+MapGetTextureXOffset(T_word16 sideNum)
 {
-    T_3dSide *p_side ;
-    T_word16 xOffset ;
+    T_3dSide *p_side;
+    T_word16 xOffset;
 
-    DebugRoutine("MapGetTextureXOffset") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapGetTextureXOffset");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = G_3dSideArray + sideNum ;
-    xOffset = p_side->tmXoffset ;
+    p_side = G_3dSideArray + sideNum;
+    xOffset = p_side->tmXoffset;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return xOffset ;
+    return xOffset;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1845,20 +1956,21 @@ T_word16 MapGetTextureXOffset(T_word16 sideNum)
  *  @return Shift in texture along y direction
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MapGetTextureYOffset(T_word16 sideNum)
+T_word16
+MapGetTextureYOffset(T_word16 sideNum)
 {
-    T_3dSide *p_side ;
-    T_word16 yOffset ;
+    T_3dSide *p_side;
+    T_word16 yOffset;
 
-    DebugRoutine("MapGetTextureYOffset") ;
-    DebugCheck(sideNum < G_Num3dSides) ;
+    DebugRoutine("MapGetTextureYOffset");
+    DebugCheck(sideNum < G_Num3dSides);
 
-    p_side = G_3dSideArray + sideNum ;
-    yOffset = p_side->tmYoffset ;
+    p_side = G_3dSideArray + sideNum;
+    yOffset = p_side->tmYoffset;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return yOffset ;
+    return yOffset;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1875,83 +1987,94 @@ T_word16 MapGetTextureYOffset(T_word16 sideNum)
  *  @return Height there, or -32767
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MapGetWalkingFloorHeightAtXY(
-        T_objMoveStruct *p_objMove,
-        T_sword16 x,
-        T_sword16 y)
+T_sword16
+MapGetWalkingFloorHeightAtXY(
+    T_objMoveStruct *p_objMove,
+    T_sword16 x,
+    T_sword16 y)
 {
-    T_sword16 floor ;
-    T_word16 sector ;
+    T_sword16 floor;
+    T_word16 sector;
 
-    DebugRoutine("MapGetWalkingFloorHeightAtXY") ;
+    DebugRoutine("MapGetWalkingFloorHeightAtXY");
 
-    sector = View3dFindSectorNum(x, y) ;
-    if (sector < G_Num3dSectors)  {
-        floor = MapGetWalkingFloorHeight(p_objMove, sector) ;
-    } else {
-        floor = -32767 ;
+    sector = View3dFindSectorNum(x, y);
+    if (sector < G_Num3dSectors)
+    {
+        floor = MapGetWalkingFloorHeight(p_objMove, sector);
+    }
+    else
+    {
+        floor = -32767;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return floor ;
+    return floor;
 }
 
 /* LES: 05/09/96 -- Return what type of sector this is. */
-T_sectorType MapGetSectorType(T_word16 sectorNum)
+T_sectorType
+MapGetSectorType(T_word16 sectorNum)
 {
-    T_sectorType type = 0 ;
+    T_sectorType type = 0;
 
-    DebugRoutine("MapGetSectorType") ;
+    DebugRoutine("MapGetSectorType");
 
-    if (sectorNum < G_Num3dSectors)  {
-        type = G_3dSectorInfoArray[sectorNum].type ;
-    } else  {
-        DebugCheck(FALSE) ;
+    if (sectorNum < G_Num3dSectors)
+    {
+        type = G_3dSectorInfoArray[sectorNum].type;
+    }
+    else
+    {
+        DebugCheck(FALSE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return type ;
+    return type;
 }
 
 /* LES: 05/13/96 -- Make a side go through a different animation */
-T_void MapSetSideState(T_word16 sideNum, T_word16 sideState)
+T_void
+MapSetSideState(T_word16 sideNum, T_word16 sideState)
 {
-    DebugRoutine("MapSetSideState") ;
+    DebugRoutine("MapSetSideState");
 
     MapAnimateStartSide(
         G_mapAnimation,
         sideNum,
-        sideState) ;
+        sideState);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES: 05/13/96 -- Make a wall go through a different animation */
-T_void MapSetWallState(T_word16 wallNum, T_word16 wallState)
+T_void
+MapSetWallState(T_word16 wallNum, T_word16 wallState)
 {
-    DebugRoutine("MapSetWallState") ;
+    DebugRoutine("MapSetWallState");
 
     MapAnimateStartWall(
         G_mapAnimation,
         wallNum,
-        wallState) ;
+        wallState);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES: 05/13/96 -- Make a sector go through a different animation */
-T_void MapSetSectorState(T_word16 sectorNum, T_word16 sectorState)
+T_void
+MapSetSectorState(T_word16 sectorNum, T_word16 sectorState)
 {
-    DebugRoutine("MapSetSectorState") ;
+    DebugRoutine("MapSetSectorState");
 
     MapAnimateStartSector(
         G_mapAnimation,
         sectorNum,
-        sectorState) ;
+        sectorState);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1968,25 +2091,26 @@ T_void MapSetSectorState(T_word16 sectorNum, T_word16 sectorState)
  *  @return TRUE=found damaging wall
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MapGetWallDamage(
-              T_3dObject *p_obj,
-              T_word16 *p_damageAmount,
-              T_byte8 *p_damageType)
+E_Boolean
+MapGetWallDamage(
+    T_3dObject *p_obj,
+    T_word16 *p_damageAmount,
+    T_byte8 *p_damageType)
 {
-    E_Boolean didGet = FALSE ;
+    E_Boolean didGet = FALSE;
 
-    DebugRoutine("MapGetWallDamage") ;
-    DebugCheck(G_mapAnimation != MAP_ANIMATION_BAD) ;
+    DebugRoutine("MapGetWallDamage");
+    DebugCheck(G_mapAnimation != MAP_ANIMATION_BAD);
 
     didGet = MapAnimateGetWallDamage(
-                 G_mapAnimation,
-                 p_obj,
-                 p_damageAmount,
-                 p_damageType) ;
+        G_mapAnimation,
+        p_obj,
+        p_damageAmount,
+        p_damageType);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return didGet ;
+    return didGet;
 }
 
 #ifdef COMPILE_OPTION_ALLOW_SHIFT_TEXTURES
@@ -2095,63 +2219,75 @@ T_void MapShiftTextureDown(T_sword16 amount)
  *  wall.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapOpenForwardWall(
-           T_3dObject *p_obj,
-           E_Boolean checkForItemRequired)
+T_void
+MapOpenForwardWall(
+    T_3dObject *p_obj,
+    E_Boolean checkForItemRequired)
 {
-    T_word16 num ;
-    T_wallListItem wallList[20] ;
-    T_sword32 newX, newY ;
-    T_sword32 reach = 64 ;
-    T_word16 side ;
-    T_word16 door = 0 ;
-    T_word16 j ;
-    T_word16 stepSize = 32 ;
+    T_word16 num;
+    T_wallListItem wallList[20];
+    T_sword32 newX, newY;
+    T_sword32 reach = 64;
+    T_word16 side;
+    T_word16 door = 0;
+    T_word16 j;
+    T_word16 stepSize = 32;
 
-    do {
-        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj))*reach ;
-        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj))*reach ;
+    do
+    {
+        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj)) * reach;
+        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj)) * reach;
         num = Collide3dFindWallList(
-                  (T_sword16)(ObjectGetX16(p_obj)),
-                  (T_sword16)(ObjectGetY16(p_obj)),
-                  (T_sword16)(newX>>16),
-                  (T_sword16)(newY>>16),
-                  (T_sword16)(ObjectGetZ16(p_obj)+(ObjectGetHeight(p_obj)>>1)),
-                  20,
-                  wallList,
-                  WALL_LIST_ITEM_UPPER) ;
+            (T_sword16) (ObjectGetX16(p_obj)),
+            (T_sword16) (ObjectGetY16(p_obj)),
+            (T_sword16) (newX >> 16),
+            (T_sword16) (newY >> 16),
+            (T_sword16) (ObjectGetZ16(p_obj) + (ObjectGetHeight(p_obj) >> 1)),
+            20,
+            wallList,
+            WALL_LIST_ITEM_UPPER);
 
         /* No walls were hit. */
-        if ((num == 0) && (stepSize != 0))  {
+        if ((num == 0) && (stepSize != 0))
+        {
             /* If we have tried reaching out the maximum distance, quit. */
             if (reach == 64)
-                break ;
+                break;
             /* Try to reach further. */
-            reach += stepSize ;
-        } else if ((num > 1) && (stepSize != 0)) {
+            reach += stepSize;
+        }
+        else if ((num > 1) && (stepSize != 0))
+        {
             /* Too many lines, try cutting it shorter. */
-            reach -= stepSize ;
-        } else {
+            reach -= stepSize;
+        }
+        else
+        {
             /* We are only touching one.  Must be the only */
             /* possible door. */
-            for (j=0; j<2; j++)  {
-                side = G_3dLineArray[wallList[0].lineNumber].side[j] ;
-                if (side != 0xFFFF)  {
-                    door = G_3dSideArray[side].sector ;
-                    if (DoorIsAtSector(door))  {
-                        if (!DoorIsLock(door))  {
-                            DoorOpen(door) ;
+            for (j = 0; j < 2; j++)
+            {
+                side = G_3dLineArray[wallList[0].lineNumber].side[j];
+                if (side != 0xFFFF)
+                {
+                    door = G_3dSideArray[side].sector;
+                    if (DoorIsAtSector(door))
+                    {
+                        if (!DoorIsLock(door))
+                        {
+                            DoorOpen(door);
                         }
                     }
                 }
             }
 
             /* Stop looping. */
-            break ;
+            break;
         }
-        stepSize>>=1 ;
+        stepSize >>= 1;
         /* Loop while our reach is still good. */
-    } while (stepSize > 0) ;
+    }
+    while (stepSize > 0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -2165,67 +2301,78 @@ T_void MapOpenForwardWall(
  *  @param p_obj -- Object doing the open
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapForceOpenForwardWall(T_3dObject *p_obj)
+T_void
+MapForceOpenForwardWall(T_3dObject *p_obj)
 {
-    T_word16 num ;
-    T_wallListItem wallList[20] ;
-    T_sword32 newX, newY ;
-    T_sword32 reach = 64 ;
-    T_word16 side ;
-    T_word16 door = 0 ;
-    T_word16 j ;
-    T_word16 stepSize = 32 ;
+    T_word16 num;
+    T_wallListItem wallList[20];
+    T_sword32 newX, newY;
+    T_sword32 reach = 64;
+    T_word16 side;
+    T_word16 door = 0;
+    T_word16 j;
+    T_word16 stepSize = 32;
 
-    DebugRoutine("MapForceOpenForwardWall") ;
+    DebugRoutine("MapForceOpenForwardWall");
 
-    do {
-        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj))*reach ;
-        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj))*reach ;
+    do
+    {
+        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj)) * reach;
+        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj)) * reach;
         num = Collide3dFindWallList(
-                  (T_sword16)(ObjectGetX16(p_obj)),
-                  (T_sword16)(ObjectGetY16(p_obj)),
-                  (T_sword16)(newX>>16),
-                  (T_sword16)(newY>>16),
-                  (T_sword16)(ObjectGetZ16(p_obj)+(ObjectGetHeight(p_obj)>>1)),
-                  20,
-                  wallList,
-                  WALL_LIST_ITEM_UPPER) ;
+            (T_sword16) (ObjectGetX16(p_obj)),
+            (T_sword16) (ObjectGetY16(p_obj)),
+            (T_sword16) (newX >> 16),
+            (T_sword16) (newY >> 16),
+            (T_sword16) (ObjectGetZ16(p_obj) + (ObjectGetHeight(p_obj) >> 1)),
+            20,
+            wallList,
+            WALL_LIST_ITEM_UPPER);
 
         /* No walls were hit. */
-        if ((num == 0) && (stepSize != 0))  {
+        if ((num == 0) && (stepSize != 0))
+        {
             /* If we have tried reaching out the maximum distance, quit. */
             if (reach == 64)
-                break ;
+                break;
             /* Try to reach further. */
-            reach += stepSize ;
-        } else if ((num > 1) && (stepSize != 0)) {
+            reach += stepSize;
+        }
+        else if ((num > 1) && (stepSize != 0))
+        {
             /* Too many lines, try cutting it shorter. */
-            reach -= stepSize ;
-        } else {
+            reach -= stepSize;
+        }
+        else
+        {
             /* We are only touching one.  Must be the only */
             /* possible door. */
-            for (j=0; j<2; j++)  {
-                side = G_3dLineArray[wallList[0].lineNumber].side[j] ;
-                if (side != 0xFFFF)  {
-                    door = G_3dSideArray[side].sector ;
-                    if (DoorIsAtSector(door))  {
+            for (j = 0; j < 2; j++)
+            {
+                side = G_3dLineArray[wallList[0].lineNumber].side[j];
+                if (side != 0xFFFF)
+                {
+                    door = G_3dSideArray[side].sector;
+                    if (DoorIsAtSector(door))
+                    {
                         /* Unlock and remove any required items. */
-                        DoorUnlock(door) ;
-                        DoorSetRequiredItem(door, 0) ;
+                        DoorUnlock(door);
+                        DoorSetRequiredItem(door, 0);
 
-                        DoorOpen(door) ;
+                        DoorOpen(door);
                     }
                 }
             }
 
             /* Stop looping. */
-            break ;
+            break;
         }
-        stepSize>>=1 ;
+        stepSize >>= 1;
         /* Loop while our reach is still good. */
-    } while (stepSize > 0) ;
+    }
+    while (stepSize > 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2242,69 +2389,83 @@ T_void MapForceOpenForwardWall(T_3dObject *p_obj)
  *  @return TRUE if can open, else false
  *
  *<!-----------------------------------------------------------------------*/
-T_void MapGetForwardWallActivationType(
-           T_3dObject *p_obj,
-           E_wallActivation *p_type,
-           T_word16 *p_data)
+T_void
+MapGetForwardWallActivationType(
+    T_3dObject *p_obj,
+    E_wallActivation *p_type,
+    T_word16 *p_data)
 {
-    T_word16 num ;
-    T_wallListItem wallList[20] ;
-    T_sword32 newX, newY ;
-    T_sword32 reach = 64 ;
-    T_word16 side ;
-    T_word16 door = 0 ;
-    T_word16 j ;
-    T_word16 stepSize = 32 ;
+    T_word16 num;
+    T_wallListItem wallList[20];
+    T_sword32 newX, newY;
+    T_sword32 reach = 64;
+    T_word16 side;
+    T_word16 door = 0;
+    T_word16 j;
+    T_word16 stepSize = 32;
 
-    DebugRoutine("MapGetForwardWallActivationType") ;
+    DebugRoutine("MapGetForwardWallActivationType");
 
-    *p_type = WALL_ACTIVATION_NONE ;
-    do {
+    *p_type = WALL_ACTIVATION_NONE;
+    do
+    {
         /* Find any line that is solid. */
-        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj))*reach ;
-        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj))*reach ;
+        newX = ObjectGetX(p_obj) + MathCosineLookup(ObjectGetAngle(p_obj)) * reach;
+        newY = ObjectGetY(p_obj) + MathSineLookup(ObjectGetAngle(p_obj)) * reach;
         num = Collide3dFindWallList(
-                  (T_sword16)(ObjectGetX16(p_obj)),
-                  (T_sword16)(ObjectGetY16(p_obj)),
-                  (T_sword16)(newX>>16),
-                  (T_sword16)(newY>>16),
-                  (T_sword16)(ObjectGetZ16(p_obj)+(ObjectGetHeight(p_obj)>>1)),
-                  20,
-                  wallList,
-                  WALL_LIST_ITEM_UPPER |
-                      WALL_LIST_ITEM_LOWER |
-                          WALL_LIST_ITEM_MAIN) ;
+            (T_sword16) (ObjectGetX16(p_obj)),
+            (T_sword16) (ObjectGetY16(p_obj)),
+            (T_sword16) (newX >> 16),
+            (T_sword16) (newY >> 16),
+            (T_sword16) (ObjectGetZ16(p_obj) + (ObjectGetHeight(p_obj) >> 1)),
+            20,
+            wallList,
+            WALL_LIST_ITEM_UPPER |
+                WALL_LIST_ITEM_LOWER |
+                WALL_LIST_ITEM_MAIN);
 
         /* No walls were hit. */
-        if ((num == 0) && (stepSize != 0))  {
+        if ((num == 0) && (stepSize != 0))
+        {
             /* If we have tried reaching out the maximum distance, quit. */
             if (reach == 64)
-                break ;
+                break;
             /* Try to reach further. */
-            reach += stepSize ;
-        } else if ((num > 1) && (stepSize != 0)) {
+            reach += stepSize;
+        }
+        else if ((num > 1) && (stepSize != 0))
+        {
             /* Too many lines, try cutting it shorter. */
-            reach -= stepSize ;
-        } else {
+            reach -= stepSize;
+        }
+        else
+        {
             /* We are only touching one.  Must be the only */
             /* possible door or wall. */
             /* Check if there is a script on the line. */
-            if (G_3dLineArray[wallList[0].lineNumber].special != 0)  {
+            if (G_3dLineArray[wallList[0].lineNumber].special != 0)
+            {
                 /* A script is found.  Report this. */
-                *p_type = WALL_ACTIVATION_SCRIPT ;
-                *p_data = G_3dLineArray[wallList[0].lineNumber].special ;
-            } else {
+                *p_type = WALL_ACTIVATION_SCRIPT;
+                *p_data = G_3dLineArray[wallList[0].lineNumber].special;
+            }
+            else
+            {
                 /* Only consider it to be a door if it is an upper. */
-                if (wallList[0].itemType == WALL_LIST_ITEM_UPPER)  {
+                if (wallList[0].itemType == WALL_LIST_ITEM_UPPER)
+                {
                     /* Check if there is a door attached. */
-                    for (j=0; j<2; j++)  {
-                        side = G_3dLineArray[wallList[0].lineNumber].side[j] ;
-                        if (side != 0xFFFF)  {
-                            door = G_3dSideArray[side].sector ;
-                            if (DoorIsAtSector(door))  {
+                    for (j = 0; j < 2; j++)
+                    {
+                        side = G_3dLineArray[wallList[0].lineNumber].side[j];
+                        if (side != 0xFFFF)
+                        {
+                            door = G_3dSideArray[side].sector;
+                            if (DoorIsAtSector(door))
+                            {
                                 /* Found a door on the line. */
-                                *p_type = WALL_ACTIVATION_DOOR ;
-                                *p_data = door ;
+                                *p_type = WALL_ACTIVATION_DOOR;
+                                *p_data = door;
                             }
                         }
                     }
@@ -2312,28 +2473,32 @@ T_void MapGetForwardWallActivationType(
             }
 
             /* Stop looping. */
-            break ;
+            break;
         }
-        stepSize>>=1 ;
+        stepSize >>= 1;
         /* Loop while our reach is still good. */
-    } while (stepSize > 0) ;
+    }
+    while (stepSize > 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void MapSetDayOffset(T_word32 offset)
+T_void
+MapSetDayOffset(T_word32 offset)
 {
-    G_dayTickOffset = offset ;
+    G_dayTickOffset = offset;
 }
 
-T_word32 MapGetDayOffset(T_void)
+T_word32
+MapGetDayOffset(T_void)
 {
-    return G_dayTickOffset ;
+    return G_dayTickOffset;
 }
 
-T_word32 MapGetMapSpecial(T_void)
+T_word32
+MapGetMapSpecial(T_void)
 {
-    return G_mapSpecial ;
+    return G_mapSpecial;
 }
 
 /** @} */

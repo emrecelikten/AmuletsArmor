@@ -15,7 +15,6 @@
 #include "CSYNCPCK.H"
 #include "GUILDUI.H"
 #include "HARDFORM.H"
-#include "MEMORY.H"
 #include "MESSAGE.H"
 #include "PEOPHERE.H"
 #include "STATS.H"
@@ -45,8 +44,10 @@ static T_byte8 G_peopleNames[MAX_PLAYERS_PER_GAME][MAX_CHAT_NAME_STRING];
 /*-------------------------------------------------------------------------*
  * Prototypes:
  *-------------------------------------------------------------------------*/
-static T_playerIDSelf *ICreatePlayerID(T_playerIDSelf *p_playerID);
-static T_playerIDLocation IGetOurLocation(T_void);
+static T_playerIDSelf *
+ICreatePlayerID(T_playerIDSelf *p_playerID);
+static T_playerIDLocation
+IGetOurLocation(T_void);
 
 /*-------------------------------------------------------------------------*
  * Routine:  PeopleHereInitialize
@@ -55,7 +56,8 @@ static T_playerIDLocation IGetOurLocation(T_void);
  *  This routine starts up the people here module.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereInitialize(T_void)
+T_void
+PeopleHereInitialize(T_void)
 {
     DebugRoutine("PeopleHereInitialize");
     DebugCheck(G_init == FALSE);
@@ -77,7 +79,8 @@ T_void PeopleHereInitialize(T_void)
  *  the list of playerIDSelf structures.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereFinish(T_void)
+T_void
+PeopleHereFinish(T_void)
 {
     DebugRoutine("PeopleHereFinish");
     DebugCheck(G_init == TRUE);
@@ -98,7 +101,8 @@ T_void PeopleHereFinish(T_void)
  *  Reset the list of people here.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereReset(T_void)
+T_void
+PeopleHereReset(T_void)
 {
     DebugRoutine("PeopleHereReset");
     DebugCheck(G_init == TRUE);
@@ -122,7 +126,8 @@ T_void PeopleHereReset(T_void)
  *  @return Found player ID pointer or NULL
  *
  *<!-----------------------------------------------------------------------*/
-T_playerIDSelf *IFindByName(T_byte8 *p_name)
+T_playerIDSelf *
+IFindByName(T_byte8 *p_name)
 {
     T_playerIDSelf *p_found = NULL;
     T_word16 i;
@@ -130,8 +135,10 @@ T_playerIDSelf *IFindByName(T_byte8 *p_name)
 
     DebugRoutine("IFindByName");
 
-    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++) {
-        if ((p->name[0]) && (strcmp(p_name, p->name) == 0)) {
+    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++)
+    {
+        if ((p->name[0]) && (strcmp(p_name, p->name) == 0))
+        {
             p_found = p;
             break;
         }
@@ -153,7 +160,8 @@ T_playerIDSelf *IFindByName(T_byte8 *p_name)
  *  @return Found player ID pointer or NULL
  *
  *<!-----------------------------------------------------------------------*/
-static T_playerIDSelf *ICreatePlayerID(T_playerIDSelf *p_playerID)
+static T_playerIDSelf *
+ICreatePlayerID(T_playerIDSelf *p_playerID)
 {
     T_playerIDSelf *p_new = NULL;
     T_word16 i;
@@ -162,11 +170,13 @@ static T_playerIDSelf *ICreatePlayerID(T_playerIDSelf *p_playerID)
     DebugRoutine("ICreatePlayerID");
 
     // Find a slot with no name
-    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++) {
-        if (p->name[0] == '\0') {
+    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++)
+    {
+        if (p->name[0] == '\0')
+        {
             memcpy(p, p_playerID, sizeof(*p));
 
-            // We want the transition from nowhere to somewhere, 
+            // We want the transition from nowhere to somewhere,
             // start at nowhere for a newly created character
             p->location = PLAYER_ID_LOCATION_NOWHERE;
             p->state = PLAYER_ID_STATE_NONE;
@@ -189,7 +199,8 @@ static T_playerIDSelf *ICreatePlayerID(T_playerIDSelf *p_playerID)
  *  @return General player location
  *
  *<!-----------------------------------------------------------------------*/
-static T_playerIDLocation IGetOurLocation(T_void)
+static T_playerIDLocation
+IGetOurLocation(T_void)
 {
     T_playerIDLocation location = PLAYER_ID_LOCATION_NOWHERE;
     T_word16 place;
@@ -198,15 +209,14 @@ static T_playerIDLocation IGetOurLocation(T_void)
 
     place = ClientGetCurrentPlace();
 
-    switch (place) {
-        case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_GUILD:
-            location = PLAYER_ID_LOCATION_GUILD;
+    switch (place)
+    {
+        case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_GUILD:location = PLAYER_ID_LOCATION_GUILD;
             break;
         case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_TOWN:
-		case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_BANK:
-		case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_STORE:
-		case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_INN:
-            location = PLAYER_ID_LOCATION_TOWN;
+        case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_BANK:
+        case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_STORE:
+        case HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_INN:location = PLAYER_ID_LOCATION_TOWN;
             break;
     }
 
@@ -227,7 +237,8 @@ static T_playerIDLocation IGetOurLocation(T_void)
  *  @param p_self -- Pointer to player id self to fill
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereGetPlayerIDSelfStruct(T_playerIDSelf *p_self)
+T_void
+PeopleHereGetPlayerIDSelfStruct(T_playerIDSelf *p_self)
 {
     DebugRoutine("PeopleHereGetPlayerIDSelfStruct");
     DebugCheck(p_self != NULL);
@@ -238,9 +249,9 @@ T_void PeopleHereGetPlayerIDSelfStruct(T_playerIDSelf *p_self)
     p_self->state = G_ourState;
     p_self->groupID = ClientSyncGetGameGroupID();
     p_self->adventure = PeopleHereGetOurAdventure();
-	p_self->quest = StatsGetCurrentQuestNumber();
-	p_self->classType = StatsGetPlayerClassType();
-	p_self->level = StatsGetPlayerLevel();
+    p_self->quest = StatsGetCurrentQuestNumber();
+    p_self->classType = StatsGetPlayerClassType();
+    p_self->level = StatsGetPlayerLevel();
 
     DebugEnd();
 }
@@ -255,7 +266,8 @@ T_void PeopleHereGetPlayerIDSelfStruct(T_playerIDSelf *p_self)
  *  @return Game group ID for this player
  *
  *<!-----------------------------------------------------------------------*/
-T_gameGroupID PeopleHereGetUniqueGroupID(T_void)
+T_gameGroupID
+PeopleHereGetUniqueGroupID(T_void)
 {
     T_gameGroupID groupID;
 
@@ -278,7 +290,8 @@ T_gameGroupID PeopleHereGetUniqueGroupID(T_void)
  *  @param [in] state -- Our new game state (joining, creating, etc.)
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereSetOurState(T_playerIDState state)
+T_void
+PeopleHereSetOurState(T_playerIDState state)
 {
     G_ourState = state;
 }
@@ -292,7 +305,8 @@ T_void PeopleHereSetOurState(T_playerIDState state)
  *  @return Our current game state (joining, creating, etc.)
  *
  *<!-----------------------------------------------------------------------*/
-T_playerIDState PeopleHereGetOurState(T_void)
+T_playerIDState
+PeopleHereGetOurState(T_void)
 {
     return G_ourState;
 }
@@ -306,7 +320,8 @@ T_playerIDState PeopleHereGetOurState(T_void)
  *  @param [in] adventure -- 16-bit adventure id.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereSetOurAdventure(T_word16 adventure)
+T_void
+PeopleHereSetOurAdventure(T_word16 adventure)
 {
     G_ourAdventure = adventure;
 }
@@ -320,7 +335,8 @@ T_void PeopleHereSetOurAdventure(T_word16 adventure)
  *  @return Current 16-bit adventure id.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PeopleHereGetOurAdventure(T_void)
+T_word16
+PeopleHereGetOurAdventure(T_void)
 {
     return G_ourAdventure;
 }
@@ -339,10 +355,11 @@ T_word16 PeopleHereGetOurAdventure(T_void)
  *  @return Current 16-bit adventure id.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereRequestJoin(
-        T_directTalkUniqueAddress uniqueAddress,
-        T_gameGroupID groupID,
-        T_word16 adventure)
+T_void
+PeopleHereRequestJoin(
+    T_directTalkUniqueAddress uniqueAddress,
+    T_gameGroupID groupID,
+    T_word16 adventure)
 {
     T_word16 i;
     T_gameGroupID ourGroupID;
@@ -353,34 +370,43 @@ T_void PeopleHereRequestJoin(
 
     /* In order to process this packet, we must be the */
     /* creator of the game and THIS particular group. */
-    if ((CompareGameGroupIDs(groupID, ourGroupID))) {
+    if ((CompareGameGroupIDs(groupID, ourGroupID)))
+    {
         if ((PeopleHereGetOurState() == PLAYER_ID_STATE_CREATING_GAME)
-                && (adventure == PeopleHereGetOurAdventure())
-                && (IGetOurLocation() == PLAYER_ID_LOCATION_GUILD)) {
-            if (G_numPeopleInGame < MAX_PLAYERS_PER_GAME) {
+            && (adventure == PeopleHereGetOurAdventure())
+            && (IGetOurLocation() == PLAYER_ID_LOCATION_GUILD))
+        {
+            if (G_numPeopleInGame < MAX_PLAYERS_PER_GAME)
+            {
                 /* Add this person to the list (if not already) */
-                for (i = 0; i < G_numPeopleInGame; i++) {
+                for (i = 0; i < G_numPeopleInGame; i++)
+                {
                     /* Stop if we have seen this one before. */
                     if (memcmp(&uniqueAddress, &G_peopleNetworkIDInGame[i],
-                            sizeof(uniqueAddress)) == 0)
+                               sizeof(uniqueAddress)) == 0)
                         break;
                 }
 
                 /* Are we at the end?  Then add the name. */
-                if (i == G_numPeopleInGame) {
+                if (i == G_numPeopleInGame)
+                {
                     G_peopleNetworkIDInGame[i] = uniqueAddress;
                     G_numPeopleInGame++;
                 }
 
                 ClientSendRespondToJoinPacket(uniqueAddress, groupID, adventure,
-                GAME_RESPOND_JOIN_OK);
-            } else {
-                ClientSendRespondToJoinPacket(uniqueAddress, groupID, adventure,
-                GAME_RESPOND_JOIN_FULL);
+                                              GAME_RESPOND_JOIN_OK);
             }
-        } else {
+            else
+            {
+                ClientSendRespondToJoinPacket(uniqueAddress, groupID, adventure,
+                                              GAME_RESPOND_JOIN_FULL);
+            }
+        }
+        else
+        {
             ClientSendRespondToJoinPacket(uniqueAddress, groupID, adventure,
-            GAME_RESPOND_JOIN_CANCELED);
+                                          GAME_RESPOND_JOIN_CANCELED);
         }
     }
 
@@ -401,20 +427,23 @@ T_void PeopleHereRequestJoin(
  *  @return Current 16-bit adventure id.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereRespondToJoin(
-        T_directTalkUniqueAddress uniqueAddress,
-        T_gameGroupID groupID,
-        T_word16 adventure,
-        E_respondJoin response)
+T_void
+PeopleHereRespondToJoin(
+    T_directTalkUniqueAddress uniqueAddress,
+    T_gameGroupID groupID,
+    T_word16 adventure,
+    E_respondJoin response)
 {
     T_directTalkUniqueAddress ourAddress;
     DebugRoutine("PeopleHereRespondToJoin");
 
     /* Make sure this refers to us. */
     DirectTalkGetUniqueAddress(&ourAddress);
-    if (memcmp(&ourAddress, &uniqueAddress, sizeof(ourAddress)) == 0) {
+    if (memcmp(&ourAddress, &uniqueAddress, sizeof(ourAddress)) == 0)
+    {
         /* Yep, thats us. */
-        switch (response) {
+        switch (response)
+        {
             case GAME_RESPOND_JOIN_OK:
                 /* Tell others that I'm trying to join in the game. */
                 PeopleHereSetOurState(PLAYER_ID_STATE_JOINING_GAME);
@@ -429,19 +458,18 @@ T_void PeopleHereRespondToJoin(
 
                 PeopleHereGeneratePeopleInGame(groupID);
                 break;
-            case GAME_RESPOND_JOIN_FULL:
-                PeopleHereSetOurState(PLAYER_ID_STATE_NONE);
+            case GAME_RESPOND_JOIN_FULL:PeopleHereSetOurState(PLAYER_ID_STATE_NONE);
                 MessageAdd("Game is already full.");
                 break;
-            case GAME_RESPOND_JOIN_CANCELED:
-                PeopleHereSetOurState(PLAYER_ID_STATE_NONE);
+            case GAME_RESPOND_JOIN_CANCELED:PeopleHereSetOurState(PLAYER_ID_STATE_NONE);
                 MessageAdd("Game was cancelled.");
                 break;
-            default:
-                DebugCheck(FALSE);
+            default:DebugCheck(FALSE);
                 break;
         }
-    } else {
+    }
+    else
+    {
         /* Not us.  Just ignore. */
     }
 
@@ -449,14 +477,19 @@ T_void PeopleHereRespondToJoin(
 }
 
 //Concats player data (title, level, name) into buffer
-void GetPlayerLabel(T_playerIDSelf *p_playerID, char* buffer)
+void
+GetPlayerLabel(T_playerIDSelf *p_playerID, char *buffer)
 {
-	DebugRoutine("GetPlayerLabel");
+    DebugRoutine("GetPlayerLabel");
 
-	if (p_playerID != NULL)
-		sprintf(buffer, "^003%s - ^007%s Level %d", p_playerID->name, StatsGetClassTitle(p_playerID->classType), p_playerID->level);
+    if (p_playerID != NULL)
+        sprintf(buffer,
+                "^003%s - ^007%s Level %d",
+                p_playerID->name,
+                StatsGetClassTitle(p_playerID->classType),
+                p_playerID->level);
 
-	DebugEnd();
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -470,13 +503,14 @@ void GetPlayerLabel(T_playerIDSelf *p_playerID, char* buffer)
  *  @param p_playerID -- New player information
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
+T_void
+PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
 {
     T_playerIDSelf *p_find;
     T_playerIDLocation location;
     T_gameGroupID ourGroupID;
-	char playerLabel[MAX_CHAT_NAME_STRING];
-	char chatNotification[MAX_CHAT_NAME_STRING];
+    char playerLabel[MAX_CHAT_NAME_STRING];
+    char chatNotification[MAX_CHAT_NAME_STRING];
 
     DebugRoutine("PeopleHereUpdatePlayer");
     DebugCheck(p_playerID != NULL);
@@ -497,25 +531,29 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
         p_find = ICreatePlayerID(p_playerID);
 
     /* If either work, go ahead and update the status. */
-    if (p_find) {
-		//Set up player ID string
-		GetPlayerLabel(p_find, playerLabel);
+    if (p_find)
+    {
+        //Set up player ID string
+        GetPlayerLabel(p_find, playerLabel);
 
         /* Check if the location is changing */
-        if (p_find->location != p_playerID->location) {
+        if (p_find->location != p_playerID->location)
+        {
             /* There is a difference, either coming or going. */
 
             /* Is the player entering or exiting? */
-            if (p_playerID->location == location) {
+            if (p_playerID->location == location)
+            {
                 /* Entering */
                 /* Do an action based on our location. */
-                switch (location) {
+                switch (location)
+                {
                     case PLAYER_ID_LOCATION_NOWHERE:
                         /* We both are nowhere. nothing happens. */
                         break;
                     case PLAYER_ID_LOCATION_TOWN:
                         /* Update the town list. */
-						TownAddPerson(playerLabel);
+                        TownAddPerson(playerLabel);
                         break;
                     case PLAYER_ID_LOCATION_GUILD:
                         /* Action is taken care of below. */
@@ -526,26 +564,30 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
                     default:
                         /* What? */
                         DebugCheck(FALSE);
-                        break;						
-                }				
-            } else {
+                        break;
+                }
+            }
+            else
+            {
                 /* Exiting */
                 /* Do an action based on our location. */
-                switch (location) {
+                switch (location)
+                {
                     case PLAYER_ID_LOCATION_NOWHERE:
                         /* We both are nowhere. nothing happens. */
                         break;
                     case PLAYER_ID_LOCATION_TOWN:
-						//If player has left town for the guild
-						if (p_find->location == PLAYER_ID_LOCATION_TOWN && p_playerID->location == PLAYER_ID_LOCATION_NOWHERE)
-						{
-							//Notify chatbox
-							sprintf(chatNotification, "^001%s LEFT THE GAME", p_playerID->name);
-							TownUIAddMessage(NULL, chatNotification);
-						}
+                        //If player has left town for the guild
+                        if (p_find->location == PLAYER_ID_LOCATION_TOWN
+                            && p_playerID->location == PLAYER_ID_LOCATION_NOWHERE)
+                        {
+                            //Notify chatbox
+                            sprintf(chatNotification, "^001%s LEFT THE GAME", p_playerID->name);
+                            TownUIAddMessage(NULL, chatNotification);
+                        }
 
-						/* Update the town list. */
-						TownRemovePerson(playerLabel);
+                        /* Update the town list. */
+                        TownRemovePerson(playerLabel);
                         break;
                     case PLAYER_ID_LOCATION_GUILD:
                         /* Action is taken care of below. */
@@ -557,33 +599,43 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
                         /* What? */
                         DebugCheck(FALSE);
                         break;
-                }				
+                }
             }
         }
 
         // Was there a change of state?
-        if (p_find->state != p_playerID->state) {
+        if (p_find->state != p_playerID->state)
+        {
             /* Do guild related events */
-            if (location == PLAYER_ID_LOCATION_GUILD) {
+            if (location == PLAYER_ID_LOCATION_GUILD)
+            {
                 if (!((PeopleHereGetOurState() == PLAYER_ID_STATE_CREATING_GAME)
-                        || (PeopleHereGetOurState()
-                                == PLAYER_ID_STATE_JOINING_GAME))) {
-                    if (p_playerID->state == PLAYER_ID_STATE_CREATING_GAME) {
+                    || (PeopleHereGetOurState()
+                        == PLAYER_ID_STATE_JOINING_GAME)))
+                {
+                    if (p_playerID->state == PLAYER_ID_STATE_CREATING_GAME)
+                    {
                         GuildUIAddGame(p_playerID->adventure,
-                                p_playerID->groupID,
-								p_playerID->quest);
+                                       p_playerID->groupID,
+                                       p_playerID->quest);
                         PeopleHereGeneratePeopleInGame(p_playerID->groupID);
-                    } else if (p_find->state == PLAYER_ID_STATE_CREATING_GAME) {
-                        GuildUIRemoveGame(p_playerID->adventure,
-                                p_playerID->groupID);
-                        PeopleHereGeneratePeopleInGame(
-                                *DirectTalkGetNullBlankUniqueAddress());
                     }
-                } else {
+                    else if (p_find->state == PLAYER_ID_STATE_CREATING_GAME)
+                    {
+                        GuildUIRemoveGame(p_playerID->adventure,
+                                          p_playerID->groupID);
+                        PeopleHereGeneratePeopleInGame(
+                            *DirectTalkGetNullBlankUniqueAddress());
+                    }
+                }
+                else
+                {
                     /* Detected that a game is removed. */
-                    if (p_find->state == PLAYER_ID_STATE_CREATING_GAME) {
+                    if (p_find->state == PLAYER_ID_STATE_CREATING_GAME)
+                    {
                         /* Is it our game? */
-                        if (CompareGameGroupIDs(p_find->groupID, ourGroupID)) {
+                        if (CompareGameGroupIDs(p_find->groupID, ourGroupID))
+                        {
                             /* Act like we pressed the cancel join button. */
                             GuildUICancelJoinGame(NULL);
                         }
@@ -593,10 +645,11 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
         }
 
         // Are they in the guild and going to our game?
-        if (location == PLAYER_ID_LOCATION_GUILD) {
+        if (location == PLAYER_ID_LOCATION_GUILD)
+        {
             /* Update the list of players if relevant to this group. */
             if ((CompareGameGroupIDs(p_find->groupID, ourGroupID))
-                    || (CompareGameGroupIDs(p_playerID->groupID, ourGroupID)))
+                || (CompareGameGroupIDs(p_playerID->groupID, ourGroupID)))
                 // Yes, in our game now
                 PeopleHereGeneratePeopleInGame(ourGroupID);
         }
@@ -611,7 +664,8 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
         /* Store the new groupID */
         p_find->groupID = p_playerID->groupID;
 
-        if (location == PLAYER_ID_LOCATION_GUILD) {
+        if (location == PLAYER_ID_LOCATION_GUILD)
+        {
             /* Update the list of players if relevant to this group. */
             PeopleHereGeneratePeopleInGame(ClientSyncGetGameGroupID());
         }
@@ -630,23 +684,27 @@ T_void PeopleHereUpdatePlayer(T_playerIDSelf *p_playerID)
  *  @param groupID -- Group ID of this game in the guild.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereGeneratePeopleInGame(T_gameGroupID groupID)
+T_void
+PeopleHereGeneratePeopleInGame(T_gameGroupID groupID)
 {
     T_word16 i;
     T_playerIDSelf *p = G_peopleList;
-	char playerLabel[MAX_CHAT_NAME_STRING];
+    char playerLabel[MAX_CHAT_NAME_STRING];
 
     DebugRoutine("PeopleHereGeneratePeopleInGame");
 
     GuildUIClearPlayers();
 
-    if (IGetOurLocation() == PLAYER_ID_LOCATION_GUILD) {
+    if (IGetOurLocation() == PLAYER_ID_LOCATION_GUILD)
+    {
         /* Go through the list and identify everyone in this group. */
-        for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++) {
+        for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++)
+        {
             if ((CompareGameGroupIDs(p->groupID, groupID))
-                    && (p->location == PLAYER_ID_LOCATION_GUILD)) {
-				GetPlayerLabel(p, playerLabel);
-				GuildUIAddPlayer(playerLabel);
+                && (p->location == PLAYER_ID_LOCATION_GUILD))
+            {
+                GetPlayerLabel(p, playerLabel);
+                GuildUIAddPlayer(playerLabel);
             }
         }
     }
@@ -663,7 +721,8 @@ T_void PeopleHereGeneratePeopleInGame(T_gameGroupID groupID)
  *  @return Player location identifier
  *
  *<!-----------------------------------------------------------------------*/
-T_playerIDLocation PeopleHereGetOurLocation(T_void)
+T_playerIDLocation
+PeopleHereGetOurLocation(T_void)
 {
     return IGetOurLocation();
 }
@@ -677,7 +736,8 @@ T_playerIDLocation PeopleHereGetOurLocation(T_void)
  *  @param firstLevel -- First level to go to
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereStartGame(T_word16 firstLevel)
+T_void
+PeopleHereStartGame(T_word16 firstLevel)
 {
     DebugRoutine("PeopleHereStartGame");
 
@@ -685,9 +745,9 @@ T_void PeopleHereStartGame(T_word16 firstLevel)
     ISetupGame(ClientSyncGetGameGroupID());
 
     ClientSendGameStartPacket(ClientSyncGetGameGroupID(),
-            PeopleHereGetOurAdventure(), (T_byte8)G_numPeopleInGame,
-            G_peopleNetworkIDInGame, firstLevel,
-			LEVEL_STATUS_STARTED);
+                              PeopleHereGetOurAdventure(), (T_byte8) G_numPeopleInGame,
+                              G_peopleNetworkIDInGame, firstLevel,
+                              LEVEL_STATUS_STARTED);
 
     DebugEnd();
 }
@@ -702,7 +762,8 @@ T_void PeopleHereStartGame(T_word16 firstLevel)
  *  @param groupID -- Game group id
  *
  *<!-----------------------------------------------------------------------*/
-T_void ISetupGame(T_gameGroupID groupID)
+T_void
+ISetupGame(T_gameGroupID groupID)
 {
     T_playerIDSelf *p = G_peopleList;
     T_word16 numFound = 0;
@@ -710,8 +771,10 @@ T_void ISetupGame(T_gameGroupID groupID)
 
     DebugRoutine("ISetupGame");
 
-    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++) {
-        if (CompareGameGroupIDs(groupID, p->groupID)) {
+    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++)
+    {
+        if (CompareGameGroupIDs(groupID, p->groupID))
+        {
             G_peopleNetworkIDInGame[numFound] = p->uniqueAddress;
             numFound++;
 
@@ -737,7 +800,8 @@ T_void ISetupGame(T_gameGroupID groupID)
  *  @param p_name -- Name of the player
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereIDPlayer(T_word16 playerNum, T_byte8 *p_name)
+T_void
+PeopleHereIDPlayer(T_word16 playerNum, T_byte8 *p_name)
 {
     DebugRoutine("PeopleHereIDPlayer");
     DebugCheck(playerNum < MAX_PLAYERS_PER_GAME);
@@ -756,7 +820,8 @@ T_void PeopleHereIDPlayer(T_word16 playerNum, T_byte8 *p_name)
  *  Reset all the names of the players in the current synchronized game.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereResetPlayerIDs(T_void)
+T_void
+PeopleHereResetPlayerIDs(T_void)
 {
     DebugRoutine("PeopleHereResetPlayerIDs");
 
@@ -776,7 +841,8 @@ T_void PeopleHereResetPlayerIDs(T_void)
  *  @return Name of player
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *PeopleHereGetPlayerIDName(T_word16 playerNum)
+T_byte8 *
+PeopleHereGetPlayerIDName(T_word16 playerNum)
 {
     DebugRoutine("PeopleHereGetPlayerIDName");
 
@@ -799,7 +865,8 @@ T_byte8 *PeopleHereGetPlayerIDName(T_word16 playerNum)
  *  @return Name of player
  *
  *<!-----------------------------------------------------------------------*/
-T_directTalkUniqueAddress *PeopleHereGetUniqueAddr(T_word16 playerNum)
+T_directTalkUniqueAddress *
+PeopleHereGetUniqueAddr(T_word16 playerNum)
 {
     DebugRoutine("PeopleHereGetUniqueAddr");
     DebugCheck(playerNum < MAX_PLAYERS_PER_GAME);
@@ -820,9 +887,10 @@ T_directTalkUniqueAddress *PeopleHereGetUniqueAddr(T_word16 playerNum)
  *  @param [in] uaddr -- Network ID.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereSetUniqueAddr(
-        T_word16 playerNum,
-        T_directTalkUniqueAddress *uaddr)
+T_void
+PeopleHereSetUniqueAddr(
+    T_word16 playerNum,
+    T_directTalkUniqueAddress *uaddr)
 {
     DebugCheck(playerNum < MAX_PLAYERS_PER_GAME);
 
@@ -838,7 +906,8 @@ T_void PeopleHereSetUniqueAddr(
  *  @return Number of people.  Usually always 1 -- you.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PeopleHereGetNumInGroupGame(void)
+T_word16
+PeopleHereGetNumInGroupGame(void)
 {
     return G_numPeopleInGame;
 }
@@ -857,12 +926,13 @@ T_word16 PeopleHereGetNumInGroupGame(void)
  *  @param p_callback -- Callback when sent (0 if no callback)
  *
  *<!-----------------------------------------------------------------------*/
-T_void PeopleHereSendPacketToGroup(
-        T_gameGroupID groupID,
-        T_packetLong *p_packet,
-        T_word16 retryTime,
-        T_word32 extraData,
-        T_cmdQPacketCallback p_callback)
+T_void
+PeopleHereSendPacketToGroup(
+    T_gameGroupID groupID,
+    T_packetLong *p_packet,
+    T_word16 retryTime,
+    T_word32 extraData,
+    T_cmdQPacketCallback p_callback)
 {
     T_word16 i;
     T_playerIDSelf *p = G_peopleList;
@@ -873,12 +943,15 @@ T_void PeopleHereSendPacketToGroup(
     DirectTalkGetUniqueAddress(&ourID);
 
     /* Go through the list and identify everyone in this group. */
-    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++) {
-        if ((p->name[0]) && (CompareGameGroupIDs(p->groupID, groupID))) {
-            if (!CompareUniqueNetworkIDs(p->uniqueAddress, ourID)) {
+    for (i = 0; i < MAX_PLAYERS_IN_WORLD; i++, p++)
+    {
+        if ((p->name[0]) && (CompareGameGroupIDs(p->groupID, groupID)))
+        {
+            if (!CompareUniqueNetworkIDs(p->uniqueAddress, ourID))
+            {
                 // Create a long packet request for EACH player
                 CmdQSendLongPacket(p_packet, &p->uniqueAddress, retryTime, extraData,
-                        p_callback);
+                                   p_callback);
             }
         }
     }

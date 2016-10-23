@@ -24,9 +24,10 @@ T_word32 G_syncTime = 1;
  *  @return sync time
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 SyncTimeGet(T_void)
+T_word32
+SyncTimeGet(T_void)
 {
-    return G_syncTime ;
+    return G_syncTime;
 }
 
 /*-------------------------------------------------------------------------*
@@ -38,9 +39,10 @@ T_word32 SyncTimeGet(T_void)
  *  @param time -- new sync time
  *
  *<!-----------------------------------------------------------------------*/
-T_void SyncTimeSet(T_word32 time)
+T_void
+SyncTimeSet(T_word32 time)
 {
-    G_syncTime = time ;
+    G_syncTime = time;
 }
 
 /** @} */

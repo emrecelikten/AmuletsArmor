@@ -6,15 +6,15 @@
 
 #include "INIFILE.H"
 
-extern T_byte8 G_keyMap[256] ;
+extern T_byte8 G_keyMap[256];
 
 #define KeyMap(v)    (G_keyMap[v])
 
 #define KeyMapGetScan(v)  (KeyboardGetScanCode(G_keyMap[v]))
 #if _WIN32
-    #define KeyMapGetHeld(v)  ((KeyboardGetScanCode(G_keyMap[v]))?delta:0)
+#define KeyMapGetHeld(v)  ((KeyboardGetScanCode(G_keyMap[v]))?delta:0)
 #else
-    #define KeyMapGetHeld(v)  (KeyboardGetHeldTimeAndClear(G_keyMap[v]))
+#define KeyMapGetHeld(v)  (KeyboardGetHeldTimeAndClear(G_keyMap[v]))
 #endif
 
 #define KEYMAP_FORWARD                      0
@@ -85,9 +85,12 @@ extern T_byte8 G_keyMap[256] ;
 
 #define KEYMAP_NUM_KEYS_MAPPED              68
 
-T_void KeyMapInitialize(T_iniFile iniFile);
-T_void KeyMapFinish(T_void);
-T_void KeyMapReinitialize(T_iniFile iniFile);
+T_void
+KeyMapInitialize(T_iniFile iniFile);
+T_void
+KeyMapFinish(T_void);
+T_void
+KeyMapReinitialize(T_iniFile iniFile);
 
 #endif /* _KEYMAP_H_ */
 

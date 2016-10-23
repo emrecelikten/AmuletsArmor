@@ -13,7 +13,8 @@
 
 #define MAX_OBJECT_SECTORS 20
 
-typedef enum {
+typedef enum
+{
     BODY_PART_LOCATION_HEAD,
     BODY_PART_LOCATION_CHEST,
     BODY_PART_LOCATION_LEFT_ARM,
@@ -26,24 +27,28 @@ typedef enum {
 
 #define MAX_BODY_PARTS     BODY_PART_LOCATION_UNKNOWN
 
-typedef struct {
+typedef struct
+{
     T_byte8 signature[4];
     T_word32 numEntries;
     T_word32 foffset;
 } PACK T_wadHeader;
 
-typedef struct {
+typedef struct
+{
     T_word32 foffset;
     T_word32 size;
     T_byte8 name[8];
 } PACK T_directoryEntry;
 
-typedef struct {
+typedef struct
+{
     T_sword16 x;
     T_sword16 y;
 } PACK T_3dVertex;
 
-typedef struct {
+typedef struct
+{
     T_sword16 from;
     T_sword16 to;
     T_sword16 flags;
@@ -52,7 +57,8 @@ typedef struct {
     T_sword16 side[2];
 } PACK T_3dLine;
 
-typedef struct {
+typedef struct
+{
     T_sword16 tmXoffset;
     T_sword16 tmYoffset;
     T_byte8 upperTx[8];
@@ -61,7 +67,8 @@ typedef struct {
     T_word16 sector;
 } PACK T_3dSide;
 
-typedef struct {
+typedef struct
+{
     T_sword16 floorHt;
     T_sword16 ceilingHt;
     T_byte8 floorTx[8];
@@ -82,7 +89,8 @@ typedef T_byte8 T_sectorType;
 
 #define NUM_SECTOR_TYPES         6
 
-typedef struct {
+typedef struct
+{
     T_sbyte8 xVelAdd;
     T_sbyte8 yVelAdd;
     T_sbyte8 zVelAdd;
@@ -113,7 +121,8 @@ typedef struct {
 #define SECTOR_LIGHT_ANIM_RANDOM    3
 #define SECTOR_LIGHT_ANIM_MIMIC     4
 
-typedef struct {
+typedef struct
+{
     T_sword16 from;
     T_sword16 to;
     T_word16 angle;
@@ -122,12 +131,14 @@ typedef struct {
     T_sword16 lineOffset;
 } PACK T_3dSegment;
 
-typedef struct {
+typedef struct
+{
     T_sword16 numSegs;
     T_sword16 firstSeg;
 } PACK T_3dSegmentSector;
 
-typedef struct {
+typedef struct
+{
     T_sword16 x;
     T_sword16 y;
     T_sword16 dx;
@@ -144,7 +155,8 @@ typedef struct {
     T_word16 left;
 } PACK T_3dNode;
 
-typedef struct {
+typedef struct
+{
     T_sword16 x;
     T_sword16 y;
     T_word16 angle;
@@ -172,7 +184,8 @@ typedef struct  {
 #define OBJECT_TYPE_COLOR_MASK       0xF000
 #define OBJECT_TYPE_COLOR_OFFSET     12
 
-typedef struct T_3dObject_ {
+typedef struct T_3dObject_
+{
     T_objMoveStruct objMove;
     T_sword16 objectType;
     T_objTypeInstance p_objType;
@@ -212,7 +225,8 @@ typedef struct T_3dObject_ {
     T_word16 objCollisionGroup;
 } PACK T_3dObject;
 
-typedef struct {
+typedef struct
+{
     T_sword16 xOrigin;
     T_sword16 yOrigin;
     T_sword16 columns;
@@ -228,7 +242,8 @@ typedef struct {
 
 typedef T_sword16 T_3dBlockMap;
 
-typedef struct {
+typedef struct
+{
     T_sword16 number;
     T_3dObject *p_obj;
 } PACK T_bodyPart;

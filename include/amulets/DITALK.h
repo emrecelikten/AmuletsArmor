@@ -11,22 +11,22 @@
 #include "GENERAL.H"
 
 typedef T_void (*T_directTalkReceiveCallback)(
-                    T_void *p_data,
-                    T_word16 size) ;
+    T_void *p_data,
+    T_word16 size);
 
 typedef T_void (*T_directTalkSendCallback)(
-                    T_void *p_data,
-                    T_byte8 *size,
-                    E_Boolean *anyData) ;
+    T_void *p_data,
+    T_byte8 *size,
+    E_Boolean *anyData);
 
-typedef T_void (*T_directTalkConnectCallback)(T_void *p_data) ;
+typedef T_void (*T_directTalkConnectCallback)(T_void *p_data);
 
-typedef T_void (*T_directTalkDisconnectCallback)(T_void) ;
+typedef T_void (*T_directTalkDisconnectCallback)(T_void);
 
-typedef T_word32 T_directTalkHandle ;
+typedef T_word32 T_directTalkHandle;
 #define DIRECT_TALK_HANDLE_BAD        0
 
-typedef T_byte8 E_directTalkLineStatus ;
+typedef T_byte8 E_directTalkLineStatus;
 #define DIRECT_TALK_LINE_STATUS_CONNECTING     0
 #define DIRECT_TALK_LINE_STATUS_TIMED_OUT      1
 #define DIRECT_TALK_LINE_STATUS_ABORTED        2
@@ -37,7 +37,7 @@ typedef T_byte8 E_directTalkLineStatus ;
 #define DIRECT_TALK_LINE_STATUS_BUSY           7
 #define DIRECT_TALK_LINE_STATUS_UNKNOWN        8
 
-typedef T_byte8 E_directTalkServiceType ;
+typedef T_byte8 E_directTalkServiceType;
 #define DIRECT_TALK_SELF_SERVER                0
 #define DIRECT_TALK_SERIAL_TWO_PLAYER          1
 #define DIRECT_TALK_MODEM_TWO_PLAYER           2
@@ -45,57 +45,76 @@ typedef T_byte8 E_directTalkServiceType ;
 #define DIRECT_TALK_DRAGON_MODEM               4
 #define DIRECT_TALK_UNKNOWN                    5
 
-typedef struct {
-    T_byte8 address[6] ;
-} T_directTalkUniqueAddress ;
+typedef struct
+{
+    T_byte8 address[6];
+} T_directTalkUniqueAddress;
 
 /* Start talking. */
-T_directTalkHandle DirectTalkInit(
-           T_directTalkReceiveCallback p_callRecv,
-           T_directTalkSendCallback p_callSend,
-           T_directTalkConnectCallback p_callConnect,
-           T_directTalkDisconnectCallback p_callDisconnect,
-           T_directTalkHandle handle) ;
+T_directTalkHandle
+DirectTalkInit(
+    T_directTalkReceiveCallback p_callRecv,
+    T_directTalkSendCallback p_callSend,
+    T_directTalkConnectCallback p_callConnect,
+    T_directTalkDisconnectCallback p_callDisconnect,
+    T_directTalkHandle handle);
 
 /* Close out all the talking. */
-T_void DirectTalkFinish(T_directTalkHandle handle) ;
+T_void
+DirectTalkFinish(T_directTalkHandle handle);
 
 #ifdef COMPILE_OPTION_DIRECT_TALK_IS_DOS32
 /* Routine to send data out the talk (only used by DOS32 side). */
-T_void DirectTalkSendData(T_void *p_data, T_byte8 size) ;
+T_void
+DirectTalkSendData(T_void *p_data, T_byte8 size);
 
 /* Routine to request data be received (only used by DOS32 side). */
-T_void DirectTalkPollData(T_void) ;
+T_void
+DirectTalkPollData(T_void);
 
-T_void DirectTalkConnect(T_byte8 *p_address) ;
+T_void
+DirectTalkConnect(T_byte8 *p_address);
 
-T_void DirectTalkDisconnect(T_void) ;
+T_void
+DirectTalkDisconnect(T_void);
 
 #endif
 
-E_directTalkLineStatus DirectTalkGetLineStatus(T_void) ;
+E_directTalkLineStatus
+DirectTalkGetLineStatus(T_void);
 
-T_void DirectTalkSetLineStatus(E_directTalkLineStatus status) ;
+T_void
+DirectTalkSetLineStatus(E_directTalkLineStatus status);
 
-T_void DirectTalkGetUniqueAddress(T_directTalkUniqueAddress *p_unique) ;
+T_void
+DirectTalkGetUniqueAddress(T_directTalkUniqueAddress *p_unique);
 
-T_void DirectTalkSetUniqueAddress(T_directTalkUniqueAddress *p_unique) ;
+T_void
+DirectTalkSetUniqueAddress(T_directTalkUniqueAddress *p_unique);
 
-T_directTalkUniqueAddress *DirectTalkGetNullBlankUniqueAddress(T_void) ;
+T_directTalkUniqueAddress *
+DirectTalkGetNullBlankUniqueAddress(T_void);
 
-T_void DirectTalkPrintAddress(FILE *fp, T_directTalkUniqueAddress *p_addr) ;
+T_void
+DirectTalkPrintAddress(FILE *fp, T_directTalkUniqueAddress *p_addr);
 
-E_directTalkServiceType DirectTalkGetServiceType(T_void) ;
+E_directTalkServiceType
+DirectTalkGetServiceType(T_void);
 
-T_void DirectTalkSetServiceType(E_directTalkServiceType serviceType) ;
+T_void
+DirectTalkSetServiceType(E_directTalkServiceType serviceType);
 
-T_void DirectTalkSetDestination(T_directTalkUniqueAddress *p_dest) ;
+T_void
+DirectTalkSetDestination(T_directTalkUniqueAddress *p_dest);
 
-T_void DirectTalkSetDestinationAll(T_void) ;
+T_void
+DirectTalkSetDestinationAll(T_void);
 
-T_byte8 *DirectTalkGetDestination(T_void) ;
+T_byte8 *
+DirectTalkGetDestination(T_void);
 
-T_byte8 DirectTalkIsBroadcastAddress(T_directTalkUniqueAddress *p_dest);
+T_byte8
+DirectTalkIsBroadcastAddress(T_directTalkUniqueAddress *p_dest);
 
 #endif // _DITALK_H_
 

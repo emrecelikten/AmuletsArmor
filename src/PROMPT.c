@@ -14,11 +14,11 @@
 #include "PROMPT.H"
 #include "TICKER.H"
 
-static E_Boolean G_exit=FALSE;
-static E_promptAction G_action=PROMPT_ACTION_NO_ACTION;
-static T_word16 G_statBaseRange=0;
+static E_Boolean G_exit = FALSE;
+static E_promptAction G_action = PROMPT_ACTION_NO_ACTION;
+static T_word16 G_statBaseRange = 0;
 static T_screen G_tempscreen;
-static T_graphicID G_bargraphic=NULL;
+static T_graphicID G_bargraphic = NULL;
 static T_byte8 G_stringIn[60];
 
 /*-------------------------------------------------------------------------*
@@ -27,91 +27,92 @@ static T_byte8 G_stringIn[60];
 /**
  *
  *<!-----------------------------------------------------------------------*/
-T_void    PromptStatusBarInit (T_byte8 *prompt, T_word16 baserange)
+T_void
+PromptStatusBarInit(T_byte8 *prompt, T_word16 baserange)
 {
     T_graphicID backgraphic;
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptStatusBarInit");
-    G_statBaseRange=baserange;
+    G_statBaseRange = baserange;
 
     /* save current background */
-    G_tempscreen=GrScreenAlloc();
-    GrTransferRectangle (G_tempscreen,
-                         0,
-                         0,
-                         319,
-                         199,
-                         0,
-                         0);
+    G_tempscreen = GrScreenAlloc();
+    GrTransferRectangle(G_tempscreen,
+                        0,
+                        0,
+                        319,
+                        199,
+                        0,
+                        0);
 
     /* set up graphics */
 
-    backgraphic=GraphicCreate (26,70,"UI/PROMPT/STAT_BK");
-    TxtboxID=TxtboxCreate (129,86,
-                           279,96,
-                           "FontMedium",
-                           0,
-                           0,
-                           FALSE,
-                           Txtbox_JUSTIFY_CENTER,
-                           Txtbox_MODE_VIEW_NOSCROLL_FORM,
-                           NULL);
+    backgraphic = GraphicCreate(26, 70, "UI/PROMPT/STAT_BK");
+    TxtboxID = TxtboxCreate(129, 86,
+                            279, 96,
+                            "FontMedium",
+                            0,
+                            0,
+                            FALSE,
+                            Txtbox_JUSTIFY_CENTER,
+                            Txtbox_MODE_VIEW_NOSCROLL_FORM,
+                            NULL);
 
-    G_bargraphic=GraphicCreate(39,105,"UI/PROMPT/STAT_GR");
+    G_bargraphic = GraphicCreate(39, 105, "UI/PROMPT/STAT_GR");
 
-    TxtboxSetData (TxtboxID,prompt);
+    TxtboxSetData(TxtboxID, prompt);
 
     /* draw background */
     GraphicUpdateAllGraphics();
 
     /* draw black bar over bar graphic */
-    GrDrawRectangle (41,105,279,113,0);
+    GrDrawRectangle(41, 105, 279, 113, 0);
     /* free background graphic */
-    GraphicDelete (backgraphic);
+    GraphicDelete(backgraphic);
     /* free textbox */
-    TxtboxDelete (TxtboxID);
+    TxtboxDelete(TxtboxID);
 
     DebugEnd();
 }
 
-
-T_void    PromptStatusBarUpdate (T_word16 current)
+T_void
+PromptStatusBarUpdate(T_word16 current)
 {
-    static T_word32 delta=0, lastupdate=0;
+    static T_word32 delta = 0, lastupdate = 0;
     T_word16 dx;
     float percentcomplete;
     T_screen tempscreen;
     DebugRoutine ("StatusBarUpdate");
 
     /* update color cycling */
-	delta=TickerGet();
-	/* update color every 4 ticks */
+    delta = TickerGet();
+    /* update color every 4 ticks */
 //	if (delta-lastupdate>4)
 //	{
-		ColorUpdate(delta);
-		lastupdate=TickerGet();
+    ColorUpdate(delta);
+    lastupdate = TickerGet();
 //	}
 
     /* calculate percent complete */
-    percentcomplete=(float)current/(float)G_statBaseRange;
+    percentcomplete = (float) current / (float) G_statBaseRange;
 
-    dx=(int)(238.0-(238.0*percentcomplete));
+    dx = (int) (238.0 - (238.0 * percentcomplete));
 
     /* draw bar graphic */
     /* double buffer */
 
     /* allocate hidden screen */
-    tempscreen=GrScreenAlloc();
+    tempscreen = GrScreenAlloc();
 
     /* copy current screen to hidden screen */
-    GrTransferRectangle (tempscreen,
-                         0,
-                         0,
-                         319,
-                         199,
-                         0,
-                         0);
+    GrTransferRectangle(tempscreen,
+                        0,
+                        0,
+                        319,
+                        199,
+                        0,
+                        0);
 
     /* set hidden screen to draw */
     GrScreenSet(tempscreen);
@@ -119,24 +120,24 @@ T_void    PromptStatusBarUpdate (T_word16 current)
     /* draw bar graphic on background screen */
     GraphicDrawToCurrentScreen();
     DebugCheck (G_bargraphic != NULL);
-    GraphicDrawAt (G_bargraphic,39,105);
+    GraphicDrawAt(G_bargraphic, 39, 105);
     GraphicDrawToActualScreen();
 
     /* draw black bar over bar graphic */
-    GrDrawRectangle (279-dx,105,279,113,0);
+    GrDrawRectangle(279 - dx, 105, 279, 113, 0);
 
     /* copy hidden screen to visual one */
     MouseHide();
-    GrTransferRectangle (GRAPHICS_ACTUAL_SCREEN,
-                         0,
-                         0,
-                         319,
-                         199,
-                         0,
-                         0);
+    GrTransferRectangle(GRAPHICS_ACTUAL_SCREEN,
+                        0,
+                        0,
+                        319,
+                        199,
+                        0,
+                        0);
     MouseShow();
 
-    GrScreenSet (GRAPHICS_ACTUAL_SCREEN);
+    GrScreenSet(GRAPHICS_ACTUAL_SCREEN);
 
     /* free the hidden screen */
     GrScreenFree(tempscreen);
@@ -144,30 +145,30 @@ T_void    PromptStatusBarUpdate (T_word16 current)
     DebugEnd();
 }
 
-
-T_void    PromptStatusBarClose (T_void)
+T_void
+PromptStatusBarClose(T_void)
 {
     T_screen tsc;
 
     DebugRoutine ("PromptStatusBarClose");
 
     /* restore background */
-    tsc=GrScreenGet();
+    tsc = GrScreenGet();
 
-    GrScreenSet (G_tempscreen);
-    GrTransferRectangle (tsc,
-                         0,
-                         0,
-                         319,
-                         199,
-                         0,
-                         0);
-    GrScreenSet (tsc);
-    GrScreenFree (G_tempscreen);
+    GrScreenSet(G_tempscreen);
+    GrTransferRectangle(tsc,
+                        0,
+                        0,
+                        319,
+                        199,
+                        0,
+                        0);
+    GrScreenSet(tsc);
+    GrScreenFree(G_tempscreen);
 
     /* delete bar graphic */
-    GraphicDelete (G_bargraphic);
-    G_bargraphic=NULL;
+    GraphicDelete(G_bargraphic);
+    G_bargraphic = NULL;
 
     DebugEnd();
 }
@@ -178,40 +179,44 @@ T_void    PromptStatusBarClose (T_void)
 /**
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean PromptForBoolean (T_byte8 *prompt, E_Boolean defaultvalue)
+E_Boolean
+PromptForBoolean(T_byte8 *prompt, E_Boolean defaultvalue)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptForBoolean");
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    GrShadeRectangle (37,89,301,123,125);
-    GrShadeRectangle (36,88,302,124,125);
+    GrShadeRectangle(37, 89, 301, 123, 125);
+    GrShadeRectangle(36, 88, 302, 124, 125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTBOOL.FRM");
+    FormLoadFromFile("frm/PMPTBOOL.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
-    if (G_action==PROMPT_ACTION_NO_ACTION) return (defaultvalue);
-    else if (G_action==PROMPT_ACTION_OK) return (TRUE);
+    if (G_action == PROMPT_ACTION_NO_ACTION)
+        return (defaultvalue);
+    else if (G_action == PROMPT_ACTION_OK)
+        return (TRUE);
     return (FALSE);
 }
 
@@ -222,32 +227,34 @@ E_Boolean PromptForBoolean (T_byte8 *prompt, E_Boolean defaultvalue)
 /**
  *
  *<!-----------------------------------------------------------------------*/
-T_void PromptNotify (T_byte8 *prompt)
+T_void
+PromptNotify(T_byte8 *prompt)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptNotify");
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTNTFY.FRM");
+    FormLoadFromFile("frm/PMPTNTFY.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
 }
@@ -260,43 +267,47 @@ T_void PromptNotify (T_byte8 *prompt)
 /**
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PromptForInteger  (T_byte8 *prompt,
-                            T_word16 defaultvalue,
-                            T_word16 min,
-                            T_word16 max)
+T_word16
+PromptForInteger(T_byte8 *prompt,
+                 T_word16 defaultvalue,
+                 T_word16 min,
+                 T_word16 max)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptForInteger");
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTINTG.FRM");
+    FormLoadFromFile("frm/PMPTINTG.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
     /* set entry field to be numeric only */
-    TxtboxID=FormGetObjID (501);
-    TxtboxSetNumericOnlyFlag (TxtboxID,TRUE);
+    TxtboxID = FormGetObjID(501);
+    TxtboxSetNumericOnlyFlag(TxtboxID, TRUE);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
-    if (G_action==PROMPT_ACTION_NO_ACTION) return (defaultvalue);
-    else if (G_action==PROMPT_ACTION_OK) return (TRUE);
+    if (G_action == PROMPT_ACTION_NO_ACTION)
+        return (defaultvalue);
+    else if (G_action == PROMPT_ACTION_OK)
+        return (TRUE);
     return (FALSE);
 }
 
@@ -313,202 +324,208 @@ T_word16 PromptForInteger  (T_byte8 *prompt,
  *  is to control all prompt functions
  *
  *<!-----------------------------------------------------------------------*/
-T_void PromptControl (E_formObjectType objtype,
-					  T_word16 objstatus,
-					  T_word32 objID)
+T_void
+PromptControl(E_formObjectType objtype,
+              T_word16 objstatus,
+              T_word32 objID)
 {
     T_TxtboxID TxtboxID;
-	DebugRoutine ("PromptControl");
+    DebugRoutine ("PromptControl");
 
-    if (objtype==FORM_OBJECT_BUTTON)
+    if (objtype == FORM_OBJECT_BUTTON)
     {
-        if (objstatus==BUTTON_ACTION_RELEASED)
+        if (objstatus == BUTTON_ACTION_RELEASED)
         {
-            if (objID==301)
+            if (objID == 301)
             {
                 /* cancel selected */
-                G_action=PROMPT_ACTION_CANCEL;
-                G_exit=TRUE;
+                G_action = PROMPT_ACTION_CANCEL;
+                G_exit = TRUE;
             }
-            else if (objID==300)
+            else if (objID == 300)
             {
                 /* ok selected */
-                G_action=PROMPT_ACTION_OK;
-                G_exit=TRUE;
+                G_action = PROMPT_ACTION_OK;
+                G_exit = TRUE;
             }
         }
     }
-    else if (objtype==FORM_OBJECT_TEXTBOX)
+    else if (objtype == FORM_OBJECT_TEXTBOX)
     {
-        if (objID==501)
+        if (objID == 501)
         {
             /* copy entered data into global field */
             /* for later usage */
-            TxtboxID=FormGetObjID(501);
+            TxtboxID = FormGetObjID(501);
             if (TxtboxID != NULL)
             {
-                strncpy (G_stringIn,TxtboxGetData(TxtboxID),TxtboxGetDataLength(TxtboxID));
-                G_stringIn[TxtboxGetDataLength(TxtboxID)+1]='\0';
+                strncpy (G_stringIn, TxtboxGetData(TxtboxID), TxtboxGetDataLength(TxtboxID));
+                G_stringIn[TxtboxGetDataLength(TxtboxID) + 1] = '\0';
             }
         }
     }
 
-	DebugEnd();
+    DebugEnd();
 }
 
-
-T_void PromptDisplayMessage (T_byte8 *prompt)
+T_void
+PromptDisplayMessage(T_byte8 *prompt)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("Prompt DisplayMessage");
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
     /* draw a shaded box */
 //    GrShadeRectangle (0,0,319,199,190);
-    GrShadeRectangle (37,89,301,123,125);
-    GrShadeRectangle (36,88,302,124,125);
+    GrShadeRectangle(37, 89, 301, 123, 125);
+    GrShadeRectangle(36, 88, 302, 124, 125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTMESG.FRM");
+    FormLoadFromFile("frm/PMPTMESG.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
 }
 
-
-
-T_void PromptDisplayBulletin (T_byte8 *prompt)
+T_void
+PromptDisplayBulletin(T_byte8 *prompt)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptDisplayBulletin");
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
     /* draw a shaded box */
 //    GrShadeRectangle (0,0,319,199,190);
-    GrShadeRectangle (37,59,301,154,125);
-    GrShadeRectangle (36,58,302,155,125);
+    GrShadeRectangle(37, 59, 301, 154, 125);
+    GrShadeRectangle(36, 58, 302, 155, 125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTBULL.FRM");
+    FormLoadFromFile("frm/PMPTBULL.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
 }
 
-
-E_Boolean PromptDisplayDialogue (T_byte8 *prompt)
+E_Boolean
+PromptDisplayDialogue(T_byte8 *prompt)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptDisplayDialogue");
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
     /* draw a shaded box */
 //    GrShadeRectangle (0,0,319,199,190);
-    GrShadeRectangle (36,26,300,188,125);
-    GrShadeRectangle (37,27,301,155,124);
+    GrShadeRectangle(36, 26, 300, 188, 125);
+    GrShadeRectangle(37, 27, 301, 155, 124);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTDLG.FRM");
+    FormLoadFromFile("frm/PMPTDLG.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
 
-    if (G_action==PROMPT_ACTION_OK) return (TRUE);
+    if (G_action == PROMPT_ACTION_OK)
+        return (TRUE);
 
     return (FALSE);
 }
 
-
-E_Boolean PromptDisplayContinue (T_byte8 *prompt)
+E_Boolean
+PromptDisplayContinue(T_byte8 *prompt)
 {
     T_TxtboxID TxtboxID;
 
     DebugRoutine ("PromptDisplayContinue");
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
     /* draw a shaded box */
 //    GrShadeRectangle (0,0,319,199,190);
-    GrShadeRectangle (37,59,301,155,125);
-    GrShadeRectangle (38,60,300,154,124);
+    GrShadeRectangle(37, 59, 301, 155, 125);
+    GrShadeRectangle(38, 60, 300, 154, 124);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTCONT.FRM");
+    FormLoadFromFile("frm/PMPTCONT.FRM");
 
     /* set up windows */
-    TxtboxID=FormGetObjID (500);
-    if (TxtboxID != NULL) TxtboxSetData (TxtboxID,prompt);
+    TxtboxID = FormGetObjID(500);
+    if (TxtboxID != NULL)
+        TxtboxSetData(TxtboxID, prompt);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     GraphicUpdateAllGraphicsBuffered();
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
 
-    if (G_action==PROMPT_ACTION_OK) return (TRUE);
+    if (G_action == PROMPT_ACTION_OK)
+        return (TRUE);
 
     return (FALSE);
 }
@@ -525,52 +542,54 @@ E_Boolean PromptDisplayContinue (T_byte8 *prompt)
  *  is loaded!!!!
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean PromptForString  (T_byte8 *prompt,
-                            T_word16 maxlen,
-                            T_byte8 *data)
+E_Boolean
+PromptForString(T_byte8 *prompt,
+                T_word16 maxlen,
+                T_byte8 *data)
 {
 
     T_TxtboxID TxtboxID;
-    E_Boolean accept=FALSE;
+    E_Boolean accept = FALSE;
 
     DebugRoutine ("PromptForString");
-    DebugCheck (maxlen<=60);
+    DebugCheck (maxlen <= 60);
 
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
-    G_exit=FALSE;
-    G_action=PROMPT_ACTION_NO_ACTION;
+    G_exit = FALSE;
+    G_action = PROMPT_ACTION_NO_ACTION;
 
-    strcpy (G_stringIn,"");
+    strcpy (G_stringIn, "");
     /* make a shadow */
-    GrShadeRectangle (37,81,301,133,125);
-    GrShadeRectangle (36,80,302,134,125);
+    GrShadeRectangle(37, 81, 301, 133, 125);
+    GrShadeRectangle(36, 80, 302, 134, 125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("frm/PMPTSTRN.FRM");
+    FormLoadFromFile("frm/PMPTSTRN.FRM");
 
     /* display the prompt */
-    TxtboxID=FormGetObjID(500);
+    TxtboxID = FormGetObjID(500);
     DebugCheck (TxtboxID != NULL);
-    TxtboxSetData (TxtboxID,prompt);
+    TxtboxSetData(TxtboxID, prompt);
 
     /* set maximum length of enterable field */
-    TxtboxID=FormGetObjID(501);
+    TxtboxID = FormGetObjID(501);
     DebugCheck (TxtboxID != NULL);
-    TxtboxSetMaxLength (TxtboxID,maxlen);
+    TxtboxSetMaxLength(TxtboxID, maxlen);
 
-	/* set the form callback routine to MainUIControl */
-	FormSetCallbackRoutine (PromptControl);
+    /* set the form callback routine to MainUIControl */
+    FormSetCallbackRoutine(PromptControl);
 
     /* go into generic control loop */
-    FormGenericControl (&G_exit);
+    FormGenericControl(&G_exit);
 
     /* get the return string */
-    sprintf (data,"%s\0",G_stringIn);
+    sprintf (data, "%s\0", G_stringIn);
 //  data=G_stringIn;
-    if (G_action==PROMPT_ACTION_OK) accept=TRUE;
+    if (G_action == PROMPT_ACTION_OK)
+        accept = TRUE;
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
     DebugEnd();
     return (accept);

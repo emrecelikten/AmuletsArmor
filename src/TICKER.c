@@ -353,73 +353,79 @@ T_void TickerInc(T_void)
 
 #endif
 
-
 #ifdef SDL
 //#include <time.h>
 #include <SDL.h>
-static T_word32 G_lastMillisecondCount ;
-static T_word32 G_tickMilli ;
-static T_word32 G_tickCount ;
-static E_Boolean F_tickerOn = FALSE ;
-static T_sword16 G_pauseLevel = 0 ;
+static T_word32 G_lastMillisecondCount;
+static T_word32 G_tickMilli;
+static T_word32 G_tickCount;
+static E_Boolean F_tickerOn = FALSE;
+static T_sword16 G_pauseLevel = 0;
 
-T_void TickerOn(T_void)
+T_void
+TickerOn(T_void)
 {
-    DebugRoutine("TickerOn") ;
-    DebugCheck(F_tickerOn == FALSE) ;
+    DebugRoutine("TickerOn");
+    DebugCheck(F_tickerOn == FALSE);
 
     /* Note that the ticker is now on. */
-    F_tickerOn = TRUE ;
+    F_tickerOn = TRUE;
     G_lastMillisecondCount = SDL_GetTicks(); // clock() ;
-    G_tickMilli = 0 ;
+    G_tickMilli = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 }
-T_void TickerOff(T_void)
+T_void
+TickerOff(T_void)
 {
-    DebugRoutine("TickerOff") ;
-    DebugCheck(F_tickerOn == TRUE) ;
+    DebugRoutine("TickerOff");
+    DebugCheck(F_tickerOn == TRUE);
 
     /* Note that the ticker is now off. */
-    F_tickerOn = FALSE ;
+    F_tickerOn = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void TickerUpdate(T_void)
+T_void
+TickerUpdate(T_void)
 {
-    T_word32 time ;
+    T_word32 time;
 
     time = SDL_GetTicks(); // clock() ;
-    G_tickMilli += time - G_lastMillisecondCount ;
-    G_lastMillisecondCount = time ;
+    G_tickMilli += time - G_lastMillisecondCount;
+    G_lastMillisecondCount = time;
 
-    G_tickCount = G_tickMilli / 14 ;
+    G_tickCount = G_tickMilli / 14;
 }
 
-T_word32 TickerGet(T_void)
+T_word32
+TickerGet(T_void)
 {
     /* Update the tick count if we are not paused */
     if (!G_pauseLevel)
         TickerUpdate();
-    return G_tickCount ;
+    return G_tickCount;
 }
 
-T_word32 TickerGetAccurate(T_void)
+T_word32
+TickerGetAccurate(T_void)
 {
-    return G_tickCount ;
+    return G_tickCount;
 }
 
-T_void TickerPause(T_void)
+T_void
+TickerPause(T_void)
 {
     /* Add one to the pause level. */
-    G_pauseLevel++ ;
+    G_pauseLevel++;
 }
 
-T_void TickerContinue(T_void)
+T_void
+TickerContinue(T_void)
 {
     /* Sub one from the pause level. */
-    G_pauseLevel-- ;
+    G_pauseLevel--;
 }
 #endif
 

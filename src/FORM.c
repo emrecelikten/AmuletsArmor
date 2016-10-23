@@ -30,15 +30,17 @@ static E_Boolean G_formHasButtons = FALSE;
 static T_doubleLinkList G_formStack = DOUBLE_LINK_LIST_BAD;
 
 /* prototype internal routines */
-static T_formObjectID FormCreateObject(
-        E_formObjectType type,
-        T_formObjectID IDobj,
-        T_word32 IDnum);
+static T_formObjectID
+FormCreateObject(
+    E_formObjectType type,
+    T_formObjectID IDobj,
+    T_word32 IDnum);
 
-static T_formObjectID FormCreateObject(
-        E_formObjectType type,
-        T_formObjectID IDobj,
-        T_word32 IDnum)
+static T_formObjectID
+FormCreateObject(
+    E_formObjectType type,
+    T_formObjectID IDobj,
+    T_word32 IDnum)
 {
     T_word32 size;
     T_formObjectStruct *myID;
@@ -47,9 +49,10 @@ static T_formObjectID FormCreateObject(
 
     size = sizeof(T_formObjectStruct);
     /* allocate memory for a new object structure */
-    myID = (T_formObjectID)MemAlloc(size);
-    DebugCheck(myID!=NULL);
-    if (myID != NULL ) {
+    myID = (T_formObjectID) MemAlloc(size);
+    DebugCheck(myID != NULL);
+    if (myID != NULL)
+    {
         /* set the object type */
         myID->objtype = type;
         /* set the pointer to the object */
@@ -66,236 +69,255 @@ static T_formObjectID FormCreateObject(
     return (myID);
 }
 
-T_formObjectID FormAddButton(
-        T_word16 x1,
-        T_word16 y1,
-        T_byte8 *picturename,
-        E_Boolean toggletype,
-        T_word16 hotkey,
-        T_word32 idnum)
+T_formObjectID
+FormAddButton(
+    T_word16 x1,
+    T_word16 y1,
+    T_byte8 *picturename,
+    E_Boolean toggletype,
+    T_word16 hotkey,
+    T_word32 idnum)
 {
     T_word16 i;
     T_buttonID buttonID;
 
     DebugRoutine("FormAddButton");
-    DebugCheck(picturename!=NULL);
+    DebugCheck(picturename != NULL);
 
     G_formHasButtons = TRUE;
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new button */
             buttonID = ButtonCreate(x1, y1, picturename, toggletype, hotkey,
-                    FormReportButton, FormReportButton);
+                                    FormReportButton, FormReportButton);
             /* now that a button has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_BUTTON,
-                    (T_formObjectID)buttonID, idnum);
+                                                    (T_formObjectID) buttonID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugCheck(buttonID != NULL);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddTextButton(
-        T_word16 x1,
-        T_word16 y1,
-        T_byte8 *data,
-        T_byte8 *picturename,
-        T_byte8 *fontname,
-        T_byte8 fcolor,
-        T_byte8 bcolor,
-        E_Boolean toggletype,
-        T_word16 hotkey,
-        T_word32 idnum)
+T_formObjectID
+FormAddTextButton(
+    T_word16 x1,
+    T_word16 y1,
+    T_byte8 *data,
+    T_byte8 *picturename,
+    T_byte8 *fontname,
+    T_byte8 fcolor,
+    T_byte8 bcolor,
+    E_Boolean toggletype,
+    T_word16 hotkey,
+    T_word32 idnum)
 {
     T_word16 i;
     T_buttonID buttonID;
 
     DebugRoutine("FormAddTextButton");
-    DebugCheck(picturename!=NULL);
+    DebugCheck(picturename != NULL);
 
     G_formHasButtons = TRUE;
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new button */
             buttonID = ButtonCreate(x1, y1, picturename, toggletype, hotkey,
-                    FormReportButton, FormReportButton );
+                                    FormReportButton, FormReportButton);
             ButtonSetFont(buttonID, fontname);
             ButtonSetText(buttonID, data, fcolor);
             /* now that a button has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_BUTTON,
-                    (T_formObjectID)buttonID, idnum);
+                                                    (T_formObjectID) buttonID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddText(
-        T_word16 x1,
-        T_word16 y1,
-        T_byte8 *data,
-        T_byte8 *fontname,
-        T_byte8 fcolor,
-        T_byte8 bcolor,
-        T_word32 idnum)
+T_formObjectID
+FormAddText(
+    T_word16 x1,
+    T_word16 y1,
+    T_byte8 *data,
+    T_byte8 *fontname,
+    T_byte8 fcolor,
+    T_byte8 bcolor,
+    T_word32 idnum)
 {
     T_word16 i;
     T_textID textID;
 
     DebugRoutine("FormAddText");
-    DebugCheck(fontname!=NULL);
-    DebugCheck(data!=NULL);
+    DebugCheck(fontname != NULL);
+    DebugCheck(data != NULL);
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new button */
             textID = TextCreate(x1, y1, data);
             TextSetFont(textID, fontname);
             TextSetColor(textID, fcolor, bcolor);
             /* now that a button has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_TEXT,
-                    (T_formObjectID)textID, idnum);
+                                                    (T_formObjectID) textID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddGraphic(
-        T_word16 x1,
-        T_word16 y1,
-        T_byte8 *picturename,
-        T_word32 idnum)
+T_formObjectID
+FormAddGraphic(
+    T_word16 x1,
+    T_word16 y1,
+    T_byte8 *picturename,
+    T_word32 idnum)
 {
     T_word16 i;
     T_graphicID graphicID;
 
     DebugRoutine("FormAddGraphic");
-    DebugCheck(picturename!=NULL);
+    DebugCheck(picturename != NULL);
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new graphic */
             graphicID = GraphicCreate(x1, y1, picturename);
             /* now that a graphic has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_GRAPHIC,
-                    (T_formObjectID)graphicID, idnum);
+                                                    (T_formObjectID) graphicID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddSlider(
-        T_word16 x1,
-        T_word16 y1,
-        T_word16 x2,
-        T_word32 idnum)
+T_formObjectID
+FormAddSlider(
+    T_word16 x1,
+    T_word16 y1,
+    T_word16 x2,
+    T_word32 idnum)
 {
     T_word16 i;
     T_sliderID sliderID;
 
     DebugRoutine("FormAddSlider");
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new slider */
             sliderID = SliderCreate(x1, y1, x2);
 
             /* now that a slider has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_SLIDER,
-                    (T_formObjectID)sliderID, idnum);
+                                                    (T_formObjectID) sliderID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddTextField(
-        T_word16 x1,
-        T_word16 y1,
-        T_word16 x2,
-        T_word16 y2,
-        T_byte8 *fontname,
-        T_byte8 maxfieldlength,
-        E_TxtfldDataType datatype,
-        T_word16 hotkey,
-        T_word32 idnum)
+T_formObjectID
+FormAddTextField(
+    T_word16 x1,
+    T_word16 y1,
+    T_word16 x2,
+    T_word16 y2,
+    T_byte8 *fontname,
+    T_byte8 maxfieldlength,
+    E_TxtfldDataType datatype,
+    T_word16 hotkey,
+    T_word32 idnum)
 {
     T_word16 i;
     T_TxtfldID TxtfldID;
 
     DebugRoutine("FormAddTextField");
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new textfield */
             TxtfldID = TxtfldCreate(x1, y1, x2, y2, fontname, maxfieldlength,
-                    hotkey, datatype, FormReportField, FormReportField);
+                                    hotkey, datatype, FormReportField, FormReportField);
             /* now that a textfield has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_TEXTFIELD,
-                    (T_formObjectID)TxtfldID, idnum);
+                                                    (T_formObjectID) TxtfldID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_formObjectID FormAddTextBox(
-        T_word16 x1,
-        T_word16 y1,
-        T_word16 x2,
-        T_word16 y2,
-        T_byte8 *fontname,
-        T_word32 maxlength,
-        T_byte8 hotkey,
-        E_Boolean numericonly,
-        E_TxtboxJustify justify,
-        E_TxtboxMode boxmode,
-        T_word32 idnum)
+T_formObjectID
+FormAddTextBox(
+    T_word16 x1,
+    T_word16 y1,
+    T_word16 x2,
+    T_word16 y2,
+    T_byte8 *fontname,
+    T_word32 maxlength,
+    T_byte8 hotkey,
+    E_Boolean numericonly,
+    E_TxtboxJustify justify,
+    E_TxtboxMode boxmode,
+    T_word32 idnum)
 {
     T_word16 i;
     T_TxtboxID TxtboxID;
@@ -308,30 +330,33 @@ T_formObjectID FormAddTextBox(
 
     G_formHasTextBoxes = TRUE;
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
         /* find an empty slot */
-        if (G_formObjectArray[i] == NULL ) {
+        if (G_formObjectArray[i] == NULL)
+        {
             /* found one, create a new textform */
             TxtboxID = TxtboxCreate(x1, y1, x2, y2, fontname, maxlength, hotkey,
-                    numericonly, justify, boxmode, FormReportTextBox);
+                                    numericonly, justify, boxmode, FormReportTextBox);
 
             TxtboxSetCallback(TxtboxID, FormReportTextBox);
             /* now that a textform has been created, make an objstruct for it */
             G_formObjectArray[i] = FormCreateObject(FORM_OBJECT_TEXTBOX,
-                    (T_formObjectID)TxtboxID, idnum);
+                                                    (T_formObjectID) TxtboxID, idnum);
             /* we made a new object struct, break from the loop */
             break;
         }
     }
 
     /* make sure we haven't exceeded any limits */
-    DebugCheck(i!=MAX_FORM_OBJECTS);
+    DebugCheck(i != MAX_FORM_OBJECTS);
     DebugEnd();
     /* return the ID for the object created */
     return (G_formObjectArray[i]);
 }
 
-T_void FormReportButton(T_buttonID buttonID)
+T_void
+FormReportButton(T_buttonID buttonID)
 {
     T_buttonStruct *p_button;
     T_formObjectStruct *p_object;
@@ -341,17 +366,21 @@ T_void FormReportButton(T_buttonID buttonID)
     DebugRoutine("FormReportButton");
     DebugCheck(buttonID != NULL);
 
-    p_button = (T_buttonStruct *)buttonID;
+    p_button = (T_buttonStruct *) buttonID;
     buttonAction = ButtonGetAction();
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
-        p_object = (T_formObjectStruct*)G_formObjectArray[i];
-        if (p_object->objtype == FORM_OBJECT_BUTTON) {
-            if ((T_buttonID)p_object->objID == buttonID) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
+        p_object = (T_formObjectStruct *) G_formObjectArray[i];
+        if (p_object->objtype == FORM_OBJECT_BUTTON)
+        {
+            if ((T_buttonID) p_object->objID == buttonID)
+            {
                 /* found the button, call the callback routine */
-                if (formcallback != NULL && buttonAction != 0) {
+                if (formcallback != NULL && buttonAction != 0)
+                {
                     formcallback(FORM_OBJECT_BUTTON, buttonAction,
-                            p_object->numID);
+                                 p_object->numID);
                     /* leave the loop */
                     break;
                 }
@@ -362,7 +391,8 @@ T_void FormReportButton(T_buttonID buttonID)
     DebugEnd();
 }
 
-T_void FormReportSlider(T_sliderID sliderID)
+T_void
+FormReportSlider(T_sliderID sliderID)
 {
     T_sliderStruct *p_slider;
     T_formObjectStruct *p_object;
@@ -371,14 +401,18 @@ T_void FormReportSlider(T_sliderID sliderID)
     DebugRoutine("FormReportSlider");
     DebugCheck(sliderID != NULL);
 
-    p_slider = (T_sliderStruct *)sliderID;
+    p_slider = (T_sliderStruct *) sliderID;
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
-        p_object = (T_formObjectStruct*)G_formObjectArray[i];
-        if (p_object->objtype == FORM_OBJECT_SLIDER) {
-            if ((T_sliderID)p_object->objID == sliderID) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
+        p_object = (T_formObjectStruct *) G_formObjectArray[i];
+        if (p_object->objtype == FORM_OBJECT_SLIDER)
+        {
+            if ((T_sliderID) p_object->objID == sliderID)
+            {
                 /* found the button, call the callback routine */
-                if (formcallback != NULL ) {
+                if (formcallback != NULL)
+                {
                     formcallback(FORM_OBJECT_SLIDER, 1, p_object->numID);
                     /* leave the loop */
                     break;
@@ -390,20 +424,22 @@ T_void FormReportSlider(T_sliderID sliderID)
     DebugEnd();
 }
 
-T_void FormReportField(T_TxtfldID TxtfldID)
+T_void
+FormReportField(T_TxtfldID TxtfldID)
 {
     T_TxtfldStruct *p_txtfld;
 
     DebugRoutine("FormReportField");
 
-    p_txtfld = (T_TxtfldStruct*)TxtfldID;
+    p_txtfld = (T_TxtfldStruct *) TxtfldID;
 
     TxtfldNextField();
 
     DebugEnd();
 }
 
-T_void FormReportTextBox(T_TxtboxID TxtboxID)
+T_void
+FormReportTextBox(T_TxtboxID TxtboxID)
 {
     T_TxtboxStruct *p_Txtbox;
     T_formObjectStruct *p_object;
@@ -413,17 +449,21 @@ T_void FormReportTextBox(T_TxtboxID TxtboxID)
     DebugRoutine("FormReportBox");
     DebugCheck(TxtboxID != NULL);
 
-    p_Txtbox = (T_TxtboxStruct*)TxtboxID;
+    p_Txtbox = (T_TxtboxStruct *) TxtboxID;
     action = TxtboxGetAction();
 
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
-        p_object = (T_formObjectStruct*)G_formObjectArray[i];
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
+        p_object = (T_formObjectStruct *) G_formObjectArray[i];
         if (!p_object)
             continue;
-        if (p_object->objtype == FORM_OBJECT_TEXTBOX) {
-            if ((T_TxtboxID)p_object->objID == TxtboxID) {
+        if (p_object->objtype == FORM_OBJECT_TEXTBOX)
+        {
+            if ((T_TxtboxID) p_object->objID == TxtboxID)
+            {
                 /* found the button, call the callback routine */
-                if (formcallback != NULL && action != 0) {
+                if (formcallback != NULL && action != 0)
+                {
                     formcallback(FORM_OBJECT_TEXTBOX, action, p_object->numID);
                     /* leave the loop */
                     break;
@@ -434,7 +474,8 @@ T_void FormReportTextBox(T_TxtboxID TxtboxID)
     DebugEnd();
 }
 
-T_void FormLoadFromFile(T_byte8 *filename)
+T_void
+FormLoadFromFile(T_byte8 *filename)
 {
     FILE *fp;
     T_word16 i;
@@ -458,15 +499,16 @@ T_void FormLoadFromFile(T_byte8 *filename)
     T_word32 size;
 
     DebugRoutine("FormLoadFromFile");
-    DebugCheck(filename!=NULL);
+    DebugCheck(filename != NULL);
 
     /* first, clean up the form structure and delete any previous forms */
     FormCleanUp();
 
     /* open up the file */
     fp = fopen(filename, "r");
-    DebugCheck(fp!=NULL);
-    while (feof(fp) == FALSE) {
+    DebugCheck(fp != NULL);
+    while (feof(fp) == FALSE)
+    {
         objtype = 0;
         /* get a line from the main file */
         fgets(tempstr, 128, fp);
@@ -475,8 +517,10 @@ T_void FormLoadFromFile(T_byte8 *filename)
             tempstr[strlen(tempstr) - 1] = '\0';
 
         /* append text to current object if flag is set */
-        if (appendtext == TRUE) {
-            if (strcmp(tempstr, "ENDOFTEXT") == 0) {
+        if (appendtext == TRUE)
+        {
+            if (strcmp(tempstr, "ENDOFTEXT") == 0)
+            {
                 /* turn off appendstring mode */
                 TxtboxBackSpace(p_obj->objID);
                 TxtboxCursTop(p_obj->objID);
@@ -484,7 +528,9 @@ T_void FormLoadFromFile(T_byte8 *filename)
                 TxtboxFirstBox();
                 appendtext = FALSE;
                 sprintf(tempstr, "#");
-            } else if (tempstr[0] != '$' && tempstr[0] != '#') {
+            }
+            else if (tempstr[0] != '$' && tempstr[0] != '#')
+            {
                 /* strip last character if newline */
                 if (tempstr[strlen(tempstr) - 1] == '\n')
                     tempstr[strlen(tempstr) - 1] = '\0';
@@ -495,7 +541,8 @@ T_void FormLoadFromFile(T_byte8 *filename)
         }
 
         /* check to see if we should open an included file */
-        if (tempstr[0] == '$') {
+        if (tempstr[0] == '$')
+        {
             /* strip the '$' from the string */
             for (i = 1; i < strlen(tempstr); i++)
                 tempstr2[i - 1] = tempstr[i];
@@ -515,17 +562,19 @@ T_void FormLoadFromFile(T_byte8 *filename)
         }
 
         /* ignore comments and blank lines */
-        if (tempstr[0] != '#' && tempstr[0] != ' ') {
+        if (tempstr[0] != '#' && tempstr[0] != ' ')
+        {
             sscanf(tempstr, "%d", &objtype);
             if (objtype == 1) /* add a graphic */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%s", &objtype, &objid, &x1, &y1,
-                        picname);
+                       picname);
                 FormAddGraphic(x1, y1, picname, objid);
-            } else if (objtype == 2) /* add a text */
+            }
+            else if (objtype == 2) /* add a text */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
-                        &fcolor, &bcolor);
+                       &fcolor, &bcolor);
                 /* get font name */
                 fgets(tempstr, 128, fp);
                 sscanf(tempstr, "%s", fontname);
@@ -535,17 +584,19 @@ T_void FormLoadFromFile(T_byte8 *filename)
                 if (tempstr[strlen(tempstr) - 1] == '\n')
                     tempstr[strlen(tempstr) - 1] = '\0';
                 /* add a text object */
-                FormAddText(x1, y1, tempstr, fontname, (T_byte8)fcolor, (T_byte8)bcolor, objid);
-            } else if (objtype == 3) /* add a button */
+                FormAddText(x1, y1, tempstr, fontname, (T_byte8) fcolor, (T_byte8) bcolor, objid);
+            }
+            else if (objtype == 3) /* add a button */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%s", &objtype, &objid, &x1,
-                        &y1, &toggletype, &hotkey, picname);
-                FormAddButton(x1, y1, picname, (E_Boolean)toggletype, hotkey,
-                        objid);
-            } else if (objtype == 4) /* add a text button */
+                       &y1, &toggletype, &hotkey, picname);
+                FormAddButton(x1, y1, picname, (E_Boolean) toggletype, hotkey,
+                              objid);
+            }
+            else if (objtype == 4) /* add a text button */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
-                        &fcolor, &toggletype, &hotkey);
+                       &fcolor, &toggletype, &hotkey);
                 /* get picture name */
                 fgets(tempstr, 128, fp);
                 sscanf(tempstr, "%s", picname);
@@ -558,14 +609,15 @@ T_void FormLoadFromFile(T_byte8 *filename)
                 if (tempstr[strlen(tempstr) - 1] == '\n')
                     tempstr[strlen(tempstr) - 1] = '\0';
                 /* make a text button */
-                FormAddTextButton(x1, y1, tempstr, picname, fontname, (T_byte8)fcolor, 0,
-                        (E_Boolean)toggletype, hotkey, objid);
-            } else if (objtype == 5) /* add a text box */
+                FormAddTextButton(x1, y1, tempstr, picname, fontname, (T_byte8) fcolor, 0,
+                                  (E_Boolean) toggletype, hotkey, objid);
+            }
+            else if (objtype == 5) /* add a text box */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
-                        &objtype, &objid, &x1, &y1, &x2, &y2, &maxlength,
-                        &numericonly, &justify, &fieldtype, &hotkey, &sbupID,
-                        &sbdnID, &sbgrID, fontname);
+                       &objtype, &objid, &x1, &y1, &x2, &y2, &maxlength,
+                       &numericonly, &justify, &fieldtype, &hotkey, &sbupID,
+                       &sbdnID, &sbgrID, fontname);
 
                 /* read in default text */
 //                fgets (tempstr,128,fp);
@@ -575,21 +627,22 @@ T_void FormLoadFromFile(T_byte8 *filename)
                     maxlength--;
 
                 objID = FormAddTextBox(
-							x1,
-							y1,
-							x2,
-							y2,
-							fontname,
-							maxlength,
-							(T_byte8)hotkey,
-							(T_byte8)numericonly,
-							justify,
-							(E_TxtboxMode)fieldtype,
-							objid);
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    fontname,
+                    maxlength,
+                    (T_byte8) hotkey,
+                    (T_byte8) numericonly,
+                    justify,
+                    (E_TxtboxMode) fieldtype,
+                    objid);
 
                 DebugCheck(objID != NULL);
                 /* set form scroll bar stuff */
-                if (sbupID != 0) {
+                if (sbupID != 0)
+                {
                     SBUbuttonID = FormGetObjID(sbupID);
                     ButtonSetData(SBUbuttonID, objid);
                     ButtonSetCallbacks(SBUbuttonID, NULL, TxtboxHandleSBUp);
@@ -600,22 +653,23 @@ T_void FormLoadFromFile(T_byte8 *filename)
                     DebugCheck(SBUbuttonID != NULL);
                     DebugCheck(SBDbuttonID != NULL);
                     DebugCheck(SBGgraphicID != NULL);
-                    p_obj = (T_formObjectStruct*)objID;
+                    p_obj = (T_formObjectStruct *) objID;
                     TxtboxSetScrollBarObjIDs(p_obj->objID, SBUbuttonID,
-                            SBDbuttonID, SBGgraphicID);
+                                             SBDbuttonID, SBGgraphicID);
                 }
 
                 /* set default text */
-                p_obj = (T_formObjectStruct *)objID;
+                p_obj = (T_formObjectStruct *) objID;
                 appendtext = TRUE;
 
-            } else if (objtype == 6) /* add a slider */
+            }
+            else if (objtype == 6) /* add a slider */
             {
                 sscanf(tempstr, "%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
-                        &x2);
+                       &x2);
                 objID = FormAddSlider(x1, y1, x2, objid);
                 DebugCheck(objID != NULL);
-                p_obj = (T_formObjectStruct *)objID;
+                p_obj = (T_formObjectStruct *) objID;
                 SliderSetCallBack(p_obj->objID, FormReportSlider);
             }
         }
@@ -624,14 +678,16 @@ T_void FormLoadFromFile(T_byte8 *filename)
     DebugEnd();
 }
 
-T_void FormDeleteObject(T_formObjectID objectID)
+T_void
+FormDeleteObject(T_formObjectID objectID)
 {
     DebugRoutine("FormDeleteObject");
 
     DebugEnd();
 }
 
-T_void FormCleanUp(T_void)
+T_void
+FormCleanUp(T_void)
 {
     T_word16 i;
     T_formObjectStruct *p_object;
@@ -643,36 +699,32 @@ T_void FormCleanUp(T_void)
     GraphicUpdateAllGraphics();
 
     /* loop through all objects, deleting structures if available */
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
-        if (G_formObjectArray[i] != NULL ) {
-            p_object = (T_formObjectStruct *)G_formObjectArray[i];
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
+        if (G_formObjectArray[i] != NULL)
+        {
+            p_object = (T_formObjectStruct *) G_formObjectArray[i];
             /* first delete the object (button, textfield, ect) */
             DebugCheck(p_object != NULL);
-            switch (p_object->objtype) {
-                case FORM_OBJECT_BUTTON:
-                    ButtonDelete((T_buttonID)p_object->objID);
+            switch (p_object->objtype)
+            {
+                case FORM_OBJECT_BUTTON:ButtonDelete((T_buttonID) p_object->objID);
                     break;
-                case FORM_OBJECT_TEXT:
-                    TextDelete((T_textID)p_object->objID);
+                case FORM_OBJECT_TEXT:TextDelete((T_textID) p_object->objID);
                     break;
-                case FORM_OBJECT_TEXTBUTTON:
-                    ButtonDelete((T_buttonID)p_object->objID);
+                case FORM_OBJECT_TEXTBUTTON:ButtonDelete((T_buttonID) p_object->objID);
                     break;
-                case FORM_OBJECT_GRAPHIC:
-                    GraphicDelete((T_graphicID)p_object->objID);
+                case FORM_OBJECT_GRAPHIC:GraphicDelete((T_graphicID) p_object->objID);
                     break;
-                case FORM_OBJECT_TEXTFIELD:
-                    TxtfldDelete((T_TxtfldID)p_object->objID);
+                case FORM_OBJECT_TEXTFIELD:TxtfldDelete((T_TxtfldID) p_object->objID);
                     break;
-                case FORM_OBJECT_TEXTBOX:
-                    TxtboxDelete((T_TxtboxID)p_object->objID);
+                case FORM_OBJECT_TEXTBOX:TxtboxDelete((T_TxtboxID) p_object->objID);
                     break;
-                case FORM_OBJECT_SLIDER:
-                    SliderDelete((T_sliderID)p_object->objID);
+                case FORM_OBJECT_SLIDER:SliderDelete((T_sliderID) p_object->objID);
                     break;
                 default:
                     /* something is wrong! */
-                    DebugCheck(UScrewedUpSomewhere==TRUE);
+                    DebugCheck(UScrewedUpSomewhere == TRUE);
                     break;
             }
 
@@ -688,11 +740,12 @@ T_void FormCleanUp(T_void)
     DebugEnd();
 }
 
-T_void FormHandleMouse(
-        E_mouseEvent event,
-        T_word16 x,
-        T_word16 y,
-        E_Boolean button)
+T_void
+FormHandleMouse(
+    E_mouseEvent event,
+    T_word16 x,
+    T_word16 y,
+    E_Boolean button)
 {
     DebugRoutine("FormHandleMouse");
     /* send event to buttons */
@@ -706,7 +759,8 @@ T_void FormHandleMouse(
     DebugEnd();
 }
 
-T_void FormHandleKey(E_keyboardEvent event, T_word16 scankey)
+T_void
+FormHandleKey(E_keyboardEvent event, T_word16 scankey)
 {
     static E_Boolean wasGamma = FALSE;
 
@@ -716,25 +770,33 @@ T_void FormHandleKey(E_keyboardEvent event, T_word16 scankey)
     if (G_formHasTextBoxes == TRUE)
         TxtboxKeyControl(event, scankey);
 
-    if (KeyboardGetScanCode(KEY_SCAN_CODE_ALT) == TRUE) {
-        if (KeyMapGetScan(KEYMAP_GAMMA_CORRECT) == TRUE)  {
-            if (wasGamma == FALSE) {
+    if (KeyboardGetScanCode(KEY_SCAN_CODE_ALT) == TRUE)
+    {
+        if (KeyMapGetScan(KEYMAP_GAMMA_CORRECT) == TRUE)
+        {
+            if (wasGamma == FALSE)
+            {
                 MessagePrintf("Gamma level %d",
-                    ColorGammaAdjust()) ;
-                ColorUpdate(1) ;
+                              ColorGammaAdjust());
+                ColorUpdate(1);
                 wasGamma = TRUE;
             }
-        } else {
+        }
+        else
+        {
             wasGamma = FALSE;
         }
-    } else {
+    }
+    else
+    {
         wasGamma = FALSE;
     }
 
     DebugEnd();
 }
 
-T_void FormSetCallbackRoutine(T_formCallBackRoutine newcallback)
+T_void
+FormSetCallbackRoutine(T_formCallBackRoutine newcallback)
 {
     DebugRoutine("FormSetCallbackRoutine");
 
@@ -745,19 +807,23 @@ T_void FormSetCallbackRoutine(T_formCallBackRoutine newcallback)
 }
 
 // Get a form object ID (or not, if doesn't exist)
-T_formObjectID FormFindObjID(T_word32 numID)
+T_formObjectID
+FormFindObjID(T_word32 numID)
 {
     T_word16 i;
     T_formObjectID retvalue = NULL;
     T_formObjectStruct *p_object;
 
     DebugRoutine("FormFindObjID");
-    for (i = 0; i < MAX_FORM_OBJECTS; i++) {
-        if (G_formObjectArray[i] != NULL ) {
+    for (i = 0; i < MAX_FORM_OBJECTS; i++)
+    {
+        if (G_formObjectArray[i] != NULL)
+        {
             /* get the pointer to the object structure */
-            p_object = (T_formObjectStruct*)G_formObjectArray[i];
+            p_object = (T_formObjectStruct *) G_formObjectArray[i];
             /* check to see if the numerical ID matches */
-            if (numID == p_object->numID) {
+            if (numID == p_object->numID)
+            {
                 /* found one, return the pointer to the object in question */
                 retvalue = p_object->objID;
                 break;
@@ -768,7 +834,8 @@ T_formObjectID FormFindObjID(T_word32 numID)
     return (retvalue);
 }
 
-T_formObjectID FormGetObjID(T_word32 numID)
+T_formObjectID
+FormGetObjID(T_word32 numID)
 {
     T_formObjectID retvalue = NULL;
 
@@ -785,7 +852,8 @@ T_formObjectID FormGetObjID(T_word32 numID)
     return (retvalue);
 }
 
-T_void FormGenericControl(E_Boolean *exitflag)
+T_void
+FormGenericControl(E_Boolean *exitflag)
 {
     static T_word32 delta = 0, lastupdate = 0;
     T_keyboardEventHandler keyhandl;
@@ -802,7 +870,7 @@ T_void FormGenericControl(E_Boolean *exitflag)
 
     /** Initialize the mouse. **/
     MouseGetBitmap(&hotX, &hotY, &p_oldBitmap);
-    p_bitmap = (T_bitmap *)PictureLock("UI/MOUSE/DEFAULT", &r_bitmap);
+    p_bitmap = (T_bitmap *) PictureLock("UI/MOUSE/DEFAULT", &r_bitmap);
     DebugCheck(p_bitmap != NULL);
     MouseSetDefaultBitmap(0, 0, p_bitmap);
     MouseUseDefaultBitmap();
@@ -816,10 +884,12 @@ T_void FormGenericControl(E_Boolean *exitflag)
     KeyboardSetEventHandler(FormHandleKey);
 //    MouseShow();
 
-    do {
+    do
+    {
         delta = TickerGet();
         /* update color every 4 ticks */
-        if ((delta - lastupdate) > 0) {
+        if ((delta - lastupdate) > 0)
+        {
             lastupdate = delta;
             ColorUpdate(delta - lastupdate);
         }
@@ -832,8 +902,9 @@ T_void FormGenericControl(E_Boolean *exitflag)
         SoundUpdate();
 //        MouseShow();
 //        delay (20);
-    } while (*exitflag == FALSE
-            && KeyboardGetScanCode(KEY_SCAN_CODE_ESC) == FALSE);
+    }
+    while (*exitflag == FALSE
+        && KeyboardGetScanCode(KEY_SCAN_CODE_ESC) == FALSE);
 
     /* clean up */
 //    MouseHide();
@@ -861,7 +932,8 @@ T_void FormGenericControl(E_Boolean *exitflag)
  *  user interface by pushing the mouse and keyboard handlers.
  *
  *<!-----------------------------------------------------------------------*/
-T_void FormGenericControlStart(T_void)
+T_void
+FormGenericControlStart(T_void)
 {
     DebugRoutine("FormGenericControlStart");
 
@@ -881,7 +953,8 @@ T_void FormGenericControlStart(T_void)
  *  user interface by popping the mouse and keyboard handlers.
  *
  *<!-----------------------------------------------------------------------*/
-T_void FormGenericControlEnd(T_void)
+T_void
+FormGenericControlEnd(T_void)
 {
     DebugRoutine("FormGenericControlEnd");
 
@@ -904,7 +977,8 @@ T_void FormGenericControlEnd(T_void)
  *  with the current user interface.
  *
  *<!-----------------------------------------------------------------------*/
-T_void FormGenericControlUpdate(T_void)
+T_void
+FormGenericControlUpdate(T_void)
 {
     DebugRoutine("FormGenericControlUpdate");
 
@@ -916,13 +990,15 @@ T_void FormGenericControlUpdate(T_void)
     DebugEnd();
 }
 
-typedef struct {
+typedef struct
+{
     T_formCallBackRoutine callback;
     E_Boolean hasText;
     E_Boolean hasButtons;
 } T_formVariousValues;
 
-T_void FormPush(T_void)
+T_void
+FormPush(T_void)
 {
     T_formObjectID *p_formObjs;
     T_void *p_state;
@@ -969,7 +1045,8 @@ T_void FormPush(T_void)
     DebugEnd();
 }
 
-T_void FormPop(T_void)
+T_void
+FormPop(T_void)
 {
     T_formObjectID *p_formObjs;
     T_doubleLinkListElement element;
@@ -983,7 +1060,7 @@ T_void FormPop(T_void)
 
     /* Recover the form callback */
     element = DoubleLinkListGetFirst(G_formStack);
-    p_values = (T_formVariousValues *)DoubleLinkListElementGetData(element);
+    p_values = (T_formVariousValues *) DoubleLinkListElementGetData(element);
     formcallback = p_values->callback;
     G_formHasTextBoxes = p_values->hasText;
     G_formHasButtons = p_values->hasButtons;
@@ -1026,7 +1103,8 @@ T_void FormPop(T_void)
     DoubleLinkListRemoveElement(element);
 
     /* If the list is empty, destroy it. */
-    if (DoubleLinkListGetNumberElements(G_formStack) == 0) {
+    if (DoubleLinkListGetNumberElements(G_formStack) == 0)
+    {
         DoubleLinkListDestroy(G_formStack);
         G_formStack = DOUBLE_LINK_LIST_BAD;
     }

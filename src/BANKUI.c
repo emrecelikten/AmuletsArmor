@@ -82,7 +82,7 @@ BankUIStart(T_word32 formNum)
                                             Txtbox_MODE_VIEW_NOSCROLL_FORM,
                                             NULL);
 
-        sprintf((char*)stmp, "%d", StatsGetPlayerSavedCoins(3 - i));
+        sprintf((char *) stmp, "%d", StatsGetPlayerSavedCoins(3 - i));
         TxtboxSetData(G_financeDisplays[i], stmp);
 
         G_financeDisplays[i + 4] = TxtboxCreate(148,
@@ -97,7 +97,7 @@ BankUIStart(T_word32 formNum)
                                                 Txtbox_MODE_VIEW_NOSCROLL_FORM,
                                                 NULL);
 
-        sprintf((char*)stmp, "%d", StatsGetPlayerCoins(3 - i));
+        sprintf((char *) stmp, "%d", StatsGetPlayerCoins(3 - i));
         TxtboxSetData(G_financeDisplays[i + 4], stmp);
 
     }
@@ -111,7 +111,7 @@ BankUIStart(T_word32 formNum)
     StoreAddBuyType(EQUIP_OBJECT_TYPE_RING);
     StoreAddBuyType(EQUIP_OBJECT_TYPE_AMULET);
 
-    adv = (E_statsAdventureNumber)StatsGetCompletedAdventure();
+    adv = (E_statsAdventureNumber) StatsGetCompletedAdventure();
 
     switch (adv)
     {
@@ -297,7 +297,7 @@ BankUIDeposit(T_buttonID buttonID)
     DebugCheck (buttonID != NULL);
 
     /* get coin type */
-    coin = (E_equipCoinTypes)ButtonGetData(buttonID);
+    coin = (E_equipCoinTypes) ButtonGetData(buttonID);
     DebugCheck (coin < COIN_TYPE_FIVE);
 
     StatsSetPlayerSavedCoins (coin, StatsGetPlayerCoins(coin) + StatsGetPlayerSavedCoins(coin));
@@ -316,7 +316,7 @@ BankUIWithdraw(T_buttonID buttonID)
     DebugRoutine ("BankUIWithdraw");
 
     /* get coin type */
-    coin = (E_equipCoinTypes)ButtonGetData(buttonID);
+    coin = (E_equipCoinTypes) ButtonGetData(buttonID);
     DebugCheck (coin < COIN_TYPE_FIVE);
 
     if (StatsGetPlayerSavedCoins(coin) > 0)
@@ -373,10 +373,10 @@ BankUIUpdateGraphics(T_void)
     DebugRoutine ("BankUIUpdateGraphics");
     for (i = 0; i < 4; i++)
     {
-        sprintf((char*)stmp, "%d", StatsGetPlayerSavedCoins(3 - i));
+        sprintf((char *) stmp, "%d", StatsGetPlayerSavedCoins(3 - i));
         TxtboxSetData(G_financeDisplays[i], stmp);
 
-        sprintf((char*)stmp, "%d", StatsGetPlayerCoins(3 - i));
+        sprintf((char *) stmp, "%d", StatsGetPlayerCoins(3 - i));
         TxtboxSetData(G_financeDisplays[i + 4], stmp);
     }
 

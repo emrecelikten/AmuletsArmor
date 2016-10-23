@@ -6,9 +6,11 @@
 
 #include "GENERAL.H"
 
-T_word32 SyncTimeGet(T_void) ;
+T_word32
+SyncTimeGet(T_void);
 
-T_void SyncTimeSet(T_word32 time) ;
+T_void
+SyncTimeSet(T_word32 time);
 
 #endif
 

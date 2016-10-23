@@ -25,33 +25,37 @@
 /* Flag to turn on output of all double link node creation */
 //#define COMPILE_OPTION_DOUBLE_LINK_OUTPUT
 
-typedef union {
-    T_void *p_data ;
-    T_word32 count ;
-} T_dllCountOrData ;
+typedef union
+{
+    T_void *p_data;
+    T_word32 count;
+} T_dllCountOrData;
 
-typedef struct _T_doubleLinkListStruct {
-    struct _T_doubleLinkListStruct *p_next ;
-    struct _T_doubleLinkListStruct *p_previous ;
-    struct _T_doubleLinkListStruct *p_head ;
-    T_dllCountOrData countOrData ;
+typedef struct _T_doubleLinkListStruct
+{
+    struct _T_doubleLinkListStruct *p_next;
+    struct _T_doubleLinkListStruct *p_previous;
+    struct _T_doubleLinkListStruct *p_head;
+    T_dllCountOrData countOrData;
 #ifndef NDEBUG
     T_word32 tag ;
 #endif
-} T_doubleLinkListStruct ;
+} T_doubleLinkListStruct;
 
 /* Internal prototypes: */
-static T_doubleLinkListStruct *ICreateNode(T_void) ;
-static T_void IDestroyNode(T_doubleLinkListStruct *p_node) ;
+static T_doubleLinkListStruct *
+ICreateNode(T_void);
+static T_void
+IDestroyNode(T_doubleLinkListStruct *p_node);
 
-static T_word32 G_numNodes = 0 ;
-static T_word32 G_maxNodes = 0 ;
-static E_Boolean G_doOutput = FALSE ;
+static T_word32 G_numNodes = 0;
+static T_word32 G_maxNodes = 0;
+static E_Boolean G_doOutput = FALSE;
 
 #define MAX_ALLOCATED_NODES 30000
-static T_doubleLinkListStruct G_nodes[MAX_ALLOCATED_NODES] ;
-static T_word16 G_firstFreeNode = 0xFFFF ;
-static T_word16 G_numAllocatedNodes = 0 ;
+static T_doubleLinkListStruct G_nodes[MAX_ALLOCATED_NODES];
+static T_word16 G_firstFreeNode = 0xFFFF;
+static T_word16 G_numAllocatedNodes = 0;
 
 /*-------------------------------------------------------------------------*
  * Routine:  DoubleLinkListCreate
@@ -71,35 +75,37 @@ T_void IDumpMaxCount(T_void)
 }
 #endif
 
-T_doubleLinkList DoubleLinkListCreate(T_void)
+T_doubleLinkList
+DoubleLinkListCreate(T_void)
 {
-    T_doubleLinkListStruct *p_head ;
+    T_doubleLinkListStruct *p_head;
 
-    DebugRoutine("DoubleLinkListCreate") ;
+    DebugRoutine("DoubleLinkListCreate");
 
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!A 1 list_%s\n", DebugGetCallerName()) ;
+    printf("!A 1 list_%s\n", DebugGetCallerName()) ;
 #endif
-    p_head = ICreateNode() ;
-    DebugCheck(p_head != NULL) ;
+    p_head = ICreateNode();
+    DebugCheck(p_head != NULL);
 
-    if (p_head)  {
-        p_head->p_next = p_head ;        /* Next is self. */
-        p_head->p_previous = p_head ;    /* Previous is self. */
-        p_head->p_head = p_head ;        /* Self points to self. */
-        p_head->countOrData.count = 0 ;  /* No elements. */
+    if (p_head)
+    {
+        p_head->p_next = p_head;        /* Next is self. */
+        p_head->p_previous = p_head;    /* Previous is self. */
+        p_head->p_head = p_head;        /* Self points to self. */
+        p_head->countOrData.count = 0;  /* No elements. */
     }
 
 #ifndef NDEBUG
-    if (G_doOutput==FALSE)  {
-        G_doOutput = TRUE ;
-        atexit(IDumpMaxCount) ;
-    }
+        if (G_doOutput==FALSE)  {
+            G_doOutput = TRUE ;
+            atexit(IDumpMaxCount) ;
+        }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return (T_doubleLinkList) p_head ;
+    return (T_doubleLinkList) p_head;
 }
 
 /*-------------------------------------------------------------------------*
@@ -117,30 +123,31 @@ printf("!A 1 list_%s\n", DebugGetCallerName()) ;
  *  @param linkList -- Handle to link list to destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void DoubleLinkListDestroy(T_doubleLinkList linkList)
+T_void
+DoubleLinkListDestroy(T_doubleLinkList linkList)
 {
-    T_doubleLinkListStruct *p_head ;
+    T_doubleLinkListStruct *p_head;
 
-    DebugRoutine("DoubleLinkListDestroy") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListDestroy");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!F 1 list_%s\n", DebugGetCallerName()) ;
+    printf("!F 1 list_%s\n", DebugGetCallerName()) ;
 #endif
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Remove all items in the list.  Hopefully */
     /* all attached data is not allocated memory or is being */
     /* managed by someone else. */
     while (p_head->p_next != p_head)
-        DoubleLinkListRemoveElement((T_doubleLinkListElement)p_head->p_next) ;
+        DoubleLinkListRemoveElement((T_doubleLinkListElement) p_head->p_next);
 
     /* Destroy this element now. */
-    IDestroyNode(p_head) ;
+    IDestroyNode(p_head);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -154,44 +161,47 @@ printf("!F 1 list_%s\n", DebugGetCallerName()) ;
  *  @param p_data -- Pointer to element data
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListAddElementAtEnd(
-                            T_doubleLinkList linkList,
-                            T_void *p_data)
+T_doubleLinkListElement
+DoubleLinkListAddElementAtEnd(
+    T_doubleLinkList linkList,
+    T_void *p_data)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListStruct *p_element ;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListStruct *p_element;
 
-    DebugRoutine("DoubleLinkListAddElementAtEnd") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListAddElementAtEnd");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
-    DebugCheck(p_head->p_head == p_head) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
+    DebugCheck(p_head->p_head == p_head);
 
-    if (p_head)  {
+    if (p_head)
+    {
         /* Create a new element. */
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!A 1 node_%s\n", DebugGetCallerName()) ;
+        printf("!A 1 node_%s\n", DebugGetCallerName()) ;
 #endif
-        p_element = ICreateNode() ;
-        DebugCheck(p_element != NULL) ;
+        p_element = ICreateNode();
+        DebugCheck(p_element != NULL);
 
-        if (p_element)  {
+        if (p_element)
+        {
             /* Attach the data to the element. */
-            p_element->countOrData.p_data = p_data ;
-            p_element->p_previous = p_head->p_previous ;
-            p_element->p_next = p_head ;
-            p_element->p_head = p_head ;
-            p_head->p_previous->p_next = p_element ;
-            p_head->p_previous = p_element ;
-            p_head->countOrData.count++ ;
+            p_element->countOrData.p_data = p_data;
+            p_element->p_previous = p_head->p_previous;
+            p_element->p_next = p_head;
+            p_element->p_head = p_head;
+            p_head->p_previous->p_next = p_element;
+            p_head->p_previous = p_element;
+            p_head->countOrData.count++;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_doubleLinkListElement)p_element) ;
+    return ((T_doubleLinkListElement) p_element);
 }
 
 /*-------------------------------------------------------------------------*
@@ -205,44 +215,47 @@ printf("!A 1 node_%s\n", DebugGetCallerName()) ;
  *  @param p_data -- Pointer to element data
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListAddElementAtFront(
-                            T_doubleLinkList linkList,
-                            T_void *p_data)
+T_doubleLinkListElement
+DoubleLinkListAddElementAtFront(
+    T_doubleLinkList linkList,
+    T_void *p_data)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListStruct *p_element ;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListStruct *p_element;
 
-    DebugRoutine("DoubleLinkListAddElementAtFront") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListAddElementAtFront");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
-    DebugCheck(p_head->p_head == p_head) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
+    DebugCheck(p_head->p_head == p_head);
 
-    if (p_head)  {
+    if (p_head)
+    {
         /* Create a new element. */
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!A 1 node_%s\n", DebugGetCallerName()) ;
+        printf("!A 1 node_%s\n", DebugGetCallerName()) ;
 #endif
-        p_element = ICreateNode() ;
-        DebugCheck(p_element != NULL) ;
+        p_element = ICreateNode();
+        DebugCheck(p_element != NULL);
 
-        if (p_element)  {
+        if (p_element)
+        {
             /* Attach the data to the element. */
-            p_element->countOrData.p_data = p_data ;
-            p_element->p_previous = p_head ;
-            p_element->p_next = p_head->p_next ;
-            p_element->p_head = p_head ;
-            p_head->p_next->p_previous = p_element ;
-            p_head->p_next = p_element ;
-            p_head->countOrData.count++ ;
+            p_element->countOrData.p_data = p_data;
+            p_element->p_previous = p_head;
+            p_element->p_next = p_head->p_next;
+            p_element->p_head = p_head;
+            p_head->p_next->p_previous = p_element;
+            p_head->p_next = p_element;
+            p_head->countOrData.count++;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_doubleLinkListElement)p_element) ;
+    return ((T_doubleLinkListElement) p_element);
 }
 
 /*-------------------------------------------------------------------------*
@@ -256,48 +269,51 @@ printf("!A 1 node_%s\n", DebugGetCallerName()) ;
  *  @param p_data -- Pointer to element data
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListAddElementAfterElement(
-                            T_doubleLinkListElement element,
-                            T_void *p_data)
+T_doubleLinkListElement
+DoubleLinkListAddElementAfterElement(
+    T_doubleLinkListElement element,
+    T_void *p_data)
 {
-    T_doubleLinkListStruct *p_after ;
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListStruct *p_element ;
+    T_doubleLinkListStruct *p_after;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListStruct *p_element;
 
-    DebugRoutine("DoubleLinkListAddElementAfterElement") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListAddElementAfterElement");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_after = (T_doubleLinkListStruct *)element;
-    DebugCheck(p_after->tag == DOUBLE_LINK_LIST_TAG) ;
-    p_head = p_after->p_head ;
-    DebugCheck(p_head != NULL) ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
-    DebugCheck(p_head->p_head == p_head) ;
+    p_after = (T_doubleLinkListStruct *) element;
+    DebugCheck(p_after->tag == DOUBLE_LINK_LIST_TAG);
+    p_head = p_after->p_head;
+    DebugCheck(p_head != NULL);
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
+    DebugCheck(p_head->p_head == p_head);
 
-    if ((p_head) && (p_after))  {
+    if ((p_head) && (p_after))
+    {
         /* Create a new element. */
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!A 1 node_%s\n", DebugGetCallerName()) ;
+        printf("!A 1 node_%s\n", DebugGetCallerName()) ;
 #endif
-        p_element = ICreateNode() ;
-        DebugCheck(p_element != NULL) ;
+        p_element = ICreateNode();
+        DebugCheck(p_element != NULL);
 
-        if (p_element)  {
+        if (p_element)
+        {
             /* Attach the data to the element. */
-            p_element->countOrData.p_data = p_data ;
-            p_element->p_previous = p_after ;
-            p_element->p_next = p_after->p_next ;
-            p_element->p_head = p_head ;
-            p_after->p_next->p_previous = p_element ;
-            p_after->p_next = p_element ;
-            p_head->countOrData.count++ ;
+            p_element->countOrData.p_data = p_data;
+            p_element->p_previous = p_after;
+            p_element->p_next = p_after->p_next;
+            p_element->p_head = p_head;
+            p_after->p_next->p_previous = p_element;
+            p_after->p_next = p_element;
+            p_head->countOrData.count++;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_doubleLinkListElement)p_element) ;
+    return ((T_doubleLinkListElement) p_element);
 }
 
 /*-------------------------------------------------------------------------*
@@ -311,48 +327,51 @@ printf("!A 1 node_%s\n", DebugGetCallerName()) ;
  *  @param p_data -- Pointer to element data
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListAddElementBeforeElement(
-                            T_doubleLinkListElement element,
-                            T_void *p_data)
+T_doubleLinkListElement
+DoubleLinkListAddElementBeforeElement(
+    T_doubleLinkListElement element,
+    T_void *p_data)
 {
-    T_doubleLinkListStruct *p_before ;
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListStruct *p_element ;
+    T_doubleLinkListStruct *p_before;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListStruct *p_element;
 
-    DebugRoutine("DoubleLinkListAddElementBeforeElement") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListAddElementBeforeElement");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_before = (T_doubleLinkListStruct *)element;
-    DebugCheck(p_before->tag == DOUBLE_LINK_LIST_TAG) ;
-    p_head = p_before->p_head ;
-    DebugCheck(p_head != NULL) ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
-    DebugCheck(p_head->p_head == p_head) ;
+    p_before = (T_doubleLinkListStruct *) element;
+    DebugCheck(p_before->tag == DOUBLE_LINK_LIST_TAG);
+    p_head = p_before->p_head;
+    DebugCheck(p_head != NULL);
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
+    DebugCheck(p_head->p_head == p_head);
 
-    if ((p_head) && (p_before))  {
+    if ((p_head) && (p_before))
+    {
         /* Create a new element. */
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!A 1 node_%s\n", DebugGetCallerName()) ;
+        printf("!A 1 node_%s\n", DebugGetCallerName()) ;
 #endif
-        p_element = ICreateNode() ;
-        DebugCheck(p_element != NULL) ;
+        p_element = ICreateNode();
+        DebugCheck(p_element != NULL);
 
-        if (p_element)  {
+        if (p_element)
+        {
             /* Attach the data to the element. */
-            p_element->countOrData.p_data = p_data ;
-            p_element->p_previous = p_before->p_previous ;
-            p_element->p_next = p_before ;
-            p_element->p_head = p_head ;
-            p_before->p_previous->p_next = p_element ;
-            p_before->p_previous = p_element ;
-            p_head->countOrData.count++ ;
+            p_element->countOrData.p_data = p_data;
+            p_element->p_previous = p_before->p_previous;
+            p_element->p_next = p_before;
+            p_element->p_head = p_head;
+            p_before->p_previous->p_next = p_element;
+            p_before->p_previous = p_element;
+            p_head->countOrData.count++;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_doubleLinkListElement)p_element) ;
+    return ((T_doubleLinkListElement) p_element);
 }
 
 /*-------------------------------------------------------------------------*
@@ -367,23 +386,24 @@ printf("!A 1 node_%s\n", DebugGetCallerName()) ;
  *  @return Number of elements
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 DoubleLinkListGetNumberElements(T_doubleLinkList linkList)
+T_word32
+DoubleLinkListGetNumberElements(T_doubleLinkList linkList)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_word32 count ;
+    T_doubleLinkListStruct *p_head;
+    T_word32 count;
 
-    DebugRoutine("DoubleLinkListGetNumberElements") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListGetNumberElements");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
-    count = p_head->countOrData.count ;
+    count = p_head->countOrData.count;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return count ;
+    return count;
 }
 
 /*-------------------------------------------------------------------------*
@@ -398,42 +418,44 @@ T_word32 DoubleLinkListGetNumberElements(T_doubleLinkList linkList)
  *  @return Previously attached node data
  *
  *<!-----------------------------------------------------------------------*/
-T_void *DoubleLinkListRemoveElement(T_doubleLinkListElement element)
+T_void *
+DoubleLinkListRemoveElement(T_doubleLinkListElement element)
 {
-    T_doubleLinkListStruct *p_node ;
-    T_void *p_data = NULL ;
+    T_doubleLinkListStruct *p_node;
+    T_void *p_data = NULL;
 
-    DebugRoutine("DoubleLinkListRemoveElement") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListRemoveElement");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_node = (T_doubleLinkListStruct *)element;
-    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_node = (T_doubleLinkListStruct *) element;
+    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Make sure we are not trying to delete the head. */
-    DebugCheck(p_node->p_head != p_node) ;
+    DebugCheck(p_node->p_head != p_node);
 
-    if (p_node)  {
+    if (p_node)
+    {
         /* Detach the node from the list. */
-        p_node->p_next->p_previous = p_node->p_previous ;
-        p_node->p_previous->p_next = p_node->p_next ;
+        p_node->p_next->p_previous = p_node->p_previous;
+        p_node->p_previous->p_next = p_node->p_next;
 
         /* Get the attached data. */
-        p_data = p_node->countOrData.p_data ;
+        p_data = p_node->countOrData.p_data;
 
         /* Decrement the count of items on this list. */
-        p_node->p_head->countOrData.count-- ;
+        p_node->p_head->countOrData.count--;
 
         /* Release the node from memory. */
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!F 1 node_%s\n", DebugGetCallerName()) ;
+        printf("!F 1 node_%s\n", DebugGetCallerName()) ;
 #endif
-        IDestroyNode(p_node) ;
+        IDestroyNode(p_node);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_data ;
+    return p_data;
 }
 
 
@@ -457,37 +479,40 @@ printf("!F 1 node_%s\n", DebugGetCallerName()) ;
  *      completed list.
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListTraverse(
-                            T_doubleLinkList linkList,
-                            T_doubleLinkListTraverseCallback callback)
+T_doubleLinkListElement
+DoubleLinkListTraverse(
+    T_doubleLinkList linkList,
+    T_doubleLinkListTraverseCallback callback)
 {
-    T_doubleLinkListStruct *p_at = NULL ;
-    T_doubleLinkListStruct *p_next = NULL ;
-    T_doubleLinkListStruct *p_head ;
+    T_doubleLinkListStruct *p_at = NULL;
+    T_doubleLinkListStruct *p_next = NULL;
+    T_doubleLinkListStruct *p_head;
 
-    DebugRoutine("DoubleLinkListTraverse") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
-    DebugCheck(callback != NULL) ;
+    DebugRoutine("DoubleLinkListTraverse");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
+    DebugCheck(callback != NULL);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
-    if (p_head)  {
-        p_at = p_head->p_next ;
-        while ((p_at != p_head) && (p_at != DOUBLE_LINK_LIST_ELEMENT_BAD))  {
-            p_next = p_at->p_next ;
+    if (p_head)
+    {
+        p_at = p_head->p_next;
+        while ((p_at != p_head) && (p_at != DOUBLE_LINK_LIST_ELEMENT_BAD))
+        {
+            p_next = p_at->p_next;
             if (callback(p_at) == FALSE)
-                break ;
-            p_at = p_next ;
+                break;
+            p_at = p_next;
         }
         if (p_at == p_head)
-            p_at = DOUBLE_LINK_LIST_ELEMENT_BAD ;
+            p_at = DOUBLE_LINK_LIST_ELEMENT_BAD;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return ((T_doubleLinkListElement)p_at) ;
+    return ((T_doubleLinkListElement) p_at);
 }
 
 /*-------------------------------------------------------------------------*
@@ -502,27 +527,28 @@ T_doubleLinkListElement DoubleLinkListTraverse(
  *  @return Found data pointer on element
  *
  *<!-----------------------------------------------------------------------*/
-T_void *DoubleLinkListElementGetData(T_doubleLinkListElement element)
+T_void *
+DoubleLinkListElementGetData(T_doubleLinkListElement element)
 {
-    T_void *p_data ;
-    T_doubleLinkListStruct *p_node ;
+    T_void *p_data;
+    T_doubleLinkListStruct *p_node;
 
-    DebugRoutine("DoubleLinkListElementGetData") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListElementGetData");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_node = (T_doubleLinkListStruct *)element;
+    p_node = (T_doubleLinkListStruct *) element;
     DebugCheck(p_node->tag != DOUBLE_LINK_LIST_DEAD_TAG);
-    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG) ;
+    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Make sure we are not trying to get data from the head. */
-    DebugCheck(p_node->p_head != p_node) ;
+    DebugCheck(p_node->p_head != p_node);
 
-    p_data = p_node->countOrData.p_data ;
+    p_data = p_node->countOrData.p_data;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_data ;
+    return p_data;
 }
 
 /*-------------------------------------------------------------------------*
@@ -537,31 +563,32 @@ T_void *DoubleLinkListElementGetData(T_doubleLinkListElement element)
  *  @return Next element
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListElementGetNext(
-                            T_doubleLinkListElement element)
+T_doubleLinkListElement
+DoubleLinkListElementGetNext(
+    T_doubleLinkListElement element)
 {
-    T_doubleLinkListElement nextElement ;
-    T_doubleLinkListStruct *p_node ;
+    T_doubleLinkListElement nextElement;
+    T_doubleLinkListStruct *p_node;
 
-    DebugRoutine("DoubleLinkListElementGetNext") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListElementGetNext");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_node = (T_doubleLinkListStruct *)element;
-    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_node = (T_doubleLinkListStruct *) element;
+    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Make sure we are not trying to get data from the head. */
-    DebugCheck(p_node->p_head != p_node) ;
+    DebugCheck(p_node->p_head != p_node);
 
-    nextElement = (T_doubleLinkListElement)p_node->p_next ;
+    nextElement = (T_doubleLinkListElement) p_node->p_next;
 
     /* Check to see if we found the head. */
     if (p_node->p_next->p_head == p_node->p_next)
-        nextElement = DOUBLE_LINK_LIST_ELEMENT_BAD ;
+        nextElement = DOUBLE_LINK_LIST_ELEMENT_BAD;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return nextElement ;
+    return nextElement;
 }
 
 /*-------------------------------------------------------------------------*
@@ -576,31 +603,32 @@ T_doubleLinkListElement DoubleLinkListElementGetNext(
  *  @return Previous element
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListElementGetPrevious(
-                            T_doubleLinkListElement element)
+T_doubleLinkListElement
+DoubleLinkListElementGetPrevious(
+    T_doubleLinkListElement element)
 {
-    T_doubleLinkListElement previousElement ;
-    T_doubleLinkListStruct *p_node ;
+    T_doubleLinkListElement previousElement;
+    T_doubleLinkListStruct *p_node;
 
-    DebugRoutine("DoubleLinkListElementGetPrevious") ;
-    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD) ;
+    DebugRoutine("DoubleLinkListElementGetPrevious");
+    DebugCheck(element != DOUBLE_LINK_LIST_ELEMENT_BAD);
 
     /* Get a quick pointer. */
-    p_node = (T_doubleLinkListStruct *)element;
-    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_node = (T_doubleLinkListStruct *) element;
+    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Make sure we are not trying to get data from the head. */
-    DebugCheck(p_node->p_head != p_node) ;
+    DebugCheck(p_node->p_head != p_node);
 
-    previousElement = (T_doubleLinkListElement)p_node->p_previous ;
+    previousElement = (T_doubleLinkListElement) p_node->p_previous;
 
     /* Check to see if we found the head. */
     if (p_node->p_previous->p_head == p_node->p_previous)
-        previousElement = DOUBLE_LINK_LIST_ELEMENT_BAD ;
+        previousElement = DOUBLE_LINK_LIST_ELEMENT_BAD;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return previousElement ;
+    return previousElement;
 }
 
 /*-------------------------------------------------------------------------*
@@ -616,27 +644,30 @@ T_doubleLinkListElement DoubleLinkListElementGetPrevious(
  *      DOUBLE_LINK_LIST_ELEMENT_BAD if none.
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListGetFirst(T_doubleLinkList linkList)
+T_doubleLinkListElement
+DoubleLinkListGetFirst(T_doubleLinkList linkList)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListElement first = DOUBLE_LINK_LIST_ELEMENT_BAD ;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListElement first = DOUBLE_LINK_LIST_ELEMENT_BAD;
 
-    DebugRoutine("DoubleLinkListGetFirst") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListGetFirst");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
-    if (p_head)  {
-        if (p_head->p_next != p_head)  {
-            first = (T_doubleLinkListElement)p_head->p_next ;
+    if (p_head)
+    {
+        if (p_head->p_next != p_head)
+        {
+            first = (T_doubleLinkListElement) p_head->p_next;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return first ;
+    return first;
 }
 
 /*-------------------------------------------------------------------------*
@@ -652,26 +683,28 @@ T_doubleLinkListElement DoubleLinkListGetFirst(T_doubleLinkList linkList)
  *      DOUBLE_LINK_LIST_ELEMENT_BAD if none.
  *
  *<!-----------------------------------------------------------------------*/
-T_doubleLinkListElement DoubleLinkListGetLast(T_doubleLinkList linkList)
+T_doubleLinkListElement
+DoubleLinkListGetLast(T_doubleLinkList linkList)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListElement last = DOUBLE_LINK_LIST_ELEMENT_BAD ;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListElement last = DOUBLE_LINK_LIST_ELEMENT_BAD;
 
-    DebugRoutine("DoubleLinkListGetLast") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListGetLast");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)linkList ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) linkList;
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
-    if (p_head)  {
+    if (p_head)
+    {
         if (p_head->p_previous != p_head)
-            last = (T_doubleLinkListElement)p_head->p_previous ;
+            last = (T_doubleLinkListElement) p_head->p_previous;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return last ;
+    return last;
 }
 
 
@@ -685,51 +718,56 @@ T_doubleLinkListElement DoubleLinkListGetLast(T_doubleLinkList linkList)
  *  @return Newly create node.
  *
  *<!-----------------------------------------------------------------------*/
-static T_doubleLinkListStruct *ICreateNode(T_void)
+static T_doubleLinkListStruct *
+ICreateNode(T_void)
 {
-    T_doubleLinkListStruct *p_node ;
-    T_word16 newNode ;
+    T_doubleLinkListStruct *p_node;
+    T_word16 newNode;
 
-    DebugRoutine("ICreateNode") ;
+    DebugRoutine("ICreateNode");
 
 #if 1      /* List method */
-        if (G_firstFreeNode == 0xFFFF)  {
-            DebugCheck(G_numAllocatedNodes < MAX_ALLOCATED_NODES) ;
-            if (G_numAllocatedNodes >= MAX_ALLOCATED_NODES)  {
-                GrGraphicsOff() ;
-                fprintf(stderr, "Out of node memory!\n") ;
-                exit(1001) ;
-            }
-            newNode = G_numAllocatedNodes++ ;
-        } else {
-            newNode = G_firstFreeNode ;
-            G_firstFreeNode = G_nodes[newNode].countOrData.count ;
+    if (G_firstFreeNode == 0xFFFF)
+    {
+        DebugCheck(G_numAllocatedNodes < MAX_ALLOCATED_NODES);
+        if (G_numAllocatedNodes >= MAX_ALLOCATED_NODES)
+        {
+            GrGraphicsOff();
+            fprintf(stderr, "Out of node memory!\n");
+            exit(1001);
         }
-        p_node = G_nodes + newNode ;
-        memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
-#ifndef NDEBUG
-        p_node->tag = DOUBLE_LINK_LIST_TAG ;
-#endif
-        G_numNodes++ ;
-        if (G_numNodes > G_maxNodes)
-            G_maxNodes = G_numNodes ;
-#else
-    p_node = MemAlloc(sizeof(T_doubleLinkListStruct)) ;
-    DebugCheck(p_node != NULL) ;
-    if (p_node)  {
-        memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
-#ifndef NDEBUG
-        p_node->tag = DOUBLE_LINK_LIST_TAG ;
-#endif
-        G_numNodes++ ;
-        if (G_numNodes > G_maxNodes)
-            G_maxNodes = G_numNodes ;
+        newNode = G_numAllocatedNodes++;
     }
+    else
+    {
+        newNode = G_firstFreeNode;
+        G_firstFreeNode = G_nodes[newNode].countOrData.count;
+    }
+    p_node = G_nodes + newNode;
+    memset(p_node, 0, sizeof(T_doubleLinkListStruct));
+#ifndef NDEBUG
+    p_node->tag = DOUBLE_LINK_LIST_TAG ;
+#endif
+    G_numNodes++;
+    if (G_numNodes > G_maxNodes)
+        G_maxNodes = G_numNodes;
+#else
+        p_node = MemAlloc(sizeof(T_doubleLinkListStruct)) ;
+        DebugCheck(p_node != NULL) ;
+        if (p_node)  {
+            memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
+#ifndef NDEBUG
+            p_node->tag = DOUBLE_LINK_LIST_TAG ;
+#endif
+            G_numNodes++ ;
+            if (G_numNodes > G_maxNodes)
+                G_maxNodes = G_numNodes ;
+        }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_node ;
+    return p_node;
 }
 
 /*-------------------------------------------------------------------------*
@@ -741,41 +779,43 @@ static T_doubleLinkListStruct *ICreateNode(T_void)
  *  @param p_node -- node to destroy
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IDestroyNode(T_doubleLinkListStruct *p_node)
+static T_void
+IDestroyNode(T_doubleLinkListStruct *p_node)
 {
-    T_word32 nodeNum ;
+    T_word32 nodeNum;
 
-    DebugRoutine("IDestroyNode") ;
-    DebugCheck(p_node != NULL) ;
-    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG) ;
+    DebugRoutine("IDestroyNode");
+    DebugCheck(p_node != NULL);
+    DebugCheck(p_node->tag == DOUBLE_LINK_LIST_TAG);
 
 #if 1
-    if (p_node)  {
+    if (p_node)
+    {
 # ifndef NDEBUG
         memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
         p_node->tag = DOUBLE_LINK_LIST_DEAD_TAG ;
 # endif
-        nodeNum = p_node - G_nodes ;
+        nodeNum = p_node - G_nodes;
         DebugCheck(nodeNum < MAX_ALLOCATED_NODES);
-        G_nodes[nodeNum].countOrData.count = G_firstFreeNode ;
-        G_firstFreeNode = nodeNum ;
-        G_numNodes-- ;
-        DebugCheck(G_numNodes != 0xFFFFFFFF) ;
+        G_nodes[nodeNum].countOrData.count = G_firstFreeNode;
+        G_firstFreeNode = nodeNum;
+        G_numNodes--;
+        DebugCheck(G_numNodes != 0xFFFFFFFF);
     }
 #else
-    if (p_node)  {
+        if (p_node)  {
 # ifndef NDEBUG
-        memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
-        p_node->tag = DOUBLE_LINK_LIST_DEAD_TAG ;
+            memset(p_node, 0, sizeof(T_doubleLinkListStruct)) ;
+            p_node->tag = DOUBLE_LINK_LIST_DEAD_TAG ;
 # endif
-        MemFree(p_node) ;
+            MemFree(p_node) ;
 
-        G_numNodes-- ;
-        DebugCheck(G_numNodes != 0xFFFFFFFF) ;
-    }
+            G_numNodes-- ;
+            DebugCheck(G_numNodes != 0xFFFFFFFF) ;
+        }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES: 12/17/95 */
@@ -821,41 +861,45 @@ T_void DoubleLinkListDisplay(T_doubleLinkList linkList)
  *  @param linkList -- Handle to link list to destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void DoubleLinkListFreeAndDestroy(T_doubleLinkList *linkList)
+T_void
+DoubleLinkListFreeAndDestroy(T_doubleLinkList *linkList)
 {
-    T_doubleLinkListStruct *p_head ;
-    T_doubleLinkListStruct *p_at ;
-    T_doubleLinkListStruct *p_next ;
+    T_doubleLinkListStruct *p_head;
+    T_doubleLinkListStruct *p_at;
+    T_doubleLinkListStruct *p_next;
 
-    DebugRoutine("DoubleLinkListFreeAndDestroy") ;
-    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD) ;
+    DebugRoutine("DoubleLinkListFreeAndDestroy");
+    DebugCheck(linkList != DOUBLE_LINK_LIST_BAD);
 
 #ifdef COMPILE_OPTION_DOUBLE_LINK_OUTPUT
-printf("!F 1 list_%s\n", DebugGetCallerName()) ;
+    printf("!F 1 list_%s\n", DebugGetCallerName()) ;
 #endif
     /* Get a quick pointer. */
-    p_head = (T_doubleLinkListStruct *)(*linkList) ;
-    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG) ;
+    p_head = (T_doubleLinkListStruct *) (*linkList);
+    DebugCheck(p_head->tag == DOUBLE_LINK_LIST_TAG);
 
     /* Remove all items in the list.  Hopefully */
     /* all attached data is not allocated memory or is being */
     /* managed by someone else. */
-    if (p_head)  {
-        p_at = p_head->p_next ;
-        while ((p_at != p_head) && (p_at != DOUBLE_LINK_LIST_ELEMENT_BAD))  {
-            p_next = p_at->p_next ;
-            if (p_at->countOrData.p_data != NULL)  {
-                MemFree(p_at->countOrData.p_data) ;
-                p_at->countOrData.p_data = NULL ;
+    if (p_head)
+    {
+        p_at = p_head->p_next;
+        while ((p_at != p_head) && (p_at != DOUBLE_LINK_LIST_ELEMENT_BAD))
+        {
+            p_next = p_at->p_next;
+            if (p_at->countOrData.p_data != NULL)
+            {
+                MemFree(p_at->countOrData.p_data);
+                p_at->countOrData.p_data = NULL;
             }
-            p_at = p_next ;
+            p_at = p_next;
         }
     }
 
-    DoubleLinkListDestroy(*linkList) ;
-    linkList = DOUBLE_LINK_LIST_BAD ;
+    DoubleLinkListDestroy(*linkList);
+    linkList = DOUBLE_LINK_LIST_BAD;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

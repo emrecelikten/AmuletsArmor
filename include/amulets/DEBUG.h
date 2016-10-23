@@ -10,12 +10,15 @@
 
 #  define DEBUG_MAX_STACK_DEPTH 60
 
-T_void DebugAddRoutine(
-           const char *p_routineName,
-           const char *p_filename,
-           long lineNum) ;
-T_void DebugFail(const char *p_msg, const char *p_file, long line) ;
-T_void DebugRemoveRoutine(T_void) ;
+T_void
+DebugAddRoutine(
+    const char *p_routineName,
+    const char *p_filename,
+    long lineNum);
+T_void
+DebugFail(const char *p_msg, const char *p_file, long line);
+T_void
+DebugRemoveRoutine(T_void);
 
 #  ifdef NDEBUG
 #    define DebugRoutine(str) ((T_void)0)
@@ -46,18 +49,18 @@ T_void DebugRemoveRoutine(T_void) ;
 #        define DebugEnd()         DebugRemoveRoutine()
 #    endif
 
-     T_void DebugGetCaller(const char **filename, long *line) ;
-     const char *DebugGetCallerName(T_void) ;
-     const char *DebugGetCallerFile(T_void) ;
-     const char *DebugGetLastCalled(T_void) ;
-     T_void DebugHeapOn(T_void) ;
-     T_void DebugHeapOff(T_void) ;
-     T_void DebugCompareCheck(T_byte8 *str, T_byte8 *p_file, T_word16 line) ;
-     T_void DebugStop(T_void) ;
-     T_void DebugTime(T_word16 timeSlot) ;
+T_void DebugGetCaller(const char **filename, long *line) ;
+const char *DebugGetCallerName(T_void) ;
+const char *DebugGetCallerFile(T_void) ;
+const char *DebugGetLastCalled(T_void) ;
+T_void DebugHeapOn(T_void) ;
+T_void DebugHeapOff(T_void) ;
+T_void DebugCompareCheck(T_byte8 *str, T_byte8 *p_file, T_word16 line) ;
+T_void DebugStop(T_void) ;
+T_void DebugTime(T_word16 timeSlot) ;
 #    ifdef COMPILE_OPTION_DEBUG_CHECKS_VECTORS
-     T_void DebugSaveVectorTable(T_void) ;
-     T_void DebugCheckVectorTable(T_void) ;
+T_void DebugSaveVectorTable(T_void) ;
+T_void DebugCheckVectorTable(T_void) ;
 #    else
 #    define DebugCheckVectorTable() ((T_void)0)
 #    define DebugSaveVectorTable() ((T_void)0)

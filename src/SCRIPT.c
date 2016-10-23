@@ -19,7 +19,6 @@
 #include "CLIENT.H"
 #include "CRELOGIC.H"
 #include "DOOR.H"
-#include "EFFECT.H"
 #include "FILE.H"
 #include "MAP.H"
 #include "MEMORY.H"
@@ -29,13 +28,11 @@
 #include "PLAYER.H"
 #include "SCHEDULE.H"
 #include "SCRFORM.H"
-#include "SCRIPT.H"
 #include "SERVER.H"
 #include "SLIDER.H"
 #include "SOUND.H"
 #include "STATS.H"
 #include "SYNCTIME.H"
-#include "VIEWFILE.H"
 
 #define SCRIPT_TAG             (*((T_word32 *)"SpT"))
 #define SCRIPT_TAG_BAD         (*((T_word32 *)"sBd"))
@@ -58,57 +55,63 @@
 #define OBJECT_SCRIPT_ATTR_ANGLE               9
 #define OBJECT_SCRIPT_ATTR_UNKNOWN             10
 
-typedef struct {
-    T_byte8 length ;
-    T_byte8 data[SCRIPT_MAX_STRING] ;
-} T_scriptString ;
+typedef struct
+{
+    T_byte8 length;
+    T_byte8 data[SCRIPT_MAX_STRING];
+} T_scriptString;
 
-typedef union {
-    T_sword32 number ;
-    T_scriptString *p_string ;
-} T_scriptNumberOrString ;
+typedef union
+{
+    T_sword32 number;
+    T_scriptString *p_string;
+} T_scriptNumberOrString;
 
-typedef struct {
-    E_scriptDataType type ;
-    T_scriptNumberOrString ns ;
-} T_scriptDataItem ;
+typedef struct
+{
+    E_scriptDataType type;
+    T_scriptNumberOrString ns;
+} T_scriptDataItem;
 
-typedef struct T_scriptHeader_ {
-    T_word16 highestEvent ;            /* Number of events in this script */
-                                       /* that might be handled. */
-    T_word16 highestPlace ;            /* Number of places in this script */
-                                       /* that might be handled. */
-    T_word32 sizeCode ;                /* size of code. */
-    T_word32 reserved[6] ;             /* Reserved for future use. */
-    T_word32 number ;                  /* Script number to identify it. */
-    T_word32 tag ;                     /* Tag to tell its memory state. */
-    struct T_scriptHeader_ *p_next ;          /* Pointer to next script. */
-    struct T_scriptHeader_ *p_prev ;          /* Pointer to previous script. */
-    T_word32 lockCount ;               /* Number of users of this script. */
-                                       /* A lock count of zero means that */
-                                       /* the script is discardable. */
-    T_byte8 *p_code ;                  /* Pointer to code area. */
-    T_word16 *p_events ;               /* Pointer to events list. */
-    T_word16 *p_places ;               /* Pointer to places list. */
-} T_scriptHeader ;
+typedef struct T_scriptHeader_
+{
+    T_word16 highestEvent;            /* Number of events in this script */
+    /* that might be handled. */
+    T_word16 highestPlace;            /* Number of places in this script */
+    /* that might be handled. */
+    T_word32 sizeCode;                /* size of code. */
+    T_word32 reserved[6];             /* Reserved for future use. */
+    T_word32 number;                  /* Script number to identify it. */
+    T_word32 tag;                     /* Tag to tell its memory state. */
+    struct T_scriptHeader_ *p_next;          /* Pointer to next script. */
+    struct T_scriptHeader_ *p_prev;          /* Pointer to previous script. */
+    T_word32 lockCount;               /* Number of users of this script. */
+    /* A lock count of zero means that */
+    /* the script is discardable. */
+    T_byte8 *p_code;                  /* Pointer to code area. */
+    T_word16 *p_events;               /* Pointer to events list. */
+    T_word16 *p_places;               /* Pointer to places list. */
+} T_scriptHeader;
 
-typedef struct {
-    T_word32 instanceTag ;
-    T_scriptHeader *p_header ;
-    T_word32 owner ;
-             /* Identifier of owner (may be pointer) */
+typedef struct
+{
+    T_word32 instanceTag;
+    T_scriptHeader *p_header;
+    T_word32 owner;
+    /* Identifier of owner (may be pointer) */
 
-    T_scriptDataItem vars[256] ;
-} T_scriptInstance ;
+    T_scriptDataItem vars[256];
+} T_scriptInstance;
 
-typedef struct {
-    T_scriptHeader *p_script ;
-    T_word16 position ;
-} T_continueData ;
+typedef struct
+{
+    T_scriptHeader *p_script;
+    T_word16 position;
+} T_continueData;
 
 typedef T_word16 (*T_scriptCommand)(
-                          T_scriptHeader *script,
-                          T_word16 position) ;
+    T_scriptHeader *script,
+    T_word16 position);
 
 /* Accessor functions/macros. */
 #define ScriptGetPrevious(p_script)  ((p_script)->p_prev)
@@ -172,147 +175,234 @@ typedef T_word16 (*T_scriptCommand)(
             ((T_script)p_instance)
 
 /* Internal prototype: */
-static T_void IDestroyScriptList(T_void) ;
-static T_void IRemoveScriptFromList(T_scriptHeader *p_script) ;
-static T_void IDestroyScript(T_scriptHeader *p_script) ;
-static T_scriptHeader *IFindScriptByNumber(T_word32 number) ;
-static T_void IReclaimScript(T_scriptHeader *p_script) ;
-static T_script IScriptInstantiate(T_scriptHeader *p_script) ;
-static T_scriptHeader *IScriptLoad(T_word32 number) ;
-static T_void IScriptMakeDiscardable(T_scriptHeader *p_script) ;
-static T_void IDestroyScriptInstance(T_scriptInstance *p_instance) ;
-static T_void IMemoryRequestDiscardScript(T_void *p_block) ;
-static T_word16 IExecuteCode(T_scriptHeader *script, T_word16 position) ;
-static T_scriptDataItem *ILookupVariable(
-                            T_scriptHeader *p_script,
-                            T_word16 varNumber) ;
-static T_scriptDataItem *IScriptGetVariable(
-                            T_scriptHeader *p_script,
-                            T_word16 *position) ;
-static T_void ICopyData(
-                  T_scriptDataItem *dest,
-                  T_scriptDataItem *source) ;
-static T_void IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring) ;
-static T_word16 IGetPlace(
-                    T_scriptHeader *p_script,
-                    T_scriptDataItem *p_value) ;
-static T_sword16 IPascalStringCompare(
-                     T_scriptString *p_string1,
-                     T_scriptString *p_string2) ;
+static T_void
+IDestroyScriptList(T_void);
+static T_void
+IRemoveScriptFromList(T_scriptHeader *p_script);
+static T_void
+IDestroyScript(T_scriptHeader *p_script);
+static T_scriptHeader *
+IFindScriptByNumber(T_word32 number);
+static T_void
+IReclaimScript(T_scriptHeader *p_script);
+static T_script
+IScriptInstantiate(T_scriptHeader *p_script);
+static T_scriptHeader *
+IScriptLoad(T_word32 number);
+static T_void
+IScriptMakeDiscardable(T_scriptHeader *p_script);
+static T_void
+IDestroyScriptInstance(T_scriptInstance *p_instance);
+static T_void
+IMemoryRequestDiscardScript(T_void *p_block);
+static T_word16
+IExecuteCode(T_scriptHeader *script, T_word16 position);
+static T_scriptDataItem *
+ILookupVariable(
+    T_scriptHeader *p_script,
+    T_word16 varNumber);
+static T_scriptDataItem *
+IScriptGetVariable(
+    T_scriptHeader *p_script,
+    T_word16 *position);
+static T_void
+ICopyData(
+    T_scriptDataItem *dest,
+    T_scriptDataItem *source);
+static T_void
+IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring);
+static T_word16
+IGetPlace(
+    T_scriptHeader *p_script,
+    T_scriptDataItem *p_value);
+static T_sword16
+IPascalStringCompare(
+    T_scriptString *p_string1,
+    T_scriptString *p_string2);
 
-static T_word16 ICommandSet(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandPrint(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandIf(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGoto(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandAdd(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSubtract(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandMuliply(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDivide(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandIncrement(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDecrement(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandCompare(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSound(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandChangeSideTexture(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectSetType(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandTeleport(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDoorCycle(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDoorLock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDoorUnlock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandAreaSound(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGotoPlace(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDelay(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSlideFloor(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSlideCeiling(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGosub(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandRandom(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectSound(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectSet(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectGet(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandError(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandLookForPlayer(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandIfNot(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectGetAngleToObject(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandAbsolute(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandClear(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandNegate(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectDistanceToObject(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectAccelForward(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectDamageForward(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSubtract16(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandTextBoxSetSelection(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandObjectShootObject(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandPlayerObjectGet(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGetFloorHeight(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGetCeilingHeight(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDoorIncreaseLock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDoorDecreaseLock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSideState(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandWallState(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSectorState(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGivePlayerXP(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGiveAllPlayersXP(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandEffect(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSectorSetLight(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGenerateMissile(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandPlayerHasItem(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandIsEffectActive(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandActivateGenerator(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandDeactiveGenerator(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandGroupState(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandBlock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandUnblock(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandToggleSwitch(T_scriptHeader *script, T_word16 position) ;
-static T_word16 ICommandSlideFloorNice(
-                    T_scriptHeader *script,
-                    T_word16 position) ;
-static T_word16 ICommandSlideCeilingNice(
-                    T_scriptHeader *script,
-                    T_word16 position) ;
-static T_word16 ICommandJournalEntry(T_scriptHeader *script, T_word16 position) ;
+static T_word16
+ICommandSet(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandPrint(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandIf(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGoto(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandAdd(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSubtract(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandMuliply(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDivide(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandIncrement(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDecrement(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandCompare(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSound(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandChangeSideTexture(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectSetType(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandTeleport(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDoorCycle(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDoorLock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDoorUnlock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandAreaSound(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGotoPlace(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDelay(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSlideFloor(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSlideCeiling(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGosub(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandRandom(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectSound(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectSet(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectGet(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandError(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandLookForPlayer(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandIfNot(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectGetAngleToObject(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandAbsolute(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandClear(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandNegate(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectDistanceToObject(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectAccelForward(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectDamageForward(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSubtract16(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandTextBoxSetSelection(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandObjectShootObject(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandPlayerObjectGet(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGetFloorHeight(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGetCeilingHeight(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDoorIncreaseLock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDoorDecreaseLock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSideState(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandWallState(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSectorState(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGivePlayerXP(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGiveAllPlayersXP(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandEffect(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSectorSetLight(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGenerateMissile(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandPlayerHasItem(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandIsEffectActive(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandActivateGenerator(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandDeactiveGenerator(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandGroupState(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandBlock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandUnblock(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandToggleSwitch(T_scriptHeader *script, T_word16 position);
+static T_word16
+ICommandSlideFloorNice(
+    T_scriptHeader *script,
+    T_word16 position);
+static T_word16
+ICommandSlideCeilingNice(
+    T_scriptHeader *script,
+    T_word16 position);
+static T_word16
+ICommandJournalEntry(T_scriptHeader *script, T_word16 position);
 
-static T_void IContinueExecution(T_word32 data) ;
+static T_void
+IContinueExecution(T_word32 data);
 
-static T_sliderResponse IHandleSlidingCeiling(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone) ;
+static T_sliderResponse
+IHandleSlidingCeiling(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone);
 
-static T_sliderResponse IHandleSlidingFloor(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone) ;
+static T_sliderResponse
+IHandleSlidingFloor(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone);
 
-static T_sliderResponse IHandleSlidingCeilingNice(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone) ;
+static T_sliderResponse
+IHandleSlidingCeilingNice(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone);
 
-static T_sliderResponse IHandleSlidingFloorNice(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone) ;
+static T_sliderResponse
+IHandleSlidingFloorNice(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone);
 
 /* Global variables. */
-static T_scriptHeader *G_firstScript = NULL ;
-static E_Boolean G_scriptInit = FALSE ;
+static T_scriptHeader *G_firstScript = NULL;
+static E_Boolean G_scriptInit = FALSE;
 
-static E_scriptDataType G_parameter1Type ;
-static T_void *         G_parameter1Data ;
-static E_scriptDataType G_parameter2Type ;
-static T_void *         G_parameter2Data ;
-static E_scriptDataType G_parameter3Type ;
-static T_void *         G_parameter3Data ;
+static E_scriptDataType G_parameter1Type;
+static T_void *G_parameter1Data;
+static E_scriptDataType G_parameter2Type;
+static T_void *G_parameter2Data;
+static E_scriptDataType G_parameter3Type;
+static T_void *G_parameter3Data;
 
-static T_scriptDataItem G_systemFlags[SCRIPT_FLAG_UNKNOWN] ;
-static T_scriptDataItem G_systemVars[2] ;
+static T_scriptDataItem G_systemFlags[SCRIPT_FLAG_UNKNOWN];
+static T_scriptDataItem G_systemVars[2];
 
-static E_Boolean G_pleaseStop = FALSE ;
+static E_Boolean G_pleaseStop = FALSE;
 
 #define SYSTEM_VAR_SELF          0
 #define SYSTEM_VAR_TIME          1
 
 /* Current instance being processed. */
-static T_scriptInstance *G_instance ;
+static T_scriptInstance *G_instance;
 
 #define NUM_SCRIPT_COMMANDS       66
 static T_scriptCommand G_commands[NUM_SCRIPT_COMMANDS] = {
@@ -383,7 +473,7 @@ static T_scriptCommand G_commands[NUM_SCRIPT_COMMANDS] = {
     ICommandSlideFloorNice,          /* 63 */
     ICommandSlideCeilingNice,        /* 64 */
     ICommandJournalEntry             /* 65 */
-} ;
+};
 
 /*-------------------------------------------------------------------------*
  * Routine:  ScriptInitialize
@@ -393,24 +483,27 @@ static T_scriptCommand G_commands[NUM_SCRIPT_COMMANDS] = {
  *  script accesses.  Call this once at the beginning of the program.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptInitialize(T_void)
+T_void
+ScriptInitialize(T_void)
 {
-    T_word16 i ;
+    T_word16 i;
 
-    DebugRoutine("ScriptInitialize") ;
-    DebugCheck(!ScriptIsInitialized()) ;
+    DebugRoutine("ScriptInitialize");
+    DebugCheck(!ScriptIsInitialized());
 
-    if (!G_scriptInit)  {
-        ScriptSetFirst(NULL) ;
-        ScriptMakeInitialized() ;
+    if (!G_scriptInit)
+    {
+        ScriptSetFirst(NULL);
+        ScriptMakeInitialized();
 
-        for (i=0; i<SCRIPT_FLAG_UNKNOWN; i++)  {
-            G_systemFlags[i].ns.number = 0 ;
-            G_systemFlags[i].type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+        for (i = 0; i < SCRIPT_FLAG_UNKNOWN; i++)
+        {
+            G_systemFlags[i].ns.number = 0;
+            G_systemFlags[i].type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -420,21 +513,23 @@ T_void ScriptInitialize(T_void)
  *  ScriptFinish closes out the scripting system.  All memory and
  *  variables must be returned to their normal state.
  *
- *  NOTE: 
+ *  NOTE:
  *  You MUST unlock all scripts before calling this command.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFinish(T_void)
+T_void
+ScriptFinish(T_void)
 {
-    DebugRoutine("ScriptFinish") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptFinish");
+    DebugCheck(ScriptIsInitialized());
 
-    if (G_scriptInit)  {
-        IDestroyScriptList() ;
-        ScriptMakeNotInitialized() ;
+    if (G_scriptInit)
+    {
+        IDestroyScriptList();
+        ScriptMakeNotInitialized();
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -446,50 +541,54 @@ T_void ScriptFinish(T_void)
  *  the handle to that instance is returned.  All script commands require
  *  a script instance handle.
  *
- *  NOTE: 
+ *  NOTE:
  *  You MUST make a call to ScriptInitialize before using this routine.
  *
  *  @param number -- Number of script to lock.
  *
  *<!-----------------------------------------------------------------------*/
-T_script ScriptLock(T_word32 number)
+T_script
+ScriptLock(T_word32 number)
 {
-    T_scriptHeader *p_script ;
-    T_word32 lockCount ;
-    T_script script = SCRIPT_BAD ;
+    T_scriptHeader *p_script;
+    T_word32 lockCount;
+    T_script script = SCRIPT_BAD;
 
-    DebugRoutine("ScriptLock") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptLock");
+    DebugCheck(ScriptIsInitialized());
 
     /* First, try to find the script by its number. */
-    p_script = IFindScriptByNumber(number) ;
+    p_script = IFindScriptByNumber(number);
 
     /* Did we find it. */
-    if (p_script)  {
+    if (p_script)
+    {
         /* Script was found. */
         /* Up its link number. */
-        lockCount = ScriptGetLockCount(p_script) ;
+        lockCount = ScriptGetLockCount(p_script);
         if (lockCount == 0)
-            IReclaimScript(p_script) ;
-        lockCount++ ;
-        ScriptSetLockCount(p_script, lockCount) ;
-        script = IScriptInstantiate(p_script) ;
-    } else {
+            IReclaimScript(p_script);
+        lockCount++;
+        ScriptSetLockCount(p_script, lockCount);
+        script = IScriptInstantiate(p_script);
+    }
+    else
+    {
         /* Not found. */
         /* We'll have to load the script. */
-        p_script = IScriptLoad(number) ;
+        p_script = IScriptLoad(number);
 
         /* Append script to beginning of the list. */
-        ScriptSetNext(p_script, ScriptGetFirst()) ;
-        ScriptSetFirst(p_script) ;
+        ScriptSetNext(p_script, ScriptGetFirst());
+        ScriptSetFirst(p_script);
         if (p_script)
-            script = IScriptInstantiate(p_script) ;
+            script = IScriptInstantiate(p_script);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return the found/created script instance handle. */
-    return script ;
+    return script;
 }
 
 /*-------------------------------------------------------------------------*
@@ -500,48 +599,49 @@ T_script ScriptLock(T_word32 number)
  *  possible, the script code will try to stay around as long as possible
  *  to keep from do excess disk accesses.
  *
- *  NOTE: 
+ *  NOTE:
  *  For each ScriptUnlock you do, you must have already done just as many
  *  ScriptLocks.
  *
  *  @param script -- Previously locked script.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptUnlock(T_script script)
+T_void
+ScriptUnlock(T_script script)
 {
-    T_scriptInstance *p_instance ;
-    T_scriptHeader *p_script ;
-    T_word32 lockCount ;
+    T_scriptInstance *p_instance;
+    T_scriptHeader *p_script;
+    T_word32 lockCount;
 
-    DebugRoutine("ScriptUnlock") ;
-    DebugCheck(ScriptIsInitialized()) ;
-    DebugCheck(script != SCRIPT_BAD) ;
+    DebugRoutine("ScriptUnlock");
+    DebugCheck(ScriptIsInitialized());
+    DebugCheck(script != SCRIPT_BAD);
 
     /* Get the instance data for this instance. */
-    p_instance = ScriptHandleToInstance(script) ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    p_instance = ScriptHandleToInstance(script);
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
     /* Get the script that goes with this instance. */
-    p_script = ScriptInstanceGetHeader(p_instance) ;
-    DebugCheck(p_script != NULL) ;
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG) ;
+    p_script = ScriptInstanceGetHeader(p_instance);
+    DebugCheck(p_script != NULL);
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG);
 
     /* Lower the lock count for the script */
-    lockCount = ScriptGetLockCount(p_script) ;
-    DebugCheck((lockCount > 0) && (lockCount < 0x10000)) ;
-    lockCount-- ;
-    ScriptSetLockCount(p_script, lockCount) ;
+    lockCount = ScriptGetLockCount(p_script);
+    DebugCheck((lockCount > 0) && (lockCount < 0x10000));
+    lockCount--;
+    ScriptSetLockCount(p_script, lockCount);
 
     /* If the count goes to zero, make the script discardable. */
 //    if (lockCount == 0)
 //        IScriptMakeDiscardable(p_script) ;
-    IRemoveScriptFromList(p_script) ;
-    MemFree(p_script) ;
+    IRemoveScriptFromList(p_script);
+    MemFree(p_script);
 
     /* Now destroy the instance for this script. */
-    IDestroyScriptInstance(p_instance) ;
+    IDestroyScriptInstance(p_instance);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -552,14 +652,15 @@ T_void ScriptUnlock(T_script script)
  *  of them.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IDestroyScriptList(T_void)
+static T_void
+IDestroyScriptList(T_void)
 {
-    DebugRoutine("IDestroyScriptList") ;
+    DebugRoutine("IDestroyScriptList");
 
     while (ScriptGetFirst())
-        IDestroyScript(ScriptGetFirst()) ;
+        IDestroyScript(ScriptGetFirst());
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -572,27 +673,28 @@ static T_void IDestroyScriptList(T_void)
  *  @param p_script -- script to destroy
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IDestroyScript(T_scriptHeader *p_script)
+static T_void
+IDestroyScript(T_scriptHeader *p_script)
 {
-    DebugRoutine("IDestroyScript") ;
-    DebugCheck(p_script != NULL) ;
-    DebugCheck(ScriptGetLockCount(p_script) == 0) ;
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE) ;
+    DebugRoutine("IDestroyScript");
+    DebugCheck(p_script != NULL);
+    DebugCheck(ScriptGetLockCount(p_script) == 0);
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE);
 
     /* Get it off the list. */
-    IRemoveScriptFromList(p_script) ;
+    IRemoveScriptFromList(p_script);
 
     /* Before truly freeing it, mark it as gone in case any body */
     /* still is illegally pointing to it. */
-    ScriptSetTag(p_script, SCRIPT_TAG_BAD) ;
+    ScriptSetTag(p_script, SCRIPT_TAG_BAD);
 
     /* Free the script from memory. */
     /* NOTE:  This may change latter to support resource files */
     /* (ResourceUnlock for instance). */
-    MemReclaimDiscardable(p_script) ;
-    MemFree(p_script) ;
+    MemReclaimDiscardable(p_script);
+    MemFree(p_script);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -605,43 +707,48 @@ static T_void IDestroyScript(T_scriptHeader *p_script)
  *  @param p_script -- script to remove from script list
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IRemoveScriptFromList(T_scriptHeader *p_script)
+static T_void
+IRemoveScriptFromList(T_scriptHeader *p_script)
 {
-    T_scriptHeader *p_prev ;
-    T_scriptHeader *p_next ;
+    T_scriptHeader *p_prev;
+    T_scriptHeader *p_next;
 
-    DebugRoutine("IRemoveScriptFromList") ;
-    DebugCheck(p_script != NULL) ;
+    DebugRoutine("IRemoveScriptFromList");
+    DebugCheck(p_script != NULL);
     DebugCheck((ScriptGetTag(p_script) == SCRIPT_TAG) ||
-               (ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE)) ;
+        (ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE));
 
     /* Get the links we are about to delete. */
-    p_prev = ScriptGetPrevious(p_script) ;
-    p_next = ScriptGetNext(p_script) ;
+    p_prev = ScriptGetPrevious(p_script);
+    p_next = ScriptGetNext(p_script);
 
     /* Check to see if there was a previous link. */
-    if (p_prev)  {
+    if (p_prev)
+    {
         /* Previous link exists. */
         /* Make who is previous point its next to our next. */
-        ScriptSetNext(p_prev, p_next) ;
-    } else {
+        ScriptSetNext(p_prev, p_next);
+    }
+    else
+    {
         /* No previous. */
         /* Make the first item our next item. */
-        ScriptSetFirst(p_next) ;
+        ScriptSetFirst(p_next);
     }
 
     /* Is there a next item? */
-    if (p_next)  {
+    if (p_next)
+    {
         /* Yes, there is a next item. */
         /* Point it to our previous. */
-        ScriptSetPrevious(p_next, p_prev) ;
+        ScriptSetPrevious(p_next, p_prev);
     }
 
     /* Declare this script as unlinked. */
-    ScriptSetNext(p_script, NULL) ;
-    ScriptSetPrevious(p_script, NULL) ;
+    ScriptSetNext(p_script, NULL);
+    ScriptSetPrevious(p_script, NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -656,22 +763,24 @@ static T_void IRemoveScriptFromList(T_scriptHeader *p_script)
  *  @return Found script, else NULL
  *
  *<!-----------------------------------------------------------------------*/
-static T_scriptHeader *IFindScriptByNumber(T_word32 number)
+static T_scriptHeader *
+IFindScriptByNumber(T_word32 number)
 {
-    T_scriptHeader *p_foundScript ;
+    T_scriptHeader *p_foundScript;
 
-    DebugRoutine("IFindScriptByNumber") ;
+    DebugRoutine("IFindScriptByNumber");
 
-    p_foundScript = ScriptGetFirst() ;
-    while (p_foundScript)  {
+    p_foundScript = ScriptGetFirst();
+    while (p_foundScript)
+    {
         if (ScriptGetNumber(p_foundScript) == number)
-            break ;
-        p_foundScript = ScriptGetNext(p_foundScript) ;
+            break;
+        p_foundScript = ScriptGetNext(p_foundScript);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_foundScript ;
+    return p_foundScript;
 }
 
 /*-------------------------------------------------------------------------*
@@ -684,19 +793,20 @@ static T_scriptHeader *IFindScriptByNumber(T_word32 number)
  *  @param p_script -- Script to reclaim
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IReclaimScript(T_scriptHeader *p_script)
+static T_void
+IReclaimScript(T_scriptHeader *p_script)
 {
-    DebugRoutine("IReclaimScript") ;
-    DebugCheck(p_script != NULL) ;
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE) ;
+    DebugRoutine("IReclaimScript");
+    DebugCheck(p_script != NULL);
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE);
 
     /* Take it back. */
-    MemReclaimDiscardable(p_script) ;
+    MemReclaimDiscardable(p_script);
 
     /* Mark it as reclaimed (aka Normal tag). */
-    ScriptSetTag(p_script, SCRIPT_TAG) ;
+    ScriptSetTag(p_script, SCRIPT_TAG);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -711,30 +821,32 @@ static T_void IReclaimScript(T_scriptHeader *p_script)
  *  @return Handle to new script instance
  *
  *<!-----------------------------------------------------------------------*/
-static T_script IScriptInstantiate(T_scriptHeader *p_script)
+static T_script
+IScriptInstantiate(T_scriptHeader *p_script)
 {
-    T_scriptInstance *p_instance ;
+    T_scriptInstance *p_instance;
 
-    DebugRoutine("IScriptInstantiate") ;
-    DebugCheck(p_script != NULL) ;
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG) ;
+    DebugRoutine("IScriptInstantiate");
+    DebugCheck(p_script != NULL);
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG);
 
     /* Allocate a new instance structure. */
-    p_instance = MemAlloc(sizeof(T_scriptInstance)) ;
-    DebugCheck(p_instance != NULL) ;
+    p_instance = MemAlloc(sizeof(T_scriptInstance));
+    DebugCheck(p_instance != NULL);
 
-    if (p_instance)  {
+    if (p_instance)
+    {
         /* Clear the structure. */
-        memset(p_instance, 0, sizeof(T_scriptInstance)) ;
+        memset(p_instance, 0, sizeof(T_scriptInstance));
 
         /* Set up the data fields. */
-        ScriptInstanceSetHeader(p_instance, p_script) ;
-        ScriptInstanceSetTag(p_instance, SCRIPT_INSTANCE_TAG) ;
+        ScriptInstanceSetHeader(p_instance, p_script);
+        ScriptInstanceSetTag(p_instance, SCRIPT_INSTANCE_TAG);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return (ScriptInstanceToHandle(p_instance)) ;
+    return (ScriptInstanceToHandle(p_instance));
 }
 
 /*-------------------------------------------------------------------------*
@@ -744,7 +856,7 @@ static T_script IScriptInstantiate(T_scriptHeader *p_script)
  *  IScriptLoad brings in a new script from disk and initializes the
  *  script data (as needed).
  *
- *  NOTE: 
+ *  NOTE:
  *  Debugging version will bomb if the script is not found.
  *
  *  @param number -- Number of script to load
@@ -752,55 +864,57 @@ static T_script IScriptInstantiate(T_scriptHeader *p_script)
  *  @return Loaded script, or NULL
  *
  *<!-----------------------------------------------------------------------*/
-static T_scriptHeader *IScriptLoad(T_word32 number)
+static T_scriptHeader *
+IScriptLoad(T_word32 number)
 {
-    T_byte8 filename[40] ;
-    T_word32 size ;
-    T_byte8 *p_loaded ;
-    T_scriptHeader *p_script ;
-    T_byte8 *p_data ;
+    T_byte8 filename[40];
+    T_word32 size;
+    T_byte8 *p_loaded;
+    T_scriptHeader *p_script;
+    T_byte8 *p_data;
 
-    DebugRoutine("IScriptLoad") ;
+    DebugRoutine("IScriptLoad");
 
     /* Create the script name. */
-    sprintf((char *)filename, "S%ld.SRP", number) ;
+    sprintf((char *) filename, "S%ld.SRP", number);
 
     /* Load the script. */
-    p_loaded = (T_byte8 *)FileLoad(filename, &size) ;
-    p_script = (T_scriptHeader *)p_loaded ;
+    p_loaded = (T_byte8 *) FileLoad(filename, &size);
+    p_script = (T_scriptHeader *) p_loaded;
 
     /* Bomb if we didn't load it. */
-    DebugCheck(p_script != NULL) ;
+    DebugCheck(p_script != NULL);
 
     /* Did it load? */
-    if (p_script)  {
+    if (p_script)
+    {
         /* It did load. */
         /* Initialize it as best as we can. */
-        ScriptSetNumber(p_script, number) ;
-        ScriptSetTag(p_script, SCRIPT_TAG) ;
-        ScriptSetNext(p_script, NULL) ;
-        ScriptSetPrevious(p_script, NULL) ;
-        ScriptSetLockCount(p_script, 1) ;
+        ScriptSetNumber(p_script, number);
+        ScriptSetTag(p_script, SCRIPT_TAG);
+        ScriptSetNext(p_script, NULL);
+        ScriptSetPrevious(p_script, NULL);
+        ScriptSetLockCount(p_script, 1);
 
         /* Code is right after the header. */
-        p_data = (T_byte8 *)(p_script+1) ;
-        ScriptSetCode(p_script, p_data) ;
+        p_data = (T_byte8 *) (p_script + 1);
+        ScriptSetCode(p_script, p_data);
 
         /* Events are after code. */
-        p_data += ScriptGetSizeCode(p_script) ;
-        ScriptSetEvents(p_script, (T_word16 *)p_data) ;
+        p_data += ScriptGetSizeCode(p_script);
+        ScriptSetEvents(p_script, (T_word16 *) p_data);
 
         /* Places are after events. */
-        p_data += ScriptGetHighestEvent(p_script) * sizeof(T_word16) ;
-        ScriptSetPlaces(p_script, (T_word16 *)p_data) ;
+        p_data += ScriptGetHighestEvent(p_script) * sizeof(T_word16);
+        ScriptSetPlaces(p_script, (T_word16 *) p_data);
 
         /* That should do it. */
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return what we have. */
-    return p_script ;
+    return p_script;
 }
 
 /*-------------------------------------------------------------------------*
@@ -812,20 +926,21 @@ static T_scriptHeader *IScriptLoad(T_word32 number)
  *  @param  -- Script to make discardable
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IScriptMakeDiscardable(T_scriptHeader *p_script)
+static T_void
+IScriptMakeDiscardable(T_scriptHeader *p_script)
 {
-    DebugRoutine("IScriptMakeDiscardable") ;
-    DebugCheck(p_script != NULL) ;
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG) ;
-    DebugCheck(ScriptGetLockCount(p_script) == 0) ;
+    DebugRoutine("IScriptMakeDiscardable");
+    DebugCheck(p_script != NULL);
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG);
+    DebugCheck(ScriptGetLockCount(p_script) == 0);
 
     /* Set up the tag. */
-    ScriptSetTag(p_script, SCRIPT_TAG_DISCARDABLE) ;
+    ScriptSetTag(p_script, SCRIPT_TAG_DISCARDABLE);
 
     /* Tell the memory manager that the script can be deleted. */
-    MemMarkDiscardable(p_script, IMemoryRequestDiscardScript) ;
+    MemMarkDiscardable(p_script, IMemoryRequestDiscardScript);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -838,25 +953,26 @@ static T_void IScriptMakeDiscardable(T_scriptHeader *p_script)
  *  @param  -- Pointer to script instance
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IDestroyScriptInstance(T_scriptInstance *p_instance)
+static T_void
+IDestroyScriptInstance(T_scriptInstance *p_instance)
 {
-    T_word16 i ;
+    T_word16 i;
 
-    DebugRoutine("IDestroyScriptInstance") ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    DebugRoutine("IDestroyScriptInstance");
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
     /* Tag this instance as bad before we free it. */
-    ScriptInstanceSetTag(p_instance, SCRIPT_INSTANCE_TAG_BAD) ;
+    ScriptInstanceSetTag(p_instance, SCRIPT_INSTANCE_TAG_BAD);
 
     /* Make sure all string data is destroyed. */
-    for (i=0; i<256; i++)
+    for (i = 0; i < 256; i++)
         if (p_instance->vars[i].type == SCRIPT_DATA_TYPE_STRING)
-            MemFree(p_instance->vars[i].ns.p_string) ;
+            MemFree(p_instance->vars[i].ns.p_string);
 
     /* Since there is no other attachments to the instance, just free it. */
-    MemFree(p_instance) ;
+    MemFree(p_instance);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -871,23 +987,24 @@ static T_void IDestroyScriptInstance(T_scriptInstance *p_instance)
  *  @param p_block -- Pointer to data that is script to free
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IMemoryRequestDiscardScript(T_void *p_block)
+static T_void
+IMemoryRequestDiscardScript(T_void *p_block)
 {
-    T_scriptHeader *p_script ;
+    T_scriptHeader *p_script;
 
-    DebugRoutine("IMemoryRequestDiscardScript") ;
-    DebugCheck(p_block != NULL) ;
+    DebugRoutine("IMemoryRequestDiscardScript");
+    DebugCheck(p_block != NULL);
 
     /* Get the script pointer. */
-    p_script = p_block ;
+    p_script = p_block;
 
-    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE) ;
-    DebugCheck(ScriptGetLockCount(p_script) == 0) ;
+    DebugCheck(ScriptGetTag(p_script) == SCRIPT_TAG_DISCARDABLE);
+    DebugCheck(ScriptGetLockCount(p_script) == 0);
 
     /* Just unlink the script. */
-    IRemoveScriptFromList(p_script) ;
+    IRemoveScriptFromList(p_script);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -901,20 +1018,21 @@ static T_void IMemoryRequestDiscardScript(T_void *p_block)
  *  @param owner -- General pointer to owner
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptSetOwner(T_script script, T_word32 owner)
+T_void
+ScriptSetOwner(T_script script, T_word32 owner)
 {
-    T_scriptInstance *p_instance ;
+    T_scriptInstance *p_instance;
 
-    DebugRoutine("ScriptSetOwner") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptSetOwner");
+    DebugCheck(ScriptIsInitialized());
 
-    p_instance = ScriptHandleToInstance(script) ;
-    DebugCheck(p_instance != NULL) ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    p_instance = ScriptHandleToInstance(script);
+    DebugCheck(p_instance != NULL);
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
-    ScriptInstanceSetOwner(p_instance, owner) ;
+    ScriptInstanceSetOwner(p_instance, owner);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -929,23 +1047,24 @@ T_void ScriptSetOwner(T_script script, T_word32 owner)
  *  @return General pointer to owner
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 ScriptGetOwner(T_script script)
+T_word32
+ScriptGetOwner(T_script script)
 {
-    T_scriptInstance *p_instance ;
-    T_word32 owner ;
+    T_scriptInstance *p_instance;
+    T_word32 owner;
 
-    DebugRoutine("ScriptGetOwner") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptGetOwner");
+    DebugCheck(ScriptIsInitialized());
 
-    p_instance = ScriptHandleToInstance(script) ;
-    DebugCheck(p_instance != NULL) ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    p_instance = ScriptHandleToInstance(script);
+    DebugCheck(p_instance != NULL);
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
-    owner = ScriptInstanceGetOwner(p_instance) ;
+    owner = ScriptInstanceGetOwner(p_instance);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return owner ;
+    return owner;
 }
 
 /*-------------------------------------------------------------------------*
@@ -955,7 +1074,7 @@ T_word32 ScriptGetOwner(T_script script)
  *  ScriptEvent runs an event in a script file.  If the script has no
  *  event for the script, a FALSE code is returned.
  *
- *  NOTE: 
+ *  NOTE:
  *  For each ScriptUnlock you do, you must have already done just as many
  *  ScriptLocks.
  *
@@ -969,67 +1088,70 @@ T_word32 ScriptGetOwner(T_script script)
  *  @param p_data3 -- Pointer to data parameter 3
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean ScriptEvent(
-              T_script script,
-              T_word16 eventNumber,
-              E_scriptDataType type1,
-              T_void *p_data1,
-              E_scriptDataType type2,
-              T_void *p_data2,
-              E_scriptDataType type3,
-              T_void *p_data3)
+E_Boolean
+ScriptEvent(
+    T_script script,
+    T_word16 eventNumber,
+    E_scriptDataType type1,
+    T_void *p_data1,
+    E_scriptDataType type2,
+    T_void *p_data2,
+    E_scriptDataType type3,
+    T_void *p_data3)
 {
-    E_Boolean status = FALSE ;
-    T_scriptInstance *p_instance ;
-    T_scriptHeader *p_header ;
-    T_word16 numEvents ;
-    T_word16 exePosition ;
+    E_Boolean status = FALSE;
+    T_scriptInstance *p_instance;
+    T_scriptHeader *p_header;
+    T_word16 numEvents;
+    T_word16 exePosition;
 
-    DebugRoutine("ScriptEvent") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptEvent");
+    DebugCheck(ScriptIsInitialized());
 
-    G_instance = p_instance = ScriptHandleToInstance(script) ;
-    DebugCheck(p_instance != NULL) ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    G_instance = p_instance = ScriptHandleToInstance(script);
+    DebugCheck(p_instance != NULL);
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
     /* Get ahold of the header to the actual script. */
-    p_header = ScriptInstanceGetHeader(p_instance) ;
-    DebugCheck(p_header != NULL) ;
-    DebugCheck(ScriptGetTag(p_header) == SCRIPT_TAG) ;
+    p_header = ScriptInstanceGetHeader(p_instance);
+    DebugCheck(p_header != NULL);
+    DebugCheck(ScriptGetTag(p_header) == SCRIPT_TAG);
 
     /* How many events can this script process? */
-    numEvents = ScriptGetHighestEvent(p_header) ;
+    numEvents = ScriptGetHighestEvent(p_header);
 
     /* Is the given event number in range? */
-    if (eventNumber < numEvents)  {
+    if (eventNumber < numEvents)
+    {
         /* Yes, we can try to process this event. */
         /* Look the execution position up. */
-        exePosition = ScriptGetEventPosition(p_header, eventNumber) ;
+        exePosition = ScriptGetEventPosition(p_header, eventNumber);
 
         /* Is this a non - position? */
-        if (exePosition != 0xFFFF)  {
+        if (exePosition != 0xFFFF)
+        {
             /* Is this a valid position. */
-            DebugCheck(exePosition < ScriptGetSizeCode(p_header)) ;
+            DebugCheck(exePosition < ScriptGetSizeCode(p_header));
 
             /* 1, 2, and 3. */
-            G_parameter1Type = type1 ;
-            G_parameter1Data = p_data1 ;
-            G_parameter2Type = type2 ;
-            G_parameter2Data = p_data2 ;
-            G_parameter3Type = type3 ;
-            G_parameter3Data = p_data3 ;
+            G_parameter1Type = type1;
+            G_parameter1Data = p_data1;
+            G_parameter2Type = type2;
+            G_parameter2Data = p_data2;
+            G_parameter3Type = type3;
+            G_parameter3Data = p_data3;
 
             /* Run the code at that position. */
-            IExecuteCode(p_header, exePosition) ;
+            IExecuteCode(p_header, exePosition);
 
-            status = TRUE ;
+            status = TRUE;
         }
     }
     /* If no event was processed, oh well, stop caring about it. */
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1045,78 +1167,85 @@ E_Boolean ScriptEvent(
  *  @return FALSE if not executed
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean ScriptRunPlace(
-              T_script script,
-              T_word16 placeNumber)
+E_Boolean
+ScriptRunPlace(
+    T_script script,
+    T_word16 placeNumber)
 {
-    E_Boolean status = FALSE ;
-    T_scriptInstance *p_instance ;
-    T_scriptHeader *p_header ;
-    T_word16 numPlaces ;
-    T_word16 exePosition ;
+    E_Boolean status = FALSE;
+    T_scriptInstance *p_instance;
+    T_scriptHeader *p_header;
+    T_word16 numPlaces;
+    T_word16 exePosition;
 
-    DebugRoutine("ScriptRunPlace") ;
-    DebugCheck(ScriptIsInitialized()) ;
+    DebugRoutine("ScriptRunPlace");
+    DebugCheck(ScriptIsInitialized());
 
-    G_instance = p_instance = ScriptHandleToInstance(script) ;
-    DebugCheck(p_instance != NULL) ;
-    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG) ;
+    G_instance = p_instance = ScriptHandleToInstance(script);
+    DebugCheck(p_instance != NULL);
+    DebugCheck(ScriptInstanceGetTag(p_instance) == SCRIPT_INSTANCE_TAG);
 
     /* Get ahold of the header to the actual script. */
-    p_header = ScriptInstanceGetHeader(p_instance) ;
-    DebugCheck(p_header != NULL) ;
-    DebugCheck(ScriptGetTag(p_header) == SCRIPT_TAG) ;
+    p_header = ScriptInstanceGetHeader(p_instance);
+    DebugCheck(p_header != NULL);
+    DebugCheck(ScriptGetTag(p_header) == SCRIPT_TAG);
 
     /* How many events can this script process? */
-    numPlaces = ScriptGetHighestPlace(p_header) ;
+    numPlaces = ScriptGetHighestPlace(p_header);
     /* Is the given event number in range? */
-    if (placeNumber < numPlaces)  {
+    if (placeNumber < numPlaces)
+    {
         /* Yes, we can try to process this event. */
         /* Look the execution position up. */
-        exePosition = ScriptGetPlacePosition(p_header, placeNumber) ;
+        exePosition = ScriptGetPlacePosition(p_header, placeNumber);
 
         /* Is this a non - position? */
-        if (exePosition != 0xFFFF)  {
+        if (exePosition != 0xFFFF)
+        {
             /* Is this a valid position. */
-            DebugCheck(exePosition < ScriptGetSizeCode(p_header)) ;
+            DebugCheck(exePosition < ScriptGetSizeCode(p_header));
 
             /* 1, 2, and 3. */
-            G_parameter1Type = SCRIPT_DATA_TYPE_NONE ;
-            G_parameter2Type = SCRIPT_DATA_TYPE_NONE ;
-            G_parameter3Type = SCRIPT_DATA_TYPE_NONE ;
+            G_parameter1Type = SCRIPT_DATA_TYPE_NONE;
+            G_parameter2Type = SCRIPT_DATA_TYPE_NONE;
+            G_parameter3Type = SCRIPT_DATA_TYPE_NONE;
 
             /* Run the code at that position. */
-            IExecuteCode(p_header, exePosition) ;
+            IExecuteCode(p_header, exePosition);
 
-            status = TRUE ;
-        } else {
+            status = TRUE;
+        }
+        else
+        {
 #ifndef NDEBUG
             fprintf(stderr, "Cannot execute place %d for script %p\n",
-                placeNumber,
-                script) ;
-            printf("Cannot execute place %d for script %p\n",
-                placeNumber,
-                script) ;
-            DebugCheck(FALSE) ;
+placeNumber,
+script) ;
+printf("Cannot execute place %d for script %p\n",
+placeNumber,
+script) ;
+DebugCheck(FALSE) ;
 #endif
         }
-    } else {
+    }
+    else
+    {
 #ifndef NDEBUG
         fprintf(stderr, "Cannot execute place %d for script %p\n",
-            placeNumber,
-            script) ;
-        printf("Cannot execute place %d for script %p\n",
-            placeNumber,
-            script) ;
-        DebugCheck(FALSE) ;
+placeNumber,
+script) ;
+printf("Cannot execute place %d for script %p\n",
+placeNumber,
+script) ;
+DebugCheck(FALSE) ;
 #endif
     }
 
     /* If no event was processed, oh well, stop caring about it. */
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1126,7 +1255,7 @@ E_Boolean ScriptRunPlace(
  *  IExecuteCode will process code at the given location until a return
  *  is reached.
  *
- *  NOTE: 
+ *  NOTE:
  *  For each ScriptUnlock you do, you must have already done just as many
  *  ScriptLocks.
  *
@@ -1134,34 +1263,36 @@ E_Boolean ScriptRunPlace(
  *  @param exePosition -- execute position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 IExecuteCode(T_scriptHeader *script, T_word16 position)
+static T_word16
+IExecuteCode(T_scriptHeader *script, T_word16 position)
 {
-    T_byte8 command ;
+    T_byte8 command;
 
-    DebugRoutine("IExecuteCode") ;
+    DebugRoutine("IExecuteCode");
 
-    G_pleaseStop = FALSE ;
-    while(G_pleaseStop == FALSE)  {
-        command = ScriptGetCodeByte(script, position++) ;
-        DebugCheck(command < NUM_SCRIPT_COMMANDS) ;
+    G_pleaseStop = FALSE;
+    while (G_pleaseStop == FALSE)
+    {
+        command = ScriptGetCodeByte(script, position++);
+        DebugCheck(command < NUM_SCRIPT_COMMANDS);
 
         if (command == 0)
-            break ;
+            break;
 
-        DebugCheck(G_commands[command]) ;
+        DebugCheck(G_commands[command]);
 
-        position = G_commands[command](script, position) ;
+        position = G_commands[command](script, position);
 
         if (command == 21 /* DELAY */)
-            break ;
+            break;
     }
 
     /* Make sure no one else stops because of this sub-execution */
-    G_pleaseStop = FALSE ;
+    G_pleaseStop = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1171,7 +1302,7 @@ static T_word16 IExecuteCode(T_scriptHeader *script, T_word16 position)
  *  ILookupVariable finds a pointer to the correct variable based on
  *  the given script and variable number.
  *
- *  NOTE: 
+ *  NOTE:
  *  If you attempt to access a variable number that is not allowed, this
  *  routine bombs.
  *
@@ -1179,36 +1310,39 @@ static T_word16 IExecuteCode(T_scriptHeader *script, T_word16 position)
  *  @param varNumber -- Number of variable
  *
  *<!-----------------------------------------------------------------------*/
-static T_scriptDataItem *ILookupVariable(
-                            T_scriptHeader *p_script,
-                            T_word16 varNumber)
+static T_scriptDataItem *
+ILookupVariable(
+    T_scriptHeader *p_script,
+    T_word16 varNumber)
 {
-    T_scriptDataItem *p_var = NULL ;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("ILookupVariable") ;
+    DebugRoutine("ILookupVariable");
     DebugCheck((varNumber < 256) ||
-               ((varNumber >= 32768) && (varNumber <= 32769))) ;
+        ((varNumber >= 32768) && (varNumber <= 32769)));
 
-    if (varNumber & 0x8000)  {
-        p_var = G_systemVars + (varNumber & 0x7FFF) ;
-        switch(varNumber & 0x7FFF)  {
-            case SYSTEM_VAR_TIME:
-                p_var->ns.number = SyncTimeGet() ;
-                p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    if (varNumber & 0x8000)
+    {
+        p_var = G_systemVars + (varNumber & 0x7FFF);
+        switch (varNumber & 0x7FFF)
+        {
+            case SYSTEM_VAR_TIME:p_var->ns.number = SyncTimeGet();
+                p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
                 break;
-            case SYSTEM_VAR_SELF:
-                p_var->ns.number = G_instance->owner ;
-                p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
-                break ;
+            case SYSTEM_VAR_SELF:p_var->ns.number = G_instance->owner;
+                p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
+                break;
         }
-    } else {
+    }
+    else
+    {
         /* For now, just do a direct lookup. */
-        p_var = G_instance->vars+(varNumber&0x7FFF) ;
+        p_var = G_instance->vars + (varNumber & 0x7FFF);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_var ;
+    return p_var;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1218,7 +1352,7 @@ static T_scriptDataItem *ILookupVariable(
  *  IScriptGetVariable reads in the variable reference in the given code
  *  position and returns a pointer to the variable.
  *
- *  NOTE: 
+ *  NOTE:
  *  If you attempt to access a variable number that is not allowed, this
  *  routine bombs.
  *
@@ -1228,29 +1362,31 @@ static T_scriptDataItem *ILookupVariable(
  *  @return Pointer to found variable, or NULL
  *
  *<!-----------------------------------------------------------------------*/
-static T_scriptDataItem *IScriptGetVariable(
-                            T_scriptHeader *p_script,
-                            T_word16 *position)
+static T_scriptDataItem *
+IScriptGetVariable(
+    T_scriptHeader *p_script,
+    T_word16 *position)
 {
-    E_scriptDataType type ;
-    T_word16 value ;
-    T_scriptDataItem *p_var = NULL ;
+    E_scriptDataType type;
+    T_word16 value;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("IScriptGetVariable") ;
+    DebugRoutine("IScriptGetVariable");
 
-    type = ScriptGetCodeByte(p_script, (*position)++) ;
-    DebugCheck(type == SCRIPT_DATA_TYPE_VARIABLE) ;
+    type = ScriptGetCodeByte(p_script, (*position)++);
+    DebugCheck(type == SCRIPT_DATA_TYPE_VARIABLE);
 
-    if (type == SCRIPT_DATA_TYPE_VARIABLE)  {
-        value = ScriptGetCodeWord(p_script, *position) ;
-        (*position) += 2 ;
+    if (type == SCRIPT_DATA_TYPE_VARIABLE)
+    {
+        value = ScriptGetCodeWord(p_script, *position);
+        (*position) += 2;
 
-        p_var = ILookupVariable(p_script, value) ;
+        p_var = ILookupVariable(p_script, value);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_var ;
+    return p_var;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1260,7 +1396,7 @@ static T_scriptDataItem *IScriptGetVariable(
  *  IScriptGetAny reads in any type of value reference in the given code
  *  position and returns a pointer to the data type.
  *
- *  NOTE: 
+ *  NOTE:
  *  If you attempt to access a variable number that is not allowed, this
  *  routine bombs.
  *
@@ -1270,90 +1406,81 @@ static T_scriptDataItem *IScriptGetVariable(
  *  @return Returned value
  *
  *<!-----------------------------------------------------------------------*/
-static T_scriptDataItem IScriptGetAny(
-                            T_scriptHeader *p_script,
-                            T_word16 *position)
+static T_scriptDataItem
+IScriptGetAny(
+    T_scriptHeader *p_script,
+    T_word16 *position)
 {
-    E_scriptDataType type ;
-    T_word16 value ;
+    E_scriptDataType type;
+    T_word16 value;
 //    T_scriptDataItem var = { SCRIPT_DATA_TYPE_NONE, 0 } ;
-    T_scriptDataItem var ;
-    T_byte8 *p_data ;
-    T_scriptString *p_string ;
-    T_sword32 *p_number ;
+    T_scriptDataItem var;
+    T_byte8 *p_data;
+    T_scriptString *p_string;
+    T_sword32 *p_number;
 
-    DebugRoutine("IScriptGetAny") ;
+    DebugRoutine("IScriptGetAny");
 
-    type = ScriptGetCodeByte(p_script, (*position)++) ;
+    type = ScriptGetCodeByte(p_script, (*position)++);
 
-    switch(type)  {
-        case SCRIPT_DATA_TYPE_EVENT_PARAMETER:
-            value = ScriptGetCodeByte(p_script, (*position)++) ;
-            switch(value)  {
-                case 1:
-                    var.type = G_parameter1Type ;
-                    var.ns.number = (T_word32)G_parameter1Data ;
-                    break ;
-                case 2:
-                    var.type = G_parameter2Type ;
-                    var.ns.number = (T_word32)G_parameter2Data ;
-                    break ;
-                case 3:
-                    var.type = G_parameter3Type ;
-                    var.ns.number = (T_word32)G_parameter3Data ;
-                    break ;
-                default:
-                    DebugCheck(FALSE) ;
-                    break ;
+    switch (type)
+    {
+        case SCRIPT_DATA_TYPE_EVENT_PARAMETER:value = ScriptGetCodeByte(p_script, (*position)++);
+            switch (value)
+            {
+                case 1:var.type = G_parameter1Type;
+                    var.ns.number = (T_word32) G_parameter1Data;
+                    break;
+                case 2:var.type = G_parameter2Type;
+                    var.ns.number = (T_word32) G_parameter2Data;
+                    break;
+                case 3:var.type = G_parameter3Type;
+                    var.ns.number = (T_word32) G_parameter3Data;
+                    break;
+                default:DebugCheck(FALSE);
+                    break;
             }
-            break ;
-        case SCRIPT_DATA_TYPE_FLAG:
-            value = ScriptGetCodeByte(p_script, (*position)++) ;
-            DebugCheck(value < SCRIPT_FLAG_UNKNOWN) ;
-            var = *(G_systemFlags + value) ;
-            break ;
-        case SCRIPT_DATA_TYPE_VARIABLE:
-            value = ScriptGetCodeWord(p_script, *position) ;
-            (*position) += 2 ;
-            var = (*(ILookupVariable(p_script, value))) ;
-            break ;
-        case SCRIPT_DATA_TYPE_STRING:
-            var.type = type ;
-            p_data = (ScriptGetCode(p_script) + *position) ;
-            p_string = (T_scriptString *)p_data ;
-            var.ns.p_string = p_string ;
+            break;
+        case SCRIPT_DATA_TYPE_FLAG:value = ScriptGetCodeByte(p_script, (*position)++);
+            DebugCheck(value < SCRIPT_FLAG_UNKNOWN);
+            var = *(G_systemFlags + value);
+            break;
+        case SCRIPT_DATA_TYPE_VARIABLE:value = ScriptGetCodeWord(p_script, *position);
+            (*position) += 2;
+            var = (*(ILookupVariable(p_script, value)));
+            break;
+        case SCRIPT_DATA_TYPE_STRING:var.type = type;
+            p_data = (ScriptGetCode(p_script) + *position);
+            p_string = (T_scriptString *) p_data;
+            var.ns.p_string = p_string;
 
-            *position += p_string->length + 1 ;
-            break ;
-        case SCRIPT_DATA_TYPE_8_BIT_NUMBER:
-            var.type = type ;
-            p_data = (ScriptGetCode(p_script) + *position) ;
-            p_number = (T_sword32 *)((T_sbyte8 *)p_data) ;
-            var.ns.number = *((T_sbyte8 *)p_number) ;
-            *position += sizeof(T_sbyte8) ;
-            break ;
-        case SCRIPT_DATA_TYPE_16_BIT_NUMBER:
-            var.type = type ;
-            p_data = (ScriptGetCode(p_script) + *position) ;
-            p_number = (T_sword32 *)((T_sbyte8 *)p_data) ;
-            var.ns.number = *((T_sword16 *)p_number) ;
-            *position += sizeof(T_sword16) ;
-            break ;
-        case SCRIPT_DATA_TYPE_32_BIT_NUMBER:
-            var.type = type ;
-            p_data = (ScriptGetCode(p_script) + *position) ;
-            p_number = (T_sword32 *)((T_sbyte8 *)p_data) ;
-            var.ns.number = *((T_sword32 *)p_number) ;
-            *position += sizeof(T_sword32) ;
-            break ;
-        default:
-            DebugCheck(FALSE) ;
-            break ;
+            *position += p_string->length + 1;
+            break;
+        case SCRIPT_DATA_TYPE_8_BIT_NUMBER:var.type = type;
+            p_data = (ScriptGetCode(p_script) + *position);
+            p_number = (T_sword32 *) ((T_sbyte8 *) p_data);
+            var.ns.number = *((T_sbyte8 *) p_number);
+            *position += sizeof(T_sbyte8);
+            break;
+        case SCRIPT_DATA_TYPE_16_BIT_NUMBER:var.type = type;
+            p_data = (ScriptGetCode(p_script) + *position);
+            p_number = (T_sword32 *) ((T_sbyte8 *) p_data);
+            var.ns.number = *((T_sword16 *) p_number);
+            *position += sizeof(T_sword16);
+            break;
+        case SCRIPT_DATA_TYPE_32_BIT_NUMBER:var.type = type;
+            p_data = (ScriptGetCode(p_script) + *position);
+            p_number = (T_sword32 *) ((T_sbyte8 *) p_data);
+            var.ns.number = *((T_sword32 *) p_number);
+            *position += sizeof(T_sword32);
+            break;
+        default:DebugCheck(FALSE);
+            break;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return var ;
+    return var;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1362,7 +1489,7 @@ static T_scriptDataItem IScriptGetAny(
 /**
  *  ICopyData copies one data item to another data item.
  *
- *  NOTE: 
+ *  NOTE:
  *  If the destination data item has a string, that destination must be
  *  allowed to do a MemFree on that string.
  *
@@ -1370,38 +1497,43 @@ static T_scriptDataItem IScriptGetAny(
  *  @param source -- Source to copy from.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void ICopyData(
-                  T_scriptDataItem *dest,
-                  T_scriptDataItem *source)
+static T_void
+ICopyData(
+    T_scriptDataItem *dest,
+    T_scriptDataItem *source)
 {
-    DebugRoutine("ICopyData") ;
+    DebugRoutine("ICopyData");
 
     /* Is the memory at the destination a NONE type? */
-    if (dest->type == SCRIPT_DATA_TYPE_STRING)  {
+    if (dest->type == SCRIPT_DATA_TYPE_STRING)
+    {
         /* We need to free its string. */
-        MemFree(dest->ns.p_string) ;
+        MemFree(dest->ns.p_string);
 
         /* No more memory. */
-        dest->ns.p_string = NULL ;
+        dest->ns.p_string = NULL;
     }
 
     /* Are we copying a string or a number? */
-    if (source->type == SCRIPT_DATA_TYPE_STRING)  {
-        dest->ns.p_string = MemAlloc(source->ns.p_string->length+1) ;
+    if (source->type == SCRIPT_DATA_TYPE_STRING)
+    {
+        dest->ns.p_string = MemAlloc(source->ns.p_string->length + 1);
         memcpy(
             dest->ns.p_string,
             source->ns.p_string,
-            source->ns.p_string->length+1) ;
-    } else {
+            source->ns.p_string->length + 1);
+    }
+    else
+    {
         /* Must be copying something else that doesn't require */
         /* any extra memory. */
-        dest->ns.number = source->ns.number ;
+        dest->ns.number = source->ns.number;
     }
 
     /* Be sure to copy the type. */
-    dest->type = source->type ;
+    dest->type = source->type;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1417,28 +1549,32 @@ static T_void ICopyData(
  *  @return TRUE or FALSE
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IValueToCondition(T_scriptDataItem *p_value)
+static E_Boolean
+IValueToCondition(T_scriptDataItem *p_value)
 {
-    E_Boolean status ;
+    E_Boolean status;
 
-    DebugRoutine("IValueToCondition") ;
+    DebugRoutine("IValueToCondition");
 
-    if (p_value->type == SCRIPT_DATA_TYPE_STRING)  {
+    if (p_value->type == SCRIPT_DATA_TYPE_STRING)
+    {
         if (p_value->ns.p_string->length)
-            status = TRUE ;
+            status = TRUE;
         else
-            status = FALSE ;
-    } else {
+            status = FALSE;
+    }
+    else
+    {
         /* Assume it is a number. */
         if (p_value->ns.number)
-            status = TRUE ;
+            status = TRUE;
         else
-            status = FALSE ;
+            status = FALSE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1448,7 +1584,7 @@ static E_Boolean IValueToCondition(T_scriptDataItem *p_value)
  *  IPascalToCString converts a script string (with length and then data)
  *  into a normal C sytle (null terminated) string.
  *
- *  NOTE: 
+ *  NOTE:
  *  There needs to be SCRIPT_MAX_STRING+1 characters where you are
  *  storing the string.
  *
@@ -1458,15 +1594,16 @@ static E_Boolean IValueToCondition(T_scriptDataItem *p_value)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring)
+static T_void
+IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring)
 {
-    T_word16 len ;
-    DebugRoutine("IPascalToCString") ;
-    len = p_pstring->length ;
-    DebugCheck(len <= SCRIPT_MAX_STRING) ;
+    T_word16 len;
+    DebugRoutine("IPascalToCString");
+    len = p_pstring->length;
+    DebugCheck(len <= SCRIPT_MAX_STRING);
 
-    memcpy(p_cstring, p_pstring->data, len) ;
-    p_cstring[len] = '\0' ;
+    memcpy(p_cstring, p_pstring->data, len);
+    p_cstring[len] = '\0';
 
     DebugEnd();
 }
@@ -1478,7 +1615,7 @@ static T_void IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring)
  *  IGetPlace takes in a script and value and finds the position in the
  *  code for the gien value.
  *
- *  NOTE: 
+ *  NOTE:
  *  If the position given is out of bounds, this routine bombs.
  *
  *  @param p_script -- Pointer to the script
@@ -1487,27 +1624,28 @@ static T_void IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring)
  *  @return position found.
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 IGetPlace(
-                    T_scriptHeader *p_script,
-                    T_scriptDataItem *p_value)
+static T_word16
+IGetPlace(
+    T_scriptHeader *p_script,
+    T_scriptDataItem *p_value)
 {
-    T_word16 position ;
-    T_word16 placeNum ;
+    T_word16 position;
+    T_word16 placeNum;
 
-    DebugRoutine("IGetPlace") ;
-    DebugCheck(p_value->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugRoutine("IGetPlace");
+    DebugCheck(p_value->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    placeNum = p_value->ns.number ;
+    placeNum = p_value->ns.number;
 
-    DebugCheck(ScriptGetHighestPlace(p_script) > placeNum) ;
+    DebugCheck(ScriptGetHighestPlace(p_script) > placeNum);
 
-    position = (ScriptGetPlaces(p_script))[placeNum] ;
+    position = (ScriptGetPlaces(p_script))[placeNum];
 
-    DebugCheck(position != 0xFFFF) ;
+    DebugCheck(position != 0xFFFF);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1522,47 +1660,53 @@ static T_word16 IGetPlace(
  *  @return Positive = >, Negative = <, 0 = Equal
  *
  *<!-----------------------------------------------------------------------*/
-static T_sword16 IPascalStringCompare(
-                     T_scriptString *p_string1,
-                     T_scriptString *p_string2)
+static T_sword16
+IPascalStringCompare(
+    T_scriptString *p_string1,
+    T_scriptString *p_string2)
 {
-    T_word16 len1, len2 ;
-    T_byte8 *p_str1, *p_str2 ;
-    T_sword16 diff ;
+    T_word16 len1, len2;
+    T_byte8 *p_str1, *p_str2;
+    T_sword16 diff;
 
-    DebugRoutine("IPascalStringCompare") ;
-    DebugCheck(p_string1 != NULL) ;
-    DebugCheck(p_string2 != NULL) ;
+    DebugRoutine("IPascalStringCompare");
+    DebugCheck(p_string1 != NULL);
+    DebugCheck(p_string2 != NULL);
 
-    len1 = p_string1->length ;
-    len2 = p_string2->length ;
+    len1 = p_string1->length;
+    len2 = p_string2->length;
 
-    p_str1 = p_string1->data ;
-    p_str2 = p_string2->data ;
+    p_str1 = p_string1->data;
+    p_str2 = p_string2->data;
 
-    while ((len1) || (len2))  {
+    while ((len1) || (len2))
+    {
         if (*p_str1 != *p_str2)
-            break ;
-        p_str1++ ;
-        p_str2++ ;
-        len1-- ;
-        len2-- ;
+            break;
+        p_str1++;
+        p_str2++;
+        len1--;
+        len2--;
     }
 
-    if ((len1) || (len2))  {
-        if ((len1 == 0) || (len2 == 0))  {
+    if ((len1) || (len2))
+    {
+        if ((len1 == 0) || (len2 == 0))
+        {
             if (len1 < len2)
-                diff = -1 ;
+                diff = -1;
             else
-                diff = 1 ;
-        } else {
-            diff = ((T_sword16)*p_str1) - ((T_sword16)*p_str2) ;
+                diff = 1;
+        }
+        else
+        {
+            diff = ((T_sword16) *p_str1) - ((T_sword16) *p_str2);
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return diff ;
+    return diff;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1573,7 +1717,7 @@ static T_sword16 IPascalStringCompare(
  *  "var1 = var2".  The left side must be a variable, the right side must
  *  be a value or variabe.
  *
- *  NOTE: 
+ *  NOTE:
  *  If you attempt to access a variable number that is not allowed, this
  *  routine bombs.
  *
@@ -1583,22 +1727,23 @@ static T_sword16 IPascalStringCompare(
  *  @return Pointer to found variable, or NULL
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSet(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSet(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value;
 
-    DebugRoutine("ICommandSet") ;
+    DebugRoutine("ICommandSet");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
 
-    p_var->type = value.type ;
-    ICopyData(p_var, &value) ;
+    p_var->type = value.type;
+    ICopyData(p_var, &value);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1614,35 +1759,39 @@ static T_word16 ICommandSet(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandPrint(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandPrint(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem value ;
-    T_byte8 string[SCRIPT_MAX_STRING+1] ;
+    T_scriptDataItem value;
+    T_byte8 string[SCRIPT_MAX_STRING + 1];
 
-    DebugRoutine("ICommandPrint") ;
+    DebugRoutine("ICommandPrint");
 
-    value = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
 
     /* Only strings for now. */
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_STRING) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_STRING);
 
-    if (value.type == SCRIPT_DATA_TYPE_STRING)  {
-        IPascalToCString(string, value.ns.p_string) ;
+    if (value.type == SCRIPT_DATA_TYPE_STRING)
+    {
+        IPascalToCString(string, value.ns.p_string);
 
-    } else {
-        sprintf(string, "%ld", value.ns.number) ;
+    }
+    else
+    {
+        sprintf(string, "%ld", value.ns.number);
     }
 
 #ifndef SERVER_ONLY
     /* Put up the message. */
-    MessageAdd(string) ;
+    MessageAdd(string);
 #else
     /* Need something here. */
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1658,25 +1807,26 @@ static T_word16 ICommandPrint(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandIf(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandIf(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem value ;
-    T_scriptDataItem place ;
-    E_Boolean condition ;
+    T_scriptDataItem value;
+    T_scriptDataItem place;
+    E_Boolean condition;
 
-    DebugRoutine("ICommandIf") ;
+    DebugRoutine("ICommandIf");
 
-    value = IScriptGetAny(script, &position) ;
-    place = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
+    place = IScriptGetAny(script, &position);
 
-    condition = IValueToCondition(&value) ;
+    condition = IValueToCondition(&value);
 
     if (condition)
-        position = IGetPlace(script, &place) ;
+        position = IGetPlace(script, &place);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1691,18 +1841,19 @@ static T_word16 ICommandIf(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandGoto(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandGoto(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem place ;
+    T_scriptDataItem place;
 
-    DebugRoutine("ICommandGoto") ;
+    DebugRoutine("ICommandGoto");
 
-    place = IScriptGetAny(script, &position) ;
-    position = IGetPlace(script, &place) ;
+    place = IScriptGetAny(script, &position);
+    position = IGetPlace(script, &place);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1718,27 +1869,28 @@ static T_word16 ICommandGoto(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandAdd(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandAdd(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value, value2 ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value, value2;
 
-    DebugRoutine("ICommandAdd") ;
+    DebugRoutine("ICommandAdd");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Add. */
-    p_var->ns.number = value.ns.number + value2.ns.number ;
+    p_var->ns.number = value.ns.number + value2.ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1754,27 +1906,28 @@ static T_word16 ICommandAdd(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSubtract(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSubtract(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value, value2 ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value, value2;
 
-    DebugRoutine("ICommandSubtract") ;
+    DebugRoutine("ICommandSubtract");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Subtract. */
-    p_var->ns.number = value.ns.number - value2.ns.number ;
+    p_var->ns.number = value.ns.number - value2.ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1790,27 +1943,28 @@ static T_word16 ICommandSubtract(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandMuliply(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandMuliply(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value, value2 ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value, value2;
 
-    DebugRoutine("ICommandMultiply") ;
+    DebugRoutine("ICommandMultiply");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Multiply. */
-    p_var->ns.number = value.ns.number * value2.ns.number ;
+    p_var->ns.number = value.ns.number * value2.ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1826,28 +1980,29 @@ static T_word16 ICommandMuliply(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDivide(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDivide(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value, value2 ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value, value2;
 
-    DebugRoutine("ICommandDivide") ;
+    DebugRoutine("ICommandDivide");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Divide. */
-    DebugCheck(value2.ns.number != 0) ;
-    p_var->ns.number = value.ns.number / value2.ns.number ;
+    DebugCheck(value2.ns.number != 0);
+    p_var->ns.number = value.ns.number / value2.ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1863,21 +2018,22 @@ static T_word16 ICommandDivide(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandIncrement(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandIncrement(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
+    T_scriptDataItem *p_var;
 
-    DebugRoutine("ICommandIncrement") ;
+    DebugRoutine("ICommandIncrement");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_var->ns.number++ ;
+    p_var->ns.number++;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1893,21 +2049,22 @@ static T_word16 ICommandIncrement(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDecrement(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDecrement(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
+    T_scriptDataItem *p_var;
 
-    DebugRoutine("ICommandDecrement") ;
+    DebugRoutine("ICommandDecrement");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_var->ns.number++ ;
+    p_var->ns.number++;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1923,39 +2080,43 @@ static T_word16 ICommandDecrement(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandCompare(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandCompare(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem value1, value2 ;
-    T_sword32 diff ;
+    T_scriptDataItem value1, value2;
+    T_sword32 diff;
 
-    DebugRoutine("ICommandCompare") ;
+    DebugRoutine("ICommandCompare");
 
-    value1 = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    value1 = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
     /* Are we comparing strings or numbers? */
-    if (value1.type == SCRIPT_DATA_TYPE_STRING)  {
-        DebugCheck(value2.type == SCRIPT_DATA_TYPE_STRING) ;
+    if (value1.type == SCRIPT_DATA_TYPE_STRING)
+    {
+        DebugCheck(value2.type == SCRIPT_DATA_TYPE_STRING);
 
-        diff = IPascalStringCompare(value1.ns.p_string, value2.ns.p_string) ;
-    } else {
-        DebugCheck(value1.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-        DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+        diff = IPascalStringCompare(value1.ns.p_string, value2.ns.p_string);
+    }
+    else
+    {
+        DebugCheck(value1.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+        DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-        diff = value1.ns.number - value2.ns.number ;
+        diff = value1.ns.number - value2.ns.number;
     }
 
-    G_systemFlags[SCRIPT_FLAG_EQUAL].ns.number = (diff == 0) ;
-    G_systemFlags[SCRIPT_FLAG_NOT_EQUAL].ns.number = (diff != 0) ;
-    G_systemFlags[SCRIPT_FLAG_LESS_THAN].ns.number = (diff < 0) ;
-    G_systemFlags[SCRIPT_FLAG_NOT_LESS_THAN].ns.number = (!(diff < 0)) ;
-    G_systemFlags[SCRIPT_FLAG_GREATER_THAN].ns.number = (diff > 0) ;
-    G_systemFlags[SCRIPT_FLAG_NOT_GREATER_THAN].ns.number = (!(diff > 0)) ;
-    G_systemFlags[SCRIPT_FLAG_LESS_THAN_OR_EQUAL].ns.number = (diff <= 0) ;
-    G_systemFlags[SCRIPT_FLAG_GREATER_THAN_OR_EQUAL].ns.number = (diff >= 0) ;
-    DebugEnd() ;
+    G_systemFlags[SCRIPT_FLAG_EQUAL].ns.number = (diff == 0);
+    G_systemFlags[SCRIPT_FLAG_NOT_EQUAL].ns.number = (diff != 0);
+    G_systemFlags[SCRIPT_FLAG_LESS_THAN].ns.number = (diff < 0);
+    G_systemFlags[SCRIPT_FLAG_NOT_LESS_THAN].ns.number = (!(diff < 0));
+    G_systemFlags[SCRIPT_FLAG_GREATER_THAN].ns.number = (diff > 0);
+    G_systemFlags[SCRIPT_FLAG_NOT_GREATER_THAN].ns.number = (!(diff > 0));
+    G_systemFlags[SCRIPT_FLAG_LESS_THAN_OR_EQUAL].ns.number = (diff <= 0);
+    G_systemFlags[SCRIPT_FLAG_GREATER_THAN_OR_EQUAL].ns.number = (diff >= 0);
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1971,22 +2132,23 @@ static T_word16 ICommandCompare(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSound(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSound(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem value ;
+    T_scriptDataItem value;
 
-    DebugRoutine("ICommandSound") ;
+    DebugRoutine("ICommandSound");
 
-    value = IScriptGetAny(script, &position) ;
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    value = IScriptGetAny(script, &position);
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
 #ifndef SERVER_ONLY
-    SoundPlayByNumber(value.ns.number, 255) ;
+    SoundPlayByNumber(value.ns.number, 255);
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2001,26 +2163,27 @@ static T_word16 ICommandSound(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandChangeSideTexture(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandChangeSideTexture(T_scriptHeader *script, T_word16 position)
 {
-    T_byte8 name[SCRIPT_MAX_STRING+1] ;
-    T_scriptDataItem value ;
-    T_scriptDataItem string ;
+    T_byte8 name[SCRIPT_MAX_STRING + 1];
+    T_scriptDataItem value;
+    T_scriptDataItem string;
 
-    DebugRoutine("ICommandChangeSideTexture") ;
+    DebugRoutine("ICommandChangeSideTexture");
 
-    value = IScriptGetAny(script, &position) ;
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    string = IScriptGetAny(script, &position) ;
-    DebugCheck(string.type == SCRIPT_DATA_TYPE_STRING) ;
+    value = IScriptGetAny(script, &position);
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    string = IScriptGetAny(script, &position);
+    DebugCheck(string.type == SCRIPT_DATA_TYPE_STRING);
 
-    IPascalToCString(name, string.ns.p_string) ;
+    IPascalToCString(name, string.ns.p_string);
 
-    MapSetWallTexture((T_word16)value.ns.number, name) ;
+    MapSetWallTexture((T_word16) value.ns.number, name);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2035,27 +2198,28 @@ static T_word16 ICommandChangeSideTexture(T_scriptHeader *script, T_word16 posit
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectSetType(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandObjectSetType(T_scriptHeader *script, T_word16 position)
 {
     T_scriptDataItem object, number;
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ICommandObjectSetType") ;
+    DebugRoutine("ICommandObjectSetType");
 
-    object = IScriptGetAny(script, &position) ;
-    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    number = IScriptGetAny(script, &position) ;
-    DebugCheck(number.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    object = IScriptGetAny(script, &position);
+    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    number = IScriptGetAny(script, &position);
+    DebugCheck(number.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_obj = ObjectFind((T_word16)object.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
+    p_obj = ObjectFind((T_word16) object.ns.number);
+    DebugCheck(p_obj != NULL);
 
     if (p_obj != NULL)
-        ObjectSetType(p_obj, (T_word16)number.ns.number) ;
+        ObjectSetType(p_obj, (T_word16) number.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2070,33 +2234,34 @@ static T_word16 ICommandObjectSetType(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandTeleport(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandTeleport(T_scriptHeader *script, T_word16 position)
 {
     T_scriptDataItem x, y, z;
-    E_Boolean isFake ;
+    E_Boolean isFake;
 
-    DebugRoutine("ICommandTeleport") ;
+    DebugRoutine("ICommandTeleport");
 
-    x = IScriptGetAny(script, &position) ;
-    DebugCheck(x.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    y = IScriptGetAny(script, &position) ;
-    DebugCheck(y.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    z = IScriptGetAny(script, &position) ;
-    DebugCheck(z.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    x = IScriptGetAny(script, &position);
+    DebugCheck(x.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    y = IScriptGetAny(script, &position);
+    DebugCheck(y.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    z = IScriptGetAny(script, &position);
+    DebugCheck(z.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    isFake = PlayerInFakeMode() ;
+    isFake = PlayerInFakeMode();
     if (isFake)
-        PlayerSetRealMode() ;
+        PlayerSetRealMode();
     PlayerTeleport(
-        (T_sword16)x.ns.number,
-        (T_sword16)y.ns.number,
-        PlayerGetAngle()) ;
+        (T_sword16) x.ns.number,
+        (T_sword16) y.ns.number,
+        PlayerGetAngle());
     if (isFake)
-        PlayerSetFakeMode() ;
-        
-    DebugEnd() ;
+        PlayerSetFakeMode();
 
-    return position ;
+    DebugEnd();
+
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2111,20 +2276,21 @@ static T_word16 ICommandTeleport(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDoorCycle(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDoorCycle(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem doorNum ;
+    T_scriptDataItem doorNum;
 
-    DebugRoutine("ICommandDoorCycle") ;
+    DebugRoutine("ICommandDoorCycle");
 
-    doorNum = IScriptGetAny(script, &position) ;
-    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    doorNum = IScriptGetAny(script, &position);
+    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    DoorOpen((T_word16)doorNum.ns.number) ;
+    DoorOpen((T_word16) doorNum.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2139,20 +2305,21 @@ static T_word16 ICommandDoorCycle(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDoorLock(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDoorLock(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem doorNum ;
+    T_scriptDataItem doorNum;
 
-    DebugRoutine("ICommandDoorLock") ;
+    DebugRoutine("ICommandDoorLock");
 
-    doorNum = IScriptGetAny(script, &position) ;
-    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    doorNum = IScriptGetAny(script, &position);
+    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    DoorLock((T_word16)doorNum.ns.number) ;
+    DoorLock((T_word16) doorNum.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2167,20 +2334,21 @@ static T_word16 ICommandDoorLock(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDoorUnlock(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDoorUnlock(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem doorNum ;
+    T_scriptDataItem doorNum;
 
-    DebugRoutine("ICommandDoorUnlock") ;
+    DebugRoutine("ICommandDoorUnlock");
 
-    doorNum = IScriptGetAny(script, &position) ;
-    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    doorNum = IScriptGetAny(script, &position);
+    DebugCheck(doorNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    DoorUnlock((T_word16)doorNum.ns.number) ;
+    DoorUnlock((T_word16) doorNum.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2196,22 +2364,23 @@ static T_word16 ICommandDoorUnlock(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandAreaSound(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandAreaSound(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem soundNum, x, y, radius, volume ;
+    T_scriptDataItem soundNum, x, y, radius, volume;
 
-    DebugRoutine("ICommandAreaSound") ;
+    DebugRoutine("ICommandAreaSound");
 
-    soundNum = IScriptGetAny(script, &position) ;
-    DebugCheck(soundNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    x = IScriptGetAny(script, &position) ;
-    DebugCheck(x.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    y = IScriptGetAny(script, &position) ;
-    DebugCheck(y.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    radius = IScriptGetAny(script, &position) ;
-    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    volume = IScriptGetAny(script, &position) ;
-    DebugCheck(volume.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    soundNum = IScriptGetAny(script, &position);
+    DebugCheck(soundNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    x = IScriptGetAny(script, &position);
+    DebugCheck(x.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    y = IScriptGetAny(script, &position);
+    DebugCheck(y.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    radius = IScriptGetAny(script, &position);
+    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    volume = IScriptGetAny(script, &position);
+    DebugCheck(volume.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
 #ifndef SERVER_ONLY
     AreaSoundCreate(
@@ -2223,12 +2392,12 @@ static T_word16 ICommandAreaSound(T_scriptHeader *script, T_word16 position)
         NULL,
         NULL,
         0,
-        soundNum.ns.number) ;
+        soundNum.ns.number);
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2243,23 +2412,24 @@ static T_word16 ICommandAreaSound(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandGotoPlace(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandGotoPlace(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem placeNum ;
+    T_scriptDataItem placeNum;
 
-    DebugRoutine("ICommandGotoPlace") ;
+    DebugRoutine("ICommandGotoPlace");
 
-    placeNum = IScriptGetAny(script, &position) ;
-    DebugCheck(placeNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    placeNum = IScriptGetAny(script, &position);
+    DebugCheck(placeNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
 #ifndef SERVER_ONLY
     /* !!! Goto place needs start location also passed in. */
-    ClientGotoPlace(placeNum.ns.number, 0) ;
+    ClientGotoPlace(placeNum.ns.number, 0);
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -2275,31 +2445,33 @@ static T_word16 ICommandGotoPlace(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandDelay(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDelay(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem delayTime ;
-    T_continueData *p_continueData ;
+    T_scriptDataItem delayTime;
+    T_continueData *p_continueData;
 
-    DebugRoutine("ICommandDelay") ;
+    DebugRoutine("ICommandDelay");
 
-    delayTime = IScriptGetAny(script, &position) ;
-    DebugCheck(delayTime.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    delayTime = IScriptGetAny(script, &position);
+    DebugCheck(delayTime.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_continueData = MemAlloc(sizeof(T_continueData)) ;
-    DebugCheck(p_continueData != NULL) ;
+    p_continueData = MemAlloc(sizeof(T_continueData));
+    DebugCheck(p_continueData != NULL);
 
-    if (p_continueData)  {
-        p_continueData->p_script = script ;
-        p_continueData->position = position ;
+    if (p_continueData)
+    {
+        p_continueData->p_script = script;
+        p_continueData->position = position;
         ScheduleAddEvent(
             SyncTimeGet() + delayTime.ns.number,
             IContinueExecution,
-            (T_word32)p_continueData) ;
+            (T_word32) p_continueData);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2315,20 +2487,21 @@ static T_word16 ICommandDelay(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IContinueExecution(T_word32 data)
+static T_void
+IContinueExecution(T_word32 data)
 {
-    T_continueData *p_continueData ;
+    T_continueData *p_continueData;
 
-    DebugRoutine("IDelayComplete") ;
-    DebugCheck(data != 0) ;
+    DebugRoutine("IDelayComplete");
+    DebugCheck(data != 0);
 
-    p_continueData = (T_continueData *)data ;
+    p_continueData = (T_continueData *) data;
 
-    IExecuteCode(p_continueData->p_script, p_continueData->position) ;
+    IExecuteCode(p_continueData->p_script, p_continueData->position);
 
-    MemFree(p_continueData) ;
+    MemFree(p_continueData);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2343,35 +2516,36 @@ static T_void IContinueExecution(T_word32 data)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSlideFloor(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSlideFloor(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem sector, start, end, over, next ;
+    T_scriptDataItem sector, start, end, over, next;
 
-    DebugRoutine("ICommandSlideFloor") ;
+    DebugRoutine("ICommandSlideFloor");
 
-    sector = IScriptGetAny(script, &position) ;
-    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    start = IScriptGetAny(script, &position) ;
-    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    end = IScriptGetAny(script, &position) ;
-    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    over = IScriptGetAny(script, &position) ;
-    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    next = IScriptGetAny(script, &position) ;
-    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    sector = IScriptGetAny(script, &position);
+    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    start = IScriptGetAny(script, &position);
+    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    end = IScriptGetAny(script, &position);
+    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    over = IScriptGetAny(script, &position);
+    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    next = IScriptGetAny(script, &position);
+    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     SliderStart(
-        ((T_word32)sector.ns.number) | (SLIDER_TYPE_FLOOR<<16),
+        ((T_word32) sector.ns.number) | (SLIDER_TYPE_FLOOR << 16),
 //        ((T_sword32)start.ns.number) << 16,
-        ((T_sword32)MapGetFloorHeight((T_word16)sector.ns.number)) << 16,
-        ((T_sword32)end.ns.number) << 16,
-        (T_sword32)over.ns.number,
+        ((T_sword32) MapGetFloorHeight((T_word16) sector.ns.number)) << 16,
+        ((T_sword32) end.ns.number) << 16,
+        (T_sword32) over.ns.number,
         IHandleSlidingFloor,
-        ((T_word16)next.ns.number)) ;
+        ((T_word16) next.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2386,35 +2560,36 @@ static T_word16 ICommandSlideFloor(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSlideCeiling(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSlideCeiling(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem sector, start, end, over, next ;
+    T_scriptDataItem sector, start, end, over, next;
 
-    DebugRoutine("ICommandSlideCeiling") ;
+    DebugRoutine("ICommandSlideCeiling");
 
-    sector = IScriptGetAny(script, &position) ;
-    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    start = IScriptGetAny(script, &position) ;
-    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    end = IScriptGetAny(script, &position) ;
-    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    over = IScriptGetAny(script, &position) ;
-    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    next = IScriptGetAny(script, &position) ;
-    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    sector = IScriptGetAny(script, &position);
+    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    start = IScriptGetAny(script, &position);
+    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    end = IScriptGetAny(script, &position);
+    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    over = IScriptGetAny(script, &position);
+    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    next = IScriptGetAny(script, &position);
+    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     SliderStart(
-        ((T_word32)sector.ns.number) | (SLIDER_TYPE_CEILING<<16),
+        ((T_word32) sector.ns.number) | (SLIDER_TYPE_CEILING << 16),
 //        ((T_sword32)start.ns.number) << 16,
-        ((T_sword32)MapGetCeilingHeight((T_word16)sector.ns.number)) << 16,
-        ((T_sword32)end.ns.number) << 16,
-        (T_sword32)over.ns.number,
+        ((T_sword32) MapGetCeilingHeight((T_word16) sector.ns.number)) << 16,
+        ((T_sword32) end.ns.number) << 16,
+        (T_sword32) over.ns.number,
         IHandleSlidingCeiling,
-        (T_word16)next.ns.number) ;
+        (T_word16) next.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2429,24 +2604,25 @@ static T_word16 ICommandSlideCeiling(T_scriptHeader *script, T_word16 position)
  *  @param isDone -- Flag telling if this is the last update
  *
  *<!-----------------------------------------------------------------------*/
-static T_sliderResponse IHandleSlidingFloor(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone)
+static T_sliderResponse
+IHandleSlidingFloor(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("IHandleSlidingFloor") ;
+    DebugRoutine("IHandleSlidingFloor");
 
     /* Extract what sector we are using. */
-    sector = sliderId & 0xFFFF ;
+    sector = sliderId & 0xFFFF;
 
     /* Change that floor's height. */
-    MapSetFloorHeight(sector, (T_sword16)(value>>16)) ;
+    MapSetFloorHeight(sector, (T_sword16) (value >> 16));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return SLIDER_RESPONSE_CONTINUE ;
+    return SLIDER_RESPONSE_CONTINUE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2461,24 +2637,25 @@ static T_sliderResponse IHandleSlidingFloor(
  *  @param isDone -- Flag telling if this is the last update
  *
  *<!-----------------------------------------------------------------------*/
-static T_sliderResponse IHandleSlidingCeiling(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone)
+static T_sliderResponse
+IHandleSlidingCeiling(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone)
 {
-    T_word16 sector ;
+    T_word16 sector;
 
-    DebugRoutine("IHandleSlidingCeiling") ;
+    DebugRoutine("IHandleSlidingCeiling");
 
     /* Extract what sector we are using. */
-    sector = sliderId & 0xFFFF ;
+    sector = sliderId & 0xFFFF;
 
     /* Change that floor's height. */
-    MapSetCeilingHeight(sector, (T_sword16)(value>>16)) ;
+    MapSetCeilingHeight(sector, (T_sword16) (value >> 16));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return SLIDER_RESPONSE_CONTINUE ;
+    return SLIDER_RESPONSE_CONTINUE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2495,23 +2672,24 @@ static T_sliderResponse IHandleSlidingCeiling(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandGosub(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandGosub(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem place ;
-    T_word16 subPosition ;
+    T_scriptDataItem place;
+    T_word16 subPosition;
 
-    DebugRoutine("ICommandGosub") ;
+    DebugRoutine("ICommandGosub");
 
-    place = IScriptGetAny(script, &position) ;
-    DebugCheck(place.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    place = IScriptGetAny(script, &position);
+    DebugCheck(place.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    subPosition = IGetPlace(script, &place) ;
+    subPosition = IGetPlace(script, &place);
 
-    IExecuteCode(script, subPosition) ;
+    IExecuteCode(script, subPosition);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2527,26 +2705,27 @@ static T_word16 ICommandGosub(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandRandom(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandRandom(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value;
 
-    DebugRoutine("ICommandRandom") ;
+    DebugRoutine("ICommandRandom");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value.ns.number <= 32000) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value.ns.number <= 32000);
 
     /* Get that random number */
-    p_var->ns.number = (RandomNumber() % value.ns.number) ;
+    p_var->ns.number = (RandomNumber() % value.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2557,7 +2736,7 @@ static T_word16 ICommandRandom(T_scriptHeader *script, T_word16 position)
  *  "ObjectSound(objNum, soundNum, radius, volume)" by creating a sound
  *  that can be heard across the whole area.
  *
- *  NOTE: 
+ *  NOTE:
  *  This routine should only be called from a server script.
  *
  *  @param script -- Script with command
@@ -2566,29 +2745,31 @@ static T_word16 ICommandRandom(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectSound(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandObjectSound(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem objectNum ;
-    T_scriptDataItem soundNum ;
-    T_scriptDataItem radius ;
-    T_scriptDataItem volume ;
-    T_3dObject *p_obj ;
+    T_scriptDataItem objectNum;
+    T_scriptDataItem soundNum;
+    T_scriptDataItem radius;
+    T_scriptDataItem volume;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ICommandObjectSound") ;
+    DebugRoutine("ICommandObjectSound");
 
-    objectNum = IScriptGetAny(script, &position) ;
-    soundNum  = IScriptGetAny(script, &position) ;
-    radius    = IScriptGetAny(script, &position) ;
-    volume    = IScriptGetAny(script, &position) ;
+    objectNum = IScriptGetAny(script, &position);
+    soundNum = IScriptGetAny(script, &position);
+    radius = IScriptGetAny(script, &position);
+    volume = IScriptGetAny(script, &position);
 
-    DebugCheck(soundNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(volume.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(soundNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(volume.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Find the object. */
-    p_obj = ObjectFind((T_word16)objectNum.ns.number) ;
-    if (p_obj)  {
+    p_obj = ObjectFind((T_word16) objectNum.ns.number);
+    if (p_obj)
+    {
         /* Create the sound. */
         AreaSoundCreate(
             ObjectGetX16(p_obj),
@@ -2600,12 +2781,12 @@ static T_word16 ICommandObjectSound(T_scriptHeader *script, T_word16 position)
             AREA_SOUND_BAD,
             NULL,
             0,
-            soundNum.ns.number) ;
+            soundNum.ns.number);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2621,71 +2802,64 @@ static T_word16 ICommandObjectSound(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectSet(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandObjectSet(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem objectNum, objAttr, valueData ;
-    T_sword32 value ;
-    T_3dObject *p_obj ;
+    T_scriptDataItem objectNum, objAttr, valueData;
+    T_sword32 value;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ICommandObjectSet") ;
+    DebugRoutine("ICommandObjectSet");
 
-    objectNum = IScriptGetAny(script, &position) ;
-    objAttr   = IScriptGetAny(script, &position) ;
-    valueData = IScriptGetAny(script, &position) ;
+    objectNum = IScriptGetAny(script, &position);
+    objAttr = IScriptGetAny(script, &position);
+    valueData = IScriptGetAny(script, &position);
 
-    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(objAttr.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(valueData.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(objAttr.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(valueData.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    value = valueData.ns.number ;
+    value = valueData.ns.number;
 
     /* Find the object. */
-    p_obj = ObjectFind((T_word16)objectNum.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
-    if (p_obj)  {
-        switch(objAttr.ns.number)  {
-            case OBJECT_SCRIPT_ATTR_X:
-                ObjectSetX(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Y:
-                ObjectSetY(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Z:
-                ObjectSetZ(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_X16:
-                ObjectSetX16(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Y16:
-                ObjectSetY16(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Z16:
-                ObjectSetZ16(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_MAX_VELOCITY:
-                ObjectSetMaxVelocity(p_obj, value) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_STANCE:
-                ObjectSetStance(p_obj, (T_word16)value) ;
-                break ;
+    p_obj = ObjectFind((T_word16) objectNum.ns.number);
+    DebugCheck(p_obj != NULL);
+    if (p_obj)
+    {
+        switch (objAttr.ns.number)
+        {
+            case OBJECT_SCRIPT_ATTR_X:ObjectSetX(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_Y:ObjectSetY(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_Z:ObjectSetZ(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_X16:ObjectSetX16(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_Y16:ObjectSetY16(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_Z16:ObjectSetZ16(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_MAX_VELOCITY:ObjectSetMaxVelocity(p_obj, value);
+                break;
+            case OBJECT_SCRIPT_ATTR_STANCE:ObjectSetStance(p_obj, (T_word16) value);
+                break;
             case OBJECT_SCRIPT_ATTR_WAS_BLOCKED:
                 if (value)
-                    DebugCheck(FALSE) ;
+                    DebugCheck(FALSE);
                 else
-                    ObjectClearBlockedFlag(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_ANGLE:
-                ObjectSetAngle(p_obj, (T_word16)value) ;
-                break ;
-            default:
-                DebugCheck(FALSE) ;
-                break ;
+                    ObjectClearBlockedFlag(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_ANGLE:ObjectSetAngle(p_obj, (T_word16) value);
+                break;
+            default:DebugCheck(FALSE);
+                break;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2701,71 +2875,63 @@ static T_word16 ICommandObjectSet(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectGet(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandObjectGet(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem objectNum, objAttr ;
-    T_scriptDataItem *p_var = NULL ;
-    T_sword32 value ;
+    T_scriptDataItem objectNum, objAttr;
+    T_scriptDataItem *p_var = NULL;
+    T_sword32 value;
 
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ICommandObjectGet") ;
+    DebugRoutine("ICommandObjectGet");
 
-    objectNum = IScriptGetAny(script, &position) ;
-    objAttr   = IScriptGetAny(script, &position) ;
-    p_var     = IScriptGetVariable(script, &position) ;
+    objectNum = IScriptGetAny(script, &position);
+    objAttr = IScriptGetAny(script, &position);
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(objAttr.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(objAttr.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Find the object. */
-    p_obj = ObjectFind((T_word16)objectNum.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
-    if (p_obj)  {
-        switch(objAttr.ns.number)  {
-            case OBJECT_SCRIPT_ATTR_X:
-                value = ObjectGetX(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Y:
-                value = ObjectGetY(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Z:
-                value = ObjectGetZ(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_X16:
-                value = ObjectGetX16(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Y16:
-                value = ObjectGetY16(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_Z16:
-                value = ObjectGetZ16(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_MAX_VELOCITY:
-                value = ObjectGetMaxVelocity(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_STANCE:
-                value = ObjectGetStance(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_WAS_BLOCKED:
-                value = ObjectWasBlocked(p_obj) ;
-                break ;
-            case OBJECT_SCRIPT_ATTR_ANGLE:
-                value = ObjectGetAngle(p_obj) ;
-                break ;
-            default:
-                DebugCheck(FALSE) ;
-                break ;
+    p_obj = ObjectFind((T_word16) objectNum.ns.number);
+    DebugCheck(p_obj != NULL);
+    if (p_obj)
+    {
+        switch (objAttr.ns.number)
+        {
+            case OBJECT_SCRIPT_ATTR_X:value = ObjectGetX(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_Y:value = ObjectGetY(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_Z:value = ObjectGetZ(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_X16:value = ObjectGetX16(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_Y16:value = ObjectGetY16(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_Z16:value = ObjectGetZ16(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_MAX_VELOCITY:value = ObjectGetMaxVelocity(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_STANCE:value = ObjectGetStance(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_WAS_BLOCKED:value = ObjectWasBlocked(p_obj);
+                break;
+            case OBJECT_SCRIPT_ATTR_ANGLE:value = ObjectGetAngle(p_obj);
+                break;
+            default:DebugCheck(FALSE);
+                break;
         }
     }
 
-    p_var->ns.number = value ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = value;
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2781,24 +2947,25 @@ static T_word16 ICommandObjectGet(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandError(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandError(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem string ;
+    T_scriptDataItem string;
 
-    DebugRoutine("ICommandError") ;
+    DebugRoutine("ICommandError");
 
-    string = IScriptGetAny(script, &position) ;
-    DebugCheck(string.type == SCRIPT_DATA_TYPE_STRING) ;
+    string = IScriptGetAny(script, &position);
+    DebugCheck(string.type == SCRIPT_DATA_TYPE_STRING);
 
     printf("Script error: %s\n (at %d in %p)",
-        string.ns.p_string, position, script) ;
+           string.ns.p_string, position, script);
     fprintf(stderr, "Script error: %s (at %d in %p)\n",
-        string.ns.p_string, position, script) ;
-    DebugCheck(FALSE) ;
+            string.ns.p_string, position, script);
+    DebugCheck(FALSE);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2813,66 +2980,76 @@ static T_word16 ICommandError(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandLookForPlayer(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandLookForPlayer(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem objectNum ;
-    T_scriptDataItem *p_target = NULL ;
-    T_3dObject *p_obj ;
-    T_sword16 playerID ;
+    T_scriptDataItem objectNum;
+    T_scriptDataItem *p_target = NULL;
+    T_3dObject *p_obj;
+    T_sword16 playerID;
 
-    DebugRoutine("ICommandLookForPlayer") ;
+    DebugRoutine("ICommandLookForPlayer");
 
-    objectNum = IScriptGetAny(script, &position) ;
-    p_target  = IScriptGetVariable(script, &position) ;
+    objectNum = IScriptGetAny(script, &position);
+    p_target = IScriptGetVariable(script, &position);
 
-    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_target->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(objectNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_target->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_obj = ObjectFind((T_word16)objectNum.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
+    p_obj = ObjectFind((T_word16) objectNum.ns.number);
+    DebugCheck(p_obj != NULL);
 
-    p_target->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
-    if (p_obj)  {
+    p_target->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
+    if (p_obj)
+    {
 #ifdef SERVER_ONLY
         p_obj = CreatureLookForPlayer(p_obj) ;
 
-        if (p_obj != NULL)  {
-            DebugCheck(p_obj != NULL) ;
+if (p_obj != NULL)  {
+DebugCheck(p_obj != NULL) ;
 
-            if (p_obj)  {
-                p_target->ns.number = ObjectGetServerId(p_obj) ;
-            } else {
-                p_target->ns.number = 0xFFFF ;
-            }
-        } else {
-            p_target->ns.number = 0xFFFF ;
-        }
+if (p_obj)  {
+p_target->ns.number = ObjectGetServerId(p_obj) ;
+} else {
+p_target->ns.number = 0xFFFF ;
+}
+} else {
+p_target->ns.number = 0xFFFF ;
+}
 #else
-        playerID = CreatureLookForPlayer(p_obj) ;
+        playerID = CreatureLookForPlayer(p_obj);
 
-        if (playerID != -1)  {
-            p_obj = ServerGetPlayerObject(playerID) ;
+        if (playerID != -1)
+        {
+            p_obj = ServerGetPlayerObject(playerID);
 
-            DebugCheck(p_obj != NULL) ;
+            DebugCheck(p_obj != NULL);
 
-            if (p_obj)  {
-                p_target->ns.number = ObjectGetServerId(p_obj) ;
-            } else {
-                p_target->ns.number = 0xFFFF ;
+            if (p_obj)
+            {
+                p_target->ns.number = ObjectGetServerId(p_obj);
             }
-        } else {
-            p_target->ns.number = 0xFFFF ;
+            else
+            {
+                p_target->ns.number = 0xFFFF;
+            }
+        }
+        else
+        {
+            p_target->ns.number = 0xFFFF;
         }
 #endif
-    } else {
-        p_target->ns.number = 0xFFFF ;
+    }
+    else
+    {
+        p_target->ns.number = 0xFFFF;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2888,25 +3065,26 @@ static T_word16 ICommandLookForPlayer(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandIfNot(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandIfNot(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem value ;
-    T_scriptDataItem place ;
-    E_Boolean condition ;
+    T_scriptDataItem value;
+    T_scriptDataItem place;
+    E_Boolean condition;
 
-    DebugRoutine("ICommandIf") ;
+    DebugRoutine("ICommandIf");
 
-    value = IScriptGetAny(script, &position) ;
-    place = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
+    place = IScriptGetAny(script, &position);
 
-    condition = IValueToCondition(&value) ;
+    condition = IValueToCondition(&value);
 
     if (!condition)
-        position = IGetPlace(script, &place) ;
+        position = IGetPlace(script, &place);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -2925,43 +3103,47 @@ static T_word16 ICommandIfNot(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectGetAngleToObject(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandObjectGetAngleToObject(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sourceObjNum, targetObjNum ;
-    T_scriptDataItem *p_targetAngle = NULL ;
-    T_3dObject *p_source, *p_target ;
+    T_scriptDataItem sourceObjNum, targetObjNum;
+    T_scriptDataItem *p_targetAngle = NULL;
+    T_3dObject *p_source, *p_target;
 
-    DebugRoutine("ICommandObjectGetAngleToObject") ;
+    DebugRoutine("ICommandObjectGetAngleToObject");
 
-    p_targetAngle = IScriptGetVariable(script, &position) ;
-    sourceObjNum = IScriptGetAny(script, &position) ;
-    targetObjNum = IScriptGetAny(script, &position) ;
+    p_targetAngle = IScriptGetVariable(script, &position);
+    sourceObjNum = IScriptGetAny(script, &position);
+    targetObjNum = IScriptGetAny(script, &position);
 
-    DebugCheck(sourceObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(targetObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_targetAngle->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(sourceObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(targetObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_targetAngle->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_source = ObjectFind((T_word16)sourceObjNum.ns.number) ;
-    DebugCheck(p_source != NULL) ;
+    p_source = ObjectFind((T_word16) sourceObjNum.ns.number);
+    DebugCheck(p_source != NULL);
 
-    p_target = ObjectFind((T_word16)targetObjNum.ns.number) ;
-    DebugCheck(p_source != NULL) ;
+    p_target = ObjectFind((T_word16) targetObjNum.ns.number);
+    DebugCheck(p_source != NULL);
 
-    if ((p_source) && (p_target))  {
+    if ((p_source) && (p_target))
+    {
         p_targetAngle->ns.number =
-            (T_sword32)MathArcTangent(
-                (T_sword16)(ObjectGetX16(p_target) - ObjectGetX16(p_source)),
-                (T_sword16)(ObjectGetY16(p_target) - ObjectGetY16(p_source))) ;
-    } else {
-        p_targetAngle->ns.number = 0 ;
+            (T_sword32) MathArcTangent(
+                (T_sword16) (ObjectGetX16(p_target) - ObjectGetX16(p_source)),
+                (T_sword16) (ObjectGetY16(p_target) - ObjectGetY16(p_source)));
     }
-    p_targetAngle->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    else
+    {
+        p_targetAngle->ns.number = 0;
+    }
+    p_targetAngle->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -2979,22 +3161,23 @@ static T_word16 ICommandObjectGetAngleToObject(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandAbsolute(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandAbsolute(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("ICommandAbsolute") ;
+    DebugRoutine("ICommandAbsolute");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     if (p_var->ns.number < 0)
-        p_var->ns.number = -p_var->ns.number ;
+        p_var->ns.number = -p_var->ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -3012,22 +3195,23 @@ static T_word16 ICommandAbsolute(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandClear(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandClear(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("ICommandClear") ;
+    DebugRoutine("ICommandClear");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_var->ns.number = 0 ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = 0;
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3044,21 +3228,22 @@ static T_word16 ICommandClear(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandNegate(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandNegate(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("ICommandNegate") ;
+    DebugRoutine("ICommandNegate");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_var->ns.number = -p_var->ns.number ;
+    p_var->ns.number = -p_var->ns.number;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -3076,45 +3261,49 @@ static T_word16 ICommandNegate(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectDistanceToObject(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandObjectDistanceToObject(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sourceObjNum, targetObjNum ;
-    T_scriptDataItem *p_dist = NULL ;
-    T_3dObject *p_source, *p_target ;
+    T_scriptDataItem sourceObjNum, targetObjNum;
+    T_scriptDataItem *p_dist = NULL;
+    T_3dObject *p_source, *p_target;
 
-    DebugRoutine("ICommandObjectDistanceToObject") ;
+    DebugRoutine("ICommandObjectDistanceToObject");
 
-    p_dist = IScriptGetVariable(script, &position) ;
-    sourceObjNum = IScriptGetAny(script, &position) ;
-    targetObjNum = IScriptGetAny(script, &position) ;
+    p_dist = IScriptGetVariable(script, &position);
+    sourceObjNum = IScriptGetAny(script, &position);
+    targetObjNum = IScriptGetAny(script, &position);
 
-    DebugCheck(sourceObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(targetObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_dist->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(sourceObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(targetObjNum.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_dist->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_source = ObjectFind((T_word16)(sourceObjNum.ns.number)) ;
-    DebugCheck(p_source != NULL) ;
+    p_source = ObjectFind((T_word16) (sourceObjNum.ns.number));
+    DebugCheck(p_source != NULL);
 
-    p_target = ObjectFind((T_word16)(targetObjNum.ns.number)) ;
-    DebugCheck(p_source != NULL) ;
+    p_target = ObjectFind((T_word16) (targetObjNum.ns.number));
+    DebugCheck(p_source != NULL);
 
-    if ((p_source) && (p_target))  {
+    if ((p_source) && (p_target))
+    {
         p_dist->ns.number =
             CalculateDistance(
                 ObjectGetX16(p_source),
                 ObjectGetY16(p_source),
                 ObjectGetX16(p_target),
-                ObjectGetY16(p_target)) ;
-    } else {
-        p_dist->ns.number = 0x7FFF ;
+                ObjectGetY16(p_target));
     }
-    p_dist->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    else
+    {
+        p_dist->ns.number = 0x7FFF;
+    }
+    p_dist->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -3132,31 +3321,33 @@ static T_word16 ICommandObjectDistanceToObject(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectAccelForward(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandObjectAccelForward(
+    T_scriptHeader *script,
+    T_word16 position)
 {
     T_scriptDataItem object, accelAmount;
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("ICommandObjectAccelForward") ;
+    DebugRoutine("ICommandObjectAccelForward");
 
-    object = IScriptGetAny(script, &position) ;
-    accelAmount = IScriptGetAny(script, &position) ;
+    object = IScriptGetAny(script, &position);
+    accelAmount = IScriptGetAny(script, &position);
 
-    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(accelAmount.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(accelAmount.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_obj = ObjectFind((T_word16)object.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
+    p_obj = ObjectFind((T_word16) object.ns.number);
+    DebugCheck(p_obj != NULL);
 
-    if (p_obj)  {
-        ObjectAccelFlat(p_obj, accelAmount.ns.number, ObjectGetAngle(p_obj)) ;
+    if (p_obj)
+    {
+        ObjectAccelFlat(p_obj, accelAmount.ns.number, ObjectGetAngle(p_obj));
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 
@@ -3174,54 +3365,56 @@ static T_word16 ICommandObjectAccelForward(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandObjectDamageForward(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandObjectDamageForward(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem object, distance, typeDamage, radius, damageAmount ;
-    T_3dObject *p_obj ;
-    T_sword32 frontX, frontY ;
+    T_scriptDataItem object, distance, typeDamage, radius, damageAmount;
+    T_3dObject *p_obj;
+    T_sword32 frontX, frontY;
 
-    DebugRoutine("ICommandObjectAccelForward") ;
+    DebugRoutine("ICommandObjectAccelForward");
 
-    object = IScriptGetAny(script, &position) ;
-    distance = IScriptGetAny(script, &position) ;
-    radius = IScriptGetAny(script, &position) ;
-    typeDamage = IScriptGetAny(script, &position) ;
-    damageAmount = IScriptGetAny(script, &position) ;
+    object = IScriptGetAny(script, &position);
+    distance = IScriptGetAny(script, &position);
+    radius = IScriptGetAny(script, &position);
+    typeDamage = IScriptGetAny(script, &position);
+    damageAmount = IScriptGetAny(script, &position);
 
-    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(distance.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(typeDamage.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(damageAmount.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(object.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(distance.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(radius.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(typeDamage.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(damageAmount.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    p_obj = ObjectFind((T_word16)object.ns.number) ;
-    DebugCheck(p_obj != NULL) ;
+    p_obj = ObjectFind((T_word16) object.ns.number);
+    DebugCheck(p_obj != NULL);
 
-    if (p_obj)  {
+    if (p_obj)
+    {
         ObjectGetForwardPosition(
             p_obj,
-            (T_sword16)(ObjectGetRadius(p_obj) + distance.ns.number),
+            (T_sword16) (ObjectGetRadius(p_obj) + distance.ns.number),
             &frontX,
-            &frontY) ;
+            &frontY);
 
 #if 0
-/* !!! To be modified later. */
-        ServerDamageAt(
-            ObjectGetX(p_obj),
-            ObjectGetY(p_obj),
-            frontX,
-            frontY,
-            (T_word16)radius.ns.number,
-            (T_word16)damageAmount.ns.number,
-            0) ;
+        /* !!! To be modified later. */
+ServerDamageAt(
+ObjectGetX(p_obj),
+ObjectGetY(p_obj),
+frontX,
+frontY,
+(T_word16)radius.ns.number,
+(T_word16)damageAmount.ns.number,
+0) ;
 #endif
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3237,32 +3430,33 @@ static T_word16 ICommandObjectDamageForward(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSubtract16(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSubtract16(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem value, value2 ;
-    T_sword16 v1, v2 ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem value, value2;
+    T_sword16 v1, v2;
 
-    DebugRoutine("ICommandSubtract16") ;
+    DebugRoutine("ICommandSubtract16");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
 
-    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(value.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(value2.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Subtract. */
-    v1 = value.ns.number ;
-    v2 = value2.ns.number ;
+    v1 = value.ns.number;
+    v2 = value2.ns.number;
 
-    v1 -= v2 ;
-    p_var->ns.number = v1 ;
+    v1 -= v2;
+    p_var->ns.number = v1;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3279,88 +3473,92 @@ static T_word16 ICommandSubtract16(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandTextBoxSetSelection(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandTextBoxSetSelection(T_scriptHeader *script, T_word16 position)
 {
     T_scriptDataItem textBoxID, row;
 
-    DebugRoutine("ICommandTextBoxSetSelection") ;
+    DebugRoutine("ICommandTextBoxSetSelection");
 
-    textBoxID = IScriptGetAny(script, &position) ;
-    row = IScriptGetAny(script, &position) ;
+    textBoxID = IScriptGetAny(script, &position);
+    row = IScriptGetAny(script, &position);
 
-    DebugCheck(row.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    DebugCheck(textBoxID.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(row.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    DebugCheck(textBoxID.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Change the row. */
 #ifndef SERVER_ONLY
     ScriptFormTextBoxSetSelection(
         textBoxID.ns.number,
-        row.ns.number) ;
+        row.ns.number);
 #else
     DebugCheck(FALSE) ;
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 12/21/95 */
-static T_word16 ICommandObjectShootObject(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandObjectShootObject(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_3dObject *p_obj ;
-    T_scriptDataItem value, value2, value3 ;
+    T_3dObject *p_obj;
+    T_scriptDataItem value, value2, value3;
 
-    DebugRoutine("ICommandObjectShootObject") ;
+    DebugRoutine("ICommandObjectShootObject");
 
-    value = IScriptGetAny(script, &position) ;
-    value2 = IScriptGetAny(script, &position) ;
-    value3 = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
+    value2 = IScriptGetAny(script, &position);
+    value3 = IScriptGetAny(script, &position);
 
-    p_obj = ObjectFind((T_word16)value.ns.number) ;
+    p_obj = ObjectFind((T_word16) value.ns.number);
 #ifndef NDEBUG
     if (p_obj == NULL)  {
-        printf("Unknown object %d\n", value.ns.number) ;
-    }
+printf("Unknown object %d\n", value.ns.number) ;
+}
 #endif
-    DebugCheck(p_obj != NULL) ;
-    if (p_obj)  {
+    DebugCheck(p_obj != NULL);
+    if (p_obj)
+    {
         // Shoot directly with the server/world system
         T_word16 objectType = value2.ns.number;
-        T_word16 angle = ObjectGetAngle(p_obj) ;
+        T_word16 angle = ObjectGetAngle(p_obj);
         T_word16 velocity = value3.ns.number;
         ServerShootProjectile(p_obj, angle, objectType, velocity, 0);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 12/21/95 */
-static T_word16 ICommandPlayerObjectGet(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandPlayerObjectGet(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
+    T_scriptDataItem *p_var = NULL;
 
-    DebugRoutine("ICommandPlayerObjectGet") ;
+    DebugRoutine("ICommandPlayerObjectGet");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    p_var = IScriptGetVariable(script, &position);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
 #ifdef SERVER_ONLY
     DebugCheck(FALSE) ;
 #else
-    p_var->ns.number = ObjectGetServerId(PlayerGetObject()) ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = ObjectGetServerId(PlayerGetObject());
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3376,29 +3574,30 @@ static T_word16 ICommandPlayerObjectGet(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandGetFloorHeight(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandGetFloorHeight(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
-    T_scriptDataItem value ;
+    T_scriptDataItem *p_var = NULL;
+    T_scriptDataItem value;
 
-    DebugRoutine("ICommandGetFloorHeight") ;
+    DebugRoutine("ICommandGetFloorHeight");
 
     /* Get the sector for the floor. */
-    value = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
 
     /* Get where to store the value. */
-    p_var = IScriptGetVariable(script, &position) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    p_var = IScriptGetVariable(script, &position);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Store the height in the variable. */
-    p_var->ns.number = MapGetFloorHeight((T_word16)value.ns.number) ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = MapGetFloorHeight((T_word16) value.ns.number);
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3414,361 +3613,380 @@ static T_word16 ICommandGetFloorHeight(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandGetCeilingHeight(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandGetCeilingHeight(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
-    T_scriptDataItem value ;
+    T_scriptDataItem *p_var = NULL;
+    T_scriptDataItem value;
 
-    DebugRoutine("ICommandGetCeilingHeight") ;
+    DebugRoutine("ICommandGetCeilingHeight");
 
     /* Get the sector for the floor. */
-    value = IScriptGetAny(script, &position) ;
+    value = IScriptGetAny(script, &position);
 
     /* Get where to store the value. */
-    p_var = IScriptGetVariable(script, &position) ;
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    p_var = IScriptGetVariable(script, &position);
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Store the height in the variable. */
-    p_var->ns.number = MapGetCeilingHeight((T_word16)value.ns.number) ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = MapGetCeilingHeight((T_word16) value.ns.number);
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Door increase lock */
-static T_word16 ICommandDoorIncreaseLock(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandDoorIncreaseLock(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sector, amount ;
+    T_scriptDataItem sector, amount;
 
-    DebugRoutine("ICommandDoorIncreaseLock") ;
+    DebugRoutine("ICommandDoorIncreaseLock");
 
     /* Get the sector for the floor. */
-    sector = IScriptGetAny(script, &position) ;
+    sector = IScriptGetAny(script, &position);
 
     /* Get the amount to increase. */
-    amount = IScriptGetAny(script, &position) ;
+    amount = IScriptGetAny(script, &position);
 
     DoorIncreaseLock(
-        (T_word16)sector.ns.number,
-        (T_word16)amount.ns.number) ;
+        (T_word16) sector.ns.number,
+        (T_word16) amount.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Door decrease lock */
-static T_word16 ICommandDoorDecreaseLock(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandDoorDecreaseLock(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sector, amount ;
+    T_scriptDataItem sector, amount;
 
-    DebugRoutine("ICommandDoorDecreaseLock") ;
+    DebugRoutine("ICommandDoorDecreaseLock");
 
     /* Get the sector for the floor. */
-    sector = IScriptGetAny(script, &position) ;
+    sector = IScriptGetAny(script, &position);
 
     /* Get the amount to decrease. */
-    amount = IScriptGetAny(script, &position) ;
+    amount = IScriptGetAny(script, &position);
 
     DoorDecreaseLock(
-        (T_word16)sector.ns.number,
-        (T_word16)amount.ns.number) ;
+        (T_word16) sector.ns.number,
+        (T_word16) amount.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Start a side state */
-static T_word16 ICommandSideState(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSideState(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem sideNum, state ;
+    T_scriptDataItem sideNum, state;
 
-    DebugRoutine("ICommandSideState") ;
+    DebugRoutine("ICommandSideState");
 
     /* Get the side number. */
-    sideNum = IScriptGetAny(script, &position) ;
+    sideNum = IScriptGetAny(script, &position);
 
     /* Get the state to become. */
-    state = IScriptGetAny(script, &position) ;
+    state = IScriptGetAny(script, &position);
 
 //    if (CommIsServer() == TRUE)  {
-        MapSetSideState(sideNum.ns.number, state.ns.number) ;
+    MapSetSideState(sideNum.ns.number, state.ns.number);
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Start a wall state */
-static T_word16 ICommandWallState(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandWallState(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem wallNum, state ;
+    T_scriptDataItem wallNum, state;
 
-    DebugRoutine("ICommandWallState") ;
+    DebugRoutine("ICommandWallState");
 
     /* Get the wall number. */
-    wallNum = IScriptGetAny(script, &position) ;
+    wallNum = IScriptGetAny(script, &position);
 
     /* Get the state to become. */
-    state = IScriptGetAny(script, &position) ;
+    state = IScriptGetAny(script, &position);
 
 //    if (CommIsServer() == TRUE)  {
-        MapSetWallState(wallNum.ns.number, state.ns.number) ;
+    MapSetWallState(wallNum.ns.number, state.ns.number);
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Start a sector state */
-static T_word16 ICommandSectorState(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandSectorState(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem sectorNum, state ;
+    T_scriptDataItem sectorNum, state;
 
-    DebugRoutine("ICommandSectorState") ;
+    DebugRoutine("ICommandSectorState");
 
     /* Get the sector number. */
-    sectorNum = IScriptGetAny(script, &position) ;
+    sectorNum = IScriptGetAny(script, &position);
 
     /* Get the state to become. */
-    state = IScriptGetAny(script, &position) ;
+    state = IScriptGetAny(script, &position);
 
 //    if (CommIsServer() == TRUE)  {
-        MapSetSectorState(sectorNum.ns.number, state.ns.number) ;
+    MapSetSectorState(sectorNum.ns.number, state.ns.number);
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Give the player experience */
-static T_word16 ICommandGivePlayerXP(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandGivePlayerXP(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem xp ;
+    T_scriptDataItem xp;
 
-    DebugRoutine("ICommandGivePlayerXP") ;
+    DebugRoutine("ICommandGivePlayerXP");
 
     /* Get the amount of experience. */
-    xp = IScriptGetAny(script, &position) ;
+    xp = IScriptGetAny(script, &position);
 
-    StatsChangePlayerExperience((T_sword16)(xp.ns.number)) ;
+    StatsChangePlayerExperience((T_sword16) (xp.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /* LES: 05/13/96 -- Give all players experience */
-static T_word16 ICommandGiveAllPlayersXP(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandGiveAllPlayersXP(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem xp ;
+    T_scriptDataItem xp;
 
-    DebugRoutine("ICommandGiveAllPlayersXP") ;
+    DebugRoutine("ICommandGiveAllPlayersXP");
 
     /* Get the amount of experience. */
-    xp = IScriptGetAny(script, &position) ;
+    xp = IScriptGetAny(script, &position);
 
-    StatsChangePlayerExperience((T_sword16)(xp.ns.number)) ;
+    StatsChangePlayerExperience((T_sword16) (xp.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandEffect(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandEffect(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem effectType, data1, data2, data3 ;
+    T_scriptDataItem effectType, data1, data2, data3;
 
-    DebugRoutine("ICommandEffect") ;
+    DebugRoutine("ICommandEffect");
 
-    effectType = IScriptGetAny(script, &position) ;
+    effectType = IScriptGetAny(script, &position);
 
-    data1 = IScriptGetAny(script, &position) ;
+    data1 = IScriptGetAny(script, &position);
 
-    data2 = IScriptGetAny(script, &position) ;
+    data2 = IScriptGetAny(script, &position);
 
-    data3 = IScriptGetAny(script, &position) ;
+    data3 = IScriptGetAny(script, &position);
 
 #ifndef SERVER_ONLY
     /* Cause the effect. */
     Effect(
-        (T_sword16)(effectType.ns.number),
+        (T_sword16) (effectType.ns.number),
         EFFECT_TRIGGER_NONE,
-        (T_word16)(data1.ns.number),
-        (T_word16)(data2.ns.number),
-        (T_word16)(data3.ns.number),
-        NULL) ;
+        (T_word16) (data1.ns.number),
+        (T_word16) (data2.ns.number),
+        (T_word16) (data3.ns.number),
+        NULL);
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandSectorSetLight(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandSectorSetLight(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sector, lightLevel ;
+    T_scriptDataItem sector, lightLevel;
 
-    DebugRoutine("ICommandSectorSetLight") ;
+    DebugRoutine("ICommandSectorSetLight");
 
-    sector = IScriptGetAny(script, &position) ;
-    lightLevel = IScriptGetAny(script, &position) ;
+    sector = IScriptGetAny(script, &position);
+    lightLevel = IScriptGetAny(script, &position);
 
     MapSetSectorLighting(
-        (T_word16)(sector.ns.number),
-        (T_byte8)(lightLevel.ns.number)) ;
+        (T_word16) (sector.ns.number),
+        (T_byte8) (lightLevel.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandGenerateMissile(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandGenerateMissile(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem objType, x, y, z, targetX, targetY, targetZ, initSpeed ;
+    T_scriptDataItem objType, x, y, z, targetX, targetY, targetZ, initSpeed;
 
-    DebugRoutine("ICommandGenerateMissile") ;
+    DebugRoutine("ICommandGenerateMissile");
 
-    objType = IScriptGetAny(script, &position) ;
-    x = IScriptGetAny(script, &position) ;
-    y = IScriptGetAny(script, &position) ;
-    z = IScriptGetAny(script, &position) ;
-    targetX = IScriptGetAny(script, &position) ;
-    targetY = IScriptGetAny(script, &position) ;
-    targetZ = IScriptGetAny(script, &position) ;
-    initSpeed = IScriptGetAny(script, &position) ;
+    objType = IScriptGetAny(script, &position);
+    x = IScriptGetAny(script, &position);
+    y = IScriptGetAny(script, &position);
+    z = IScriptGetAny(script, &position);
+    targetX = IScriptGetAny(script, &position);
+    targetY = IScriptGetAny(script, &position);
+    targetZ = IScriptGetAny(script, &position);
+    initSpeed = IScriptGetAny(script, &position);
 
 //    if (CommIsServer() == TRUE)  {
-        ServerShootBasicProjectile(
-            (T_word16)(objType.ns.number),
-            (T_sword32)((x.ns.number)<<16),
-            (T_sword32)((y.ns.number)<<16),
-            (T_sword32)((z.ns.number)<<16),
-            (T_sword32)((targetX.ns.number)<<16),
-            (T_sword32)((targetY.ns.number)<<16),
-            (T_sword32)((targetZ.ns.number)<<16),
-            (T_word16)(initSpeed.ns.number)) ;
+    ServerShootBasicProjectile(
+        (T_word16) (objType.ns.number),
+        (T_sword32) ((x.ns.number) << 16),
+        (T_sword32) ((y.ns.number) << 16),
+        (T_sword32) ((z.ns.number) << 16),
+        (T_sword32) ((targetX.ns.number) << 16),
+        (T_sword32) ((targetY.ns.number) << 16),
+        (T_sword32) ((targetZ.ns.number) << 16),
+        (T_word16) (initSpeed.ns.number));
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandPlayerHasItem(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandPlayerHasItem(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
-    T_scriptDataItem item ;
+    T_scriptDataItem *p_var = NULL;
+    T_scriptDataItem item;
 
-    DebugRoutine("ICommandPlayerHasItem") ;
+    DebugRoutine("ICommandPlayerHasItem");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    item = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    item = IScriptGetAny(script, &position);
 
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 /* !!! Need InventoryHasItem to be written */
 /*    if (InventoryHasItem((T_word16)(item.ns.number)) == TRUE)  {
         p_var->ns.number = 1 ;
     } else */ {
-        p_var->ns.number = 0 ;
+        p_var->ns.number = 0;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandIsEffectActive(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandIsEffectActive(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var = NULL ;
-    T_scriptDataItem effect ;
+    T_scriptDataItem *p_var = NULL;
+    T_scriptDataItem effect;
 
-    DebugRoutine("ICommandIsEffectActive") ;
+    DebugRoutine("ICommandIsEffectActive");
 
-    p_var = IScriptGetVariable(script, &position) ;
-    effect = IScriptGetAny(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
+    effect = IScriptGetAny(script, &position);
 
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 #ifndef SERVER_ONLY
     if (EffectPlayerEffectIsActive(
-            (E_playerEffectType)(effect.ns.number)) == TRUE)  {
+        (E_playerEffectType) (effect.ns.number)) == TRUE)
+    {
         /* Player effect is active */
-        p_var->ns.number = 1 ;
-    } else {
+        p_var->ns.number = 1;
+    }
+    else
+    {
         /* Player effect is not active. */
-        p_var->ns.number = 0 ;
+        p_var->ns.number = 0;
     }
 #else
     /* When server only, always return zero. */
-    p_var->ns.number = 0 ;
+p_var->ns.number = 0 ;
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandActivateGenerator(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandActivateGenerator(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem genID ;
+    T_scriptDataItem genID;
 
-    DebugRoutine("ICommandActivateGenerator") ;
+    DebugRoutine("ICommandActivateGenerator");
 
-    genID = IScriptGetAny(script, &position) ;
+    genID = IScriptGetAny(script, &position);
 
-    ObjectGeneratorActivate((T_word16)(genID.ns.number)) ;
+    ObjectGeneratorActivate((T_word16) (genID.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandDeactiveGenerator(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandDeactiveGenerator(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem genID ;
+    T_scriptDataItem genID;
 
-    DebugRoutine("ICommandDeactivateGenerator") ;
+    DebugRoutine("ICommandDeactivateGenerator");
 
-    genID = IScriptGetAny(script, &position) ;
+    genID = IScriptGetAny(script, &position);
 
-    ObjectGeneratorDeactivate((T_word16)(genID.ns.number)) ;
+    ObjectGeneratorDeactivate((T_word16) (genID.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
-static T_word16 ICommandGroupState(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandGroupState(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem group ;
+    T_scriptDataItem group;
 
-    DebugRoutine("ICommandGroupState") ;
+    DebugRoutine("ICommandGroupState");
 
-    group = IScriptGetAny(script, &position) ;
+    group = IScriptGetAny(script, &position);
 
-    ObjectGeneratorDeactivate((T_word16)(group.ns.number)) ;
+    ObjectGeneratorDeactivate((T_word16) (group.ns.number));
 
 //    if (CommIsServer() == TRUE)  {
 /* !!! Not implemented yet
@@ -3776,9 +3994,9 @@ static T_word16 ICommandGroupState(T_scriptHeader *script, T_word16 position)
 */
 //    }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3794,28 +4012,32 @@ static T_word16 ICommandGroupState(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandBlock(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandBlock(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
+    T_scriptDataItem *p_var;
 
-    DebugRoutine("ICommandBlock") ;
+    DebugRoutine("ICommandBlock");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    if (p_var->ns.number == 0)  {
+    if (p_var->ns.number == 0)
+    {
         /* The given value is zero.  Make the value not zero and go on. */
-        p_var->ns.number = 1 ;
-        p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
-    } else {
+        p_var->ns.number = 1;
+        p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
+    }
+    else
+    {
         /* The given value is not zero.  We must immediately stop here. */
-        G_pleaseStop = TRUE ;
+        G_pleaseStop = TRUE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3831,23 +4053,24 @@ static T_word16 ICommandBlock(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandUnblock(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandUnblock(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem *p_var ;
+    T_scriptDataItem *p_var;
 
-    DebugRoutine("ICommandUnblock") ;
+    DebugRoutine("ICommandUnblock");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Unblock the variable. */
-    p_var->ns.number = 0 ;
-    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER ;
+    p_var->ns.number = 0;
+    p_var->type = SCRIPT_DATA_TYPE_32_BIT_NUMBER;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3866,63 +4089,67 @@ static T_word16 ICommandUnblock(T_scriptHeader *script, T_word16 position)
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandToggleSwitch(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandToggleSwitch(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem *p_var ;
-    T_scriptDataItem side ;
-    T_scriptDataItem stringUp ;
-    T_scriptDataItem stringDown ;
-    T_scriptDataItem downScript ;
-    T_scriptDataItem upScript ;
-    T_byte8 name[SCRIPT_MAX_STRING+1] ;
+    T_scriptDataItem *p_var;
+    T_scriptDataItem side;
+    T_scriptDataItem stringUp;
+    T_scriptDataItem stringDown;
+    T_scriptDataItem downScript;
+    T_scriptDataItem upScript;
+    T_byte8 name[SCRIPT_MAX_STRING + 1];
 
-    DebugRoutine("ICommandToggleSwitch") ;
+    DebugRoutine("ICommandToggleSwitch");
 
-    p_var = IScriptGetVariable(script, &position) ;
+    p_var = IScriptGetVariable(script, &position);
 
-    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    DebugCheck(p_var->type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    side = IScriptGetAny(script, &position) ;
-    DebugCheck(side.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    side = IScriptGetAny(script, &position);
+    DebugCheck(side.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    stringUp = IScriptGetAny(script, &position) ;
-    DebugCheck(stringUp.type == SCRIPT_DATA_TYPE_STRING) ;
+    stringUp = IScriptGetAny(script, &position);
+    DebugCheck(stringUp.type == SCRIPT_DATA_TYPE_STRING);
 
-    stringDown = IScriptGetAny(script, &position) ;
-    DebugCheck(stringDown.type == SCRIPT_DATA_TYPE_STRING) ;
+    stringDown = IScriptGetAny(script, &position);
+    DebugCheck(stringDown.type == SCRIPT_DATA_TYPE_STRING);
 
-    upScript = IScriptGetAny(script, &position) ;
-    DebugCheck(upScript.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    upScript = IScriptGetAny(script, &position);
+    DebugCheck(upScript.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
-    downScript = IScriptGetAny(script, &position) ;
-    DebugCheck(downScript.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    downScript = IScriptGetAny(script, &position);
+    DebugCheck(downScript.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     /* Is the switch up or down? */
-    if (p_var->ns.number == 0)  {
+    if (p_var->ns.number == 0)
+    {
         /* It is up.  Put it in the down position. */
-        p_var->ns.number = 1 ;
-        IPascalToCString(name, stringDown.ns.p_string) ;
-        MapSetWallTexture((T_word16)side.ns.number, name) ;
+        p_var->ns.number = 1;
+        IPascalToCString(name, stringDown.ns.p_string);
+        MapSetWallTexture((T_word16) side.ns.number, name);
 
         /* Go to the down script. */
         if (downScript.ns.number != -1)
-            position = IGetPlace(script, &downScript) ;
-    } else {
+            position = IGetPlace(script, &downScript);
+    }
+    else
+    {
         /* It is down.  Put it in the up position. */
-        p_var->ns.number = 0 ;
-        IPascalToCString(name, stringUp.ns.p_string) ;
-        MapSetWallTexture((T_word16)side.ns.number, name) ;
+        p_var->ns.number = 0;
+        IPascalToCString(name, stringUp.ns.p_string);
+        MapSetWallTexture((T_word16) side.ns.number, name);
 
         /* Go to the down script. */
         if (upScript.ns.number != -1)
-            position = IGetPlace(script, &upScript) ;
+            position = IGetPlace(script, &upScript);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3937,36 +4164,37 @@ static T_word16 ICommandToggleSwitch(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSlideFloorNice(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandSlideFloorNice(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sector, start, end, over, next ;
+    T_scriptDataItem sector, start, end, over, next;
 
-    DebugRoutine("ICommandSlideFloorNice") ;
+    DebugRoutine("ICommandSlideFloorNice");
 
-    sector = IScriptGetAny(script, &position) ;
-    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    start = IScriptGetAny(script, &position) ;
-    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    end = IScriptGetAny(script, &position) ;
-    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    over = IScriptGetAny(script, &position) ;
-    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    next = IScriptGetAny(script, &position) ;
-    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    sector = IScriptGetAny(script, &position);
+    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    start = IScriptGetAny(script, &position);
+    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    end = IScriptGetAny(script, &position);
+    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    over = IScriptGetAny(script, &position);
+    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    next = IScriptGetAny(script, &position);
+    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     SliderStart(
-        ((T_word32)sector.ns.number) | (SLIDER_TYPE_FLOOR<<16),
-        ((T_sword32)MapGetFloorHeight((T_word16)sector.ns.number)) << 16,
-        ((T_sword32)end.ns.number) << 16,
-        (T_sword32)over.ns.number,
+        ((T_word32) sector.ns.number) | (SLIDER_TYPE_FLOOR << 16),
+        ((T_sword32) MapGetFloorHeight((T_word16) sector.ns.number)) << 16,
+        ((T_sword32) end.ns.number) << 16,
+        (T_sword32) over.ns.number,
         IHandleSlidingFloorNice,
-        ((T_word16)next.ns.number)) ;
+        ((T_word16) next.ns.number));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3981,36 +4209,37 @@ static T_word16 ICommandSlideFloorNice(
  *  @return New position
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 ICommandSlideCeilingNice(
-                    T_scriptHeader *script,
-                    T_word16 position)
+static T_word16
+ICommandSlideCeilingNice(
+    T_scriptHeader *script,
+    T_word16 position)
 {
-    T_scriptDataItem sector, start, end, over, next ;
+    T_scriptDataItem sector, start, end, over, next;
 
-    DebugRoutine("ICommandSlideCeilingNice") ;
+    DebugRoutine("ICommandSlideCeilingNice");
 
-    sector = IScriptGetAny(script, &position) ;
-    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    start = IScriptGetAny(script, &position) ;
-    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    end = IScriptGetAny(script, &position) ;
-    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    over = IScriptGetAny(script, &position) ;
-    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
-    next = IScriptGetAny(script, &position) ;
-    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER) ;
+    sector = IScriptGetAny(script, &position);
+    DebugCheck(sector.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    start = IScriptGetAny(script, &position);
+    DebugCheck(start.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    end = IScriptGetAny(script, &position);
+    DebugCheck(end.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    over = IScriptGetAny(script, &position);
+    DebugCheck(over.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
+    next = IScriptGetAny(script, &position);
+    DebugCheck(next.type <= SCRIPT_DATA_TYPE_32_BIT_NUMBER);
 
     SliderStart(
-        ((T_word32)sector.ns.number) | (SLIDER_TYPE_CEILING<<16),
-        ((T_sword32)MapGetCeilingHeight((T_word16)sector.ns.number)) << 16,
-        ((T_sword32)end.ns.number) << 16,
-        (T_sword32)over.ns.number,
+        ((T_word32) sector.ns.number) | (SLIDER_TYPE_CEILING << 16),
+        ((T_sword32) MapGetCeilingHeight((T_word16) sector.ns.number)) << 16,
+        ((T_sword32) end.ns.number) << 16,
+        (T_sword32) over.ns.number,
         IHandleSlidingCeilingNice,
-        (T_word16)next.ns.number) ;
+        (T_word16) next.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /*-------------------------------------------------------------------------*
@@ -4025,33 +4254,37 @@ static T_word16 ICommandSlideCeilingNice(
  *  @param isDone -- Flag telling if this is the last update
  *
  *<!-----------------------------------------------------------------------*/
-static T_sliderResponse IHandleSlidingFloorNice(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone)
+static T_sliderResponse
+IHandleSlidingFloorNice(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone)
 {
-    T_word16 sector ;
-    T_sliderResponse response ;
+    T_word16 sector;
+    T_sliderResponse response;
 
-    DebugRoutine("IHandleSlidingFloorNice") ;
+    DebugRoutine("IHandleSlidingFloorNice");
 
     /* Extract what sector we are using. */
-    sector = sliderId & 0xFFFF ;
+    sector = sliderId & 0xFFFF;
 
     /* Change that floor's height. */
-    if (MapCheckCrushByFloor(sector, (T_sword16)(value>>16)) == FALSE)  {
+    if (MapCheckCrushByFloor(sector, (T_sword16) (value >> 16)) == FALSE)
+    {
         /* Not crushing, must be ok. */
-        MapSetFloorHeight(sector, (T_sword16)(value>>16)) ;
-        response = SLIDER_RESPONSE_CONTINUE ;
-    } else {
+        MapSetFloorHeight(sector, (T_sword16) (value >> 16));
+        response = SLIDER_RESPONSE_CONTINUE;
+    }
+    else
+    {
         /* Crushing is a problem. */
         /* Hold this position until the obstruction is out of the way. */
-        response = SLIDER_RESPONSE_PAUSE ;
+        response = SLIDER_RESPONSE_PAUSE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return response ;
+    return response;
 }
 
 /*-------------------------------------------------------------------------*
@@ -4066,48 +4299,53 @@ static T_sliderResponse IHandleSlidingFloorNice(
  *  @param isDone -- Flag telling if this is the last update
  *
  *<!-----------------------------------------------------------------------*/
-static T_sliderResponse IHandleSlidingCeilingNice(
-           T_word32 sliderId,
-           T_sword32 value,
-           E_Boolean isDone)
+static T_sliderResponse
+IHandleSlidingCeilingNice(
+    T_word32 sliderId,
+    T_sword32 value,
+    E_Boolean isDone)
 {
-    T_word16 sector ;
-    T_sliderResponse response ;
+    T_word16 sector;
+    T_sliderResponse response;
 
-    DebugRoutine("IHandleSlidingCeilingNice") ;
+    DebugRoutine("IHandleSlidingCeilingNice");
 
     /* Extract what sector we are using. */
-    sector = sliderId & 0xFFFF ;
+    sector = sliderId & 0xFFFF;
 
     /* Change that ceiling's height. */
-    if (MapCheckCrushByCeiling(sector, (T_sword16)(value>>16)) == FALSE)  {
+    if (MapCheckCrushByCeiling(sector, (T_sword16) (value >> 16)) == FALSE)
+    {
         /* Not crushing, must be ok. */
-        MapSetCeilingHeight(sector, (T_sword16)(value>>16)) ;
-        response = SLIDER_RESPONSE_CONTINUE ;
-    } else {
+        MapSetCeilingHeight(sector, (T_sword16) (value >> 16));
+        response = SLIDER_RESPONSE_CONTINUE;
+    }
+    else
+    {
         /* Crushing is a problem. */
         /* Hold this position until the obstruction is out of the way. */
-        response = SLIDER_RESPONSE_PAUSE ;
+        response = SLIDER_RESPONSE_PAUSE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return response ;
+    return response;
 }
 
-static T_word16 ICommandJournalEntry(T_scriptHeader *script, T_word16 position)
+static T_word16
+ICommandJournalEntry(T_scriptHeader *script, T_word16 position)
 {
-    T_scriptDataItem entry ;
+    T_scriptDataItem entry;
 
-    DebugRoutine("ICommandJournalEntry") ;
+    DebugRoutine("ICommandJournalEntry");
 
-    entry = IScriptGetAny(script, &position) ;
+    entry = IScriptGetAny(script, &position);
 
-    StatsAddPlayerNotePage(entry.ns.number) ;
+    StatsAddPlayerNotePage(entry.ns.number);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return position ;
+    return position;
 }
 
 /** @} */

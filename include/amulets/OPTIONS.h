@@ -74,13 +74,13 @@
 //   -- View3dDrawView
 
 #ifdef COMPILE_OPTION_SHAREWARE_DEMO
-    #define VERSION_TEXT "Shareware Demo V1.2"
+#define VERSION_TEXT "Shareware Demo V1.2"
 #elif defined(COMPILE_OPTION_CLASSIC_VERSION)
-    #define VERSION_TEXT "Classic V1.05.03a"
+#define VERSION_TEXT "Classic V1.05.03a"
 #elif defined(COMPILE_OPTION_CLASSIC_DEV_VERSION)
-    #define VERSION_TEXT "Classic Dev V1.05.03a"
+#define VERSION_TEXT "Classic Dev V1.05.03a"
 #else
-    #define VERSION_TEXT "Registered V1.0"
+#define VERSION_TEXT "Registered V1.0"
 #endif
 
 #ifndef SERVER_ONLY
@@ -177,16 +177,16 @@
 #define CompareUniqueNetworkIDs(a, b) (((memcmp(&(a), &(b), sizeof(a)))==0)?TRUE:FALSE)
 
 #ifdef WIN32
-	#define far
-	#define near
-	#define huge
-	#define __interrupt
-	#define __far
-	#define __near
-	#define COMPILE_OPTION_DIRECT_TALK_IS_DOS32
-	#define WIN_IPX		 1 // off
+#define far
+#define near
+#define huge
+#define __interrupt
+#define __far
+#define __near
+#define COMPILE_OPTION_DIRECT_TALK_IS_DOS32
+#define WIN_IPX		 1 // off
 #else
-	#define COMPILE_OPTION_DIRECT_TALK_IS_DOS32
+#define COMPILE_OPTION_DIRECT_TALK_IS_DOS32
 #endif
 
 #ifdef SDL

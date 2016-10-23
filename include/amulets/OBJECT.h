@@ -17,8 +17,8 @@
 #define STANCE_UNKNOWN 6
 
 typedef E_Boolean (*T_objectDoToAllCallback)(
-                          T_3dObject *p_obj,
-                          T_word32 data) ;
+    T_3dObject *p_obj,
+    T_word32 data);
 
 #define OBJECT_ATTR_PASSABLE         0x0001    /* ---- ---- ---- ---1 */
 #define OBJECT_ATTR_GRABABLE         0x0002    /* ---- ---- ---- --1- */
@@ -32,7 +32,7 @@ typedef E_Boolean (*T_objectDoToAllCallback)(
 #define OBJECT_ATTR_SLIDE_ONLY       0x0200    /* ---- --1- ---- ---- */
 #define OBJECT_ATTR_PIECE_WISE       0x0400    /* ---- -1-- ---- ---- */
 #define OBJECT_ATTR_MARK_IMPASSIBLE_WHEN_FREE 0x0800
-                                               /* ---- 1--- ---- ---- */
+/* ---- 1--- ---- ---- */
 #define OBJECT_ATTR_MARK_FOR_DESTROY 0x1000    /* ---1 ---- ---- ---- */
 #define OBJECT_ATTR_FULLY_PASSABLE   0x2000    /* --1- ---- ---- ---- */
 #define OBJECT_ATTR_BODY_PART        0x4000    /* -1-- ---- ---- ---- */
@@ -116,8 +116,8 @@ typedef E_Boolean (*T_objectDoToAllCallback)(
 #define ObjectSetY16(p_obj, y)   ObjectSetY(p_obj, (((T_sword32)(y))<<16))
 #define ObjectSetZ16(p_obj, z)   ObjectSetZ(p_obj, (((T_sword32)(z))<<16))
 #define ObjectSetAttributes(p_obj, attr)  ((p_obj)->attributes = (attr))
-#define ObjectAddAttributes(p_obj,attr)   ((p_obj)->attributes |= (attr))
-#define ObjectRemoveAttributes(p_obj,attr)   ((p_obj)->attributes &= (~(attr)))
+#define ObjectAddAttributes(p_obj, attr)   ((p_obj)->attributes |= (attr))
+#define ObjectRemoveAttributes(p_obj, attr)   ((p_obj)->attributes &= (~(attr)))
 #define ObjectSetRadius(p_obj, rad)  \
              ObjMoveSetRadius(&(p_obj)->objMove, (rad))
 #define ObjectSetUniqueId(p_obj, id)        ((p_obj)->objUniqueId = (id))
@@ -322,154 +322,205 @@ typedef E_Boolean (*T_objectDoToAllCallback)(
 #define ObjectRegularFriction(p_obj)     \
             ObjMoveRegularFriction(&(p_obj)->objMove)
 
-T_word16 ObjectGetPictureWidth(T_3dObject *p_obj) ;
+T_word16
+ObjectGetPictureWidth(T_3dObject *p_obj);
 
-T_word16 ObjectGetPictureHeight(T_3dObject *p_obj) ;
+T_word16
+ObjectGetPictureHeight(T_3dObject *p_obj);
 
-T_byte8 *ObjectGetPicture(T_3dObject *p_obj) ;
+T_byte8 *
+ObjectGetPicture(T_3dObject *p_obj);
 
-T_3dObject *ObjectFind(T_word16 objServerId) ;
+T_3dObject *
+ObjectFind(T_word16 objServerId);
 
-T_void ObjectSetUpSectors(T_3dObject *p_obj) ;
+T_void
+ObjectSetUpSectors(T_3dObject *p_obj);
 
-T_3dObject *ObjectCreate(T_void) ;
+T_3dObject *
+ObjectCreate(T_void);
 
-T_3dObject *ObjectCreateFake(T_void) ;
+T_3dObject *
+ObjectCreateFake(T_void);
 
-T_void ObjectAdd(T_3dObject *p_obj) ;
+T_void
+ObjectAdd(T_3dObject *p_obj);
 
-T_void ObjectRemove(T_3dObject *p_obj) ;
+T_void
+ObjectRemove(T_3dObject *p_obj);
 
-T_void ObjectDestroy(T_3dObject *p_obj) ;
+T_void
+ObjectDestroy(T_3dObject *p_obj);
 
-T_void ObjectDeclareStatic(
-           T_3dObject *p_obj,
-           T_sword16 mapX,
-           T_sword16 mapY) ;
+T_void
+ObjectDeclareStatic(
+    T_3dObject *p_obj,
+    T_sword16 mapX,
+    T_sword16 mapY);
 
 //T_void ObjectSetPictureDirectly(T_3dObject *p_obj, T_byte8 *p_pic) ;
 
-T_void ObjectTeleport(T_3dObject *p_obj, T_sword16 x, T_sword16 y) ;
+T_void
+ObjectTeleport(T_3dObject *p_obj, T_sword16 x, T_sword16 y);
 
-T_void ObjectTeleportAlways(T_3dObject *p_obj, T_sword16 x, T_sword16 y) ;
+T_void
+ObjectTeleportAlways(T_3dObject *p_obj, T_sword16 x, T_sword16 y);
 
-T_void ObjectMakeImpassable(T_3dObject *p_obj) ;
+T_void
+ObjectMakeImpassable(T_3dObject *p_obj);
 
-T_void ObjectMakePassable(T_3dObject *p_obj) ;
+T_void
+ObjectMakePassable(T_3dObject *p_obj);
 
-T_void ObjectMakePassable(T_3dObject *p_obj) ;
+T_void
+ObjectMakePassable(T_3dObject *p_obj);
 
-T_sword16 ObjectGetMiddleHeight(T_3dObject *p_obj) ;
+T_sword16
+ObjectGetMiddleHeight(T_3dObject *p_obj);
 
-T_word16 ObjectGetTypeRadius(T_word16 type) ;
+T_word16
+ObjectGetTypeRadius(T_word16 type);
 
-T_bitmap *ObjectGetBitmap(T_3dObject *p_obj) ;
+T_bitmap *
+ObjectGetBitmap(T_3dObject *p_obj);
 
-T_void ObjectsRemoveExtra(T_void) ;
+T_void
+ObjectsRemoveExtra(T_void);
 
-T_void ObjectsUpdateMovement(T_word32 delta) ;
+T_void
+ObjectsUpdateMovement(T_word32 delta);
 
-T_void ObjectSetType(T_3dObject *p_obj, T_word16 type) ;
+T_void
+ObjectSetType(T_3dObject *p_obj, T_word16 type);
 
-T_void ObjectSetTypeSimple(T_3dObject *p_obj, T_word16 type) ;
+T_void
+ObjectSetTypeSimple(T_3dObject *p_obj, T_word16 type);
 
-T_void ObjectsUpdateAnimation(T_word32 currentTime) ;
+T_void
+ObjectsUpdateAnimation(T_word32 currentTime);
 
-T_void ObjectUpdateAnimation(T_3dObject *p_obj, T_word32 currentTime) ;
+T_void
+ObjectUpdateAnimation(T_3dObject *p_obj, T_word32 currentTime);
 
-T_void ObjectSetStance(T_3dObject *p_obj, T_word16 stance) ;
+T_void
+ObjectSetStance(T_3dObject *p_obj, T_word16 stance);
 
-T_void ObjectDoToAll(T_objectDoToAllCallback p_callback, T_word32 data) ;
+T_void
+ObjectDoToAll(T_objectDoToAllCallback p_callback, T_word32 data);
 
-T_void ObjectsDoToAllAtXY(
-           T_sword16 x,
-           T_sword16 y,
-           T_objectDoToAllCallback p_callback,
-           T_word32 data) ;
+T_void
+ObjectsDoToAllAtXY(
+    T_sword16 x,
+    T_sword16 y,
+    T_objectDoToAllCallback p_callback,
+    T_word32 data);
 
-T_void ObjectsDoToAllAtXYRadius(
-           T_sword16 x,
-           T_sword16 y,
-           T_word16 radius,
-           T_objectDoToAllCallback p_callback,
-           T_word32 data);
+T_void
+ObjectsDoToAllAtXYRadius(
+    T_sword16 x,
+    T_sword16 y,
+    T_word16 radius,
+    T_objectDoToAllCallback p_callback,
+    T_word32 data);
 
-T_void ObjectsDoToAllAtXYZRadius(
-           T_sword16 x,
-           T_sword16 y,
-           T_sword16 z,
-           T_word16 radius,
-           T_objectDoToAllCallback p_callback,
-           T_word32 data) ;
+T_void
+ObjectsDoToAllAtXYZRadius(
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z,
+    T_word16 radius,
+    T_objectDoToAllCallback p_callback,
+    T_word32 data);
 
-T_void ObjectSetAngle(T_3dObject *p_obj, T_word16 angle) ;
+T_void
+ObjectSetAngle(T_3dObject *p_obj, T_word16 angle);
 
-E_Boolean ObjectCheckIfCollide(
-              T_3dObject *p_obj,
-              T_sword32 x,
-              T_sword32 y,
-              T_sword32 z) ;
+E_Boolean
+ObjectCheckIfCollide(
+    T_3dObject *p_obj,
+    T_sword32 x,
+    T_sword32 y,
+    T_sword32 z);
 
-E_Boolean ObjectCheckCollide(
-              T_3dObject *p_obj,
-              T_sword16 x,
-              T_sword16 y,
-              T_sword16 height) ;
+E_Boolean
+ObjectCheckCollide(
+    T_3dObject *p_obj,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 height);
 
-E_Boolean ObjectIsAtXY(T_3dObject *p_obj, T_sword16 x, T_sword16 y) ;
+E_Boolean
+ObjectIsAtXY(T_3dObject *p_obj, T_sword16 x, T_sword16 y);
 
-T_void ObjectGetForwardPosition(
-           T_3dObject *p_obj,
-           T_word16 dist,
-           T_sword32 *p_x,
-           T_sword32 *p_y) ;
+T_void
+ObjectGetForwardPosition(
+    T_3dObject *p_obj,
+    T_word16 dist,
+    T_sword32 *p_x,
+    T_sword32 *p_y);
 
-T_void ObjectGetAngularPosition(
-           T_3dObject *p_obj,
-           T_word16 angle,
-           T_sword16 dist,
-           T_sword32 *p_x,
-           T_sword32 *p_y) ;
+T_void
+ObjectGetAngularPosition(
+    T_3dObject *p_obj,
+    T_word16 angle,
+    T_sword16 dist,
+    T_sword32 *p_x,
+    T_sword32 *p_y);
 
-T_void ObjectsMakeTemporarilyPassableAtXYRadius(
-           T_sword16 x,
-           T_sword16 y,
-           T_word16 radius,
-           T_sword16 zBottom,
-           T_sword16 zTop) ;
+T_void
+ObjectsMakeTemporarilyPassableAtXYRadius(
+    T_sword16 x,
+    T_sword16 y,
+    T_word16 radius,
+    T_sword16 zBottom,
+    T_sword16 zTop);
 
-T_word32 ObjectsCountType(T_word16 objectType) ;
+T_word32
+ObjectsCountType(T_word16 objectType);
 
-T_word32 ObjectsCountBasicType(T_word16 objectType) ;
+T_word32
+ObjectsCountBasicType(T_word16 objectType);
 
-T_3dObject *ObjectDuplicate(T_3dObject *p_obj) ;
+T_3dObject *
+ObjectDuplicate(T_3dObject *p_obj);
 
-T_void ObjectSetBodyPartType(
-           T_3dObject *p_obj,
-           T_bodyPartLocation location,
-           T_word16 objType) ;
+T_void
+ObjectSetBodyPartType(
+    T_3dObject *p_obj,
+    T_bodyPartLocation location,
+    T_word16 objType);
 
-T_word16 ObjectGetBodyPartType(
-             T_3dObject *p_obj,
-             T_bodyPartLocation location) ;
+T_word16
+ObjectGetBodyPartType(
+    T_3dObject *p_obj,
+    T_bodyPartLocation location);
 
-T_void ObjectChainingOff(T_void) ;
+T_void
+ObjectChainingOff(T_void);
 
-T_void ObjectChainingOn(T_void) ;
+T_void
+ObjectChainingOn(T_void);
 
-T_void ObjectsInitialize(T_void) ;
+T_void
+ObjectsInitialize(T_void);
 
-T_void ObjectsFinish(T_void) ;
+T_void
+ObjectsFinish(T_void);
 
-T_void *ObjectAllocExtraData(T_3dObject *p_obj, T_word32 sizeData) ;
+T_void *
+ObjectAllocExtraData(T_3dObject *p_obj, T_word32 sizeData);
 
-T_void ObjectFreeExtraData(T_3dObject *p_obj) ;
+T_void
+ObjectFreeExtraData(T_3dObject *p_obj);
 
-E_Boolean ObjectIsBeingCrushed(T_3dObject *p_obj) ;
+E_Boolean
+ObjectIsBeingCrushed(T_3dObject *p_obj);
 
-T_void ObjectMarkForDestroy(T_3dObject *p_obj) ;
+T_void
+ObjectMarkForDestroy(T_3dObject *p_obj);
 
-T_word32 ObjectsGetNumMarkedForDestroy(T_void) ;
+T_word32
+ObjectsGetNumMarkedForDestroy(T_void);
 
 #ifndef NDEBUG
 
@@ -478,11 +529,14 @@ T_void ObjectPrint(FILE *fp, T_3dObject *p_obj) ;
 #define ObjectPrint(fp, p_obj)
 #endif
 
-T_void ObjectRemoveScript(T_3dObject *p_obj) ;
+T_void
+ObjectRemoveScript(T_3dObject *p_obj);
 
-T_void ObjectsUpdateMovementForFake(T_word32 delta) ;
+T_void
+ObjectsUpdateMovementForFake(T_word32 delta);
 
-T_void ObjectAddWithoutHistory(T_3dObject *p_obj) ;
+T_void
+ObjectAddWithoutHistory(T_3dObject *p_obj);
 
 #define ObjectSetTarget(p_obj, targetID) CreatureSetTarget(p_obj, targetID)
 #endif
@@ -505,42 +559,56 @@ T_void ObjectAddWithoutHistory(T_3dObject *p_obj) ;
 #define ObjectIsValid(p_obj)         \
             ((strcmp((p_obj)->tag, "Obj") == 0)?TRUE:FALSE)
 
-T_void ObjectsCreateSaveBlock(T_void) ;
+T_void
+ObjectsCreateSaveBlock(T_void);
 
-T_void ObjectsResetIds(T_void) ;
+T_void
+ObjectsResetIds(T_void);
 
-T_word32 ObjectGetNextId(T_void) ;
+T_word32
+ObjectGetNextId(T_void);
 
-T_void ObjectAddAttributesToPiecewise(T_3dObject *p_obj, T_word16 attr) ;
+T_void
+ObjectAddAttributesToPiecewise(T_3dObject *p_obj, T_word16 attr);
 
-T_void ObjectRemoveAttributesFromPiecewise(T_3dObject *p_obj, T_word16 attr) ;
+T_void
+ObjectRemoveAttributesFromPiecewise(T_3dObject *p_obj, T_word16 attr);
 
-T_word16 ObjectGetWeight(T_3dObject *p_obj) ;
+T_word16
+ObjectGetWeight(T_3dObject *p_obj);
 
-T_word16 ObjectGetValue(T_3dObject *p_obj) ;
+T_word16
+ObjectGetValue(T_3dObject *p_obj);
 
-T_void ObjectDrawFrontScaled(
-           T_3dObject *p_obj,
-           T_sword16 x,
-           T_sword16 y,
-           T_word16 width,
-           T_word16 height) ;
+T_void
+ObjectDrawFrontScaled(
+    T_3dObject *p_obj,
+    T_sword16 x,
+    T_sword16 y,
+    T_word16 width,
+    T_word16 height);
 
-T_void ObjectUpdateCollisionLink(T_3dObject *p_obj) ;
+T_void
+ObjectUpdateCollisionLink(T_3dObject *p_obj);
 
-T_void ObjectUnlinkCollisionLink(T_3dObject *p_obj) ;
+T_void
+ObjectUnlinkCollisionLink(T_3dObject *p_obj);
 
-E_Boolean ObjectCheckCollideAny(
-              T_3dObject *p_obj,
-              T_sword16 x,
-              T_sword16 y,
-              T_sword16 height) ;
+E_Boolean
+ObjectCheckCollideAny(
+    T_3dObject *p_obj,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 height);
 
-T_3dObject *ObjectFindBodyPartHead(T_3dObject *p_part) ;
+T_3dObject *
+ObjectFindBodyPartHead(T_3dObject *p_part);
 
-T_void ObjectsDoToAll(T_objectDoToAllCallback p_callback, T_word32 data);
+T_void
+ObjectsDoToAll(T_objectDoToAllCallback p_callback, T_word32 data);
 
-T_void ObjectsUnload(T_void);
+T_void
+ObjectsUnload(T_void);
 
 /****************************************************************************/
 /*    END OF FILE:  OBJECT.H                                                */

@@ -12,7 +12,8 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
-#include "PACKET.H"
+#include "DITALK.h"
+#include "PACKET.h"
 
 /* Option to create the file RECEIVE.DAT to record all received bytes */
 /* from the packet driver. */
@@ -21,9 +22,10 @@
 /* Keep track of the number of the current packet.  Although this is mainly */
 /* for debugging, we can use it to make sure packets are sent correctly.   */
 /* If nothing else, we'll make sure everything is in order. */
-static T_word32 G_packetID = 1 ;
+static T_word32 G_packetID = 1;
 
-static T_word16 IPacketComputeChecksum(T_packetEitherShortOrLong *p_packet) ;
+static T_word16
+IPacketComputeChecksum(T_packetEitherShortOrLong *p_packet);
 
 /*-------------------------------------------------------------------------*
  * Routine:  PacketSendShort
@@ -38,37 +40,38 @@ static T_word16 IPacketComputeChecksum(T_packetEitherShortOrLong *p_packet) ;
  *  @return 0 if packet sent, -1 if not sent
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 PacketSendShort(T_packetShort *p_shortPacket)
+T_sword16
+PacketSendShort(T_packetShort *p_shortPacket)
 {
-    T_sword16 code = -1 ;
+    T_sword16 code = -1;
 
-    DebugRoutine("PacketSendShort") ;
-    DebugCheck(p_shortPacket != NULL) ;
+    DebugRoutine("PacketSendShort");
+    DebugCheck(p_shortPacket != NULL);
 
     /* Store the header information in the packet. */
-    p_shortPacket->header.prefix = PACKET_PREFIX ;
+    p_shortPacket->header.prefix = PACKET_PREFIX;
 
     /* Make this a short packet. */
-    p_shortPacket->header.packetLength = SHORT_PACKET_LENGTH ;
+    p_shortPacket->header.packetLength = SHORT_PACKET_LENGTH;
 
     /* Put the id for this packet in the packet. */
-    p_shortPacket->header.id = G_packetID++ ;
+    p_shortPacket->header.id = G_packetID++;
 
     // Store the sender in the packet (needed for proper ack packets)
     DirectTalkGetUniqueAddress(&p_shortPacket->header.sender);
 
     /* Compute the checksum for this packet. */
     p_shortPacket->header.checksum =
-        IPacketComputeChecksum((T_packetEitherShortOrLong *)p_shortPacket) ;
+        IPacketComputeChecksum((T_packetEitherShortOrLong *) p_shortPacket);
 
     /* Actually send the data out the port. */
-    DirectTalkSendData((T_byte8 *)p_shortPacket, sizeof(T_packetShort)) ;
+    DirectTalkSendData((T_byte8 *) p_shortPacket, sizeof(T_packetShort));
     /* Note that the packet was sent. */
-    code = 0 ;
+    code = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return code ;
+    return code;
 }
 
 /*-------------------------------------------------------------------------*
@@ -84,39 +87,40 @@ T_sword16 PacketSendShort(T_packetShort *p_shortPacket)
  *  @return 0 if packet sent, -1 if not sent
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 PacketSendLong(T_packetLong *p_longPacket)
+T_sword16
+PacketSendLong(T_packetLong *p_longPacket)
 {
-    T_sword16 code = -1 ;
+    T_sword16 code = -1;
 
-    DebugRoutine("PacketSendLong") ;
-    DebugCheck(p_longPacket != NULL) ;
+    DebugRoutine("PacketSendLong");
+    DebugCheck(p_longPacket != NULL);
 
     /* Store the header information in the packet. */
-    p_longPacket->header.prefix = PACKET_PREFIX ;
+    p_longPacket->header.prefix = PACKET_PREFIX;
 
     /* Make this a long packet. */
-    p_longPacket->header.packetLength = LONG_PACKET_LENGTH ;
+    p_longPacket->header.packetLength = LONG_PACKET_LENGTH;
 
     /* Put the id for this packet in the packet. */
-    p_longPacket->header.id = G_packetID++ ;
+    p_longPacket->header.id = G_packetID++;
 
     // Store the sender in the packet (needed for proper ack packets)
     DirectTalkGetUniqueAddress(&p_longPacket->header.sender);
 
     /* Compute the checksum for this packet. */
     p_longPacket->header.checksum =
-        IPacketComputeChecksum((T_packetEitherShortOrLong *)p_longPacket) ;
+        IPacketComputeChecksum((T_packetEitherShortOrLong *) p_longPacket);
 
     /* See if there is room to send the packet. */
     /* Actually send the data out the port. */
-    DirectTalkSendData((T_byte8 *)p_longPacket, sizeof(T_packetLong)) ;
+    DirectTalkSendData((T_byte8 *) p_longPacket, sizeof(T_packetLong));
 
     /* Note that the packet was sent. */
-    code = 0 ;
+    code = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return code ;
+    return code;
 }
 
 /*-------------------------------------------------------------------------*
@@ -131,41 +135,42 @@ T_sword16 PacketSendLong(T_packetLong *p_longPacket)
  *  @return 0 if packet sent, -1 if not sent
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 PacketSendAnyLength(T_packetEitherShortOrLong *p_anyPacket)
+T_sword16
+PacketSendAnyLength(T_packetEitherShortOrLong *p_anyPacket)
 {
-    T_sword16 code = -1 ;
+    T_sword16 code = -1;
 
-    DebugRoutine("PacketSendAnyLength") ;
-    DebugCheck(p_anyPacket != NULL) ;
-    DebugCheck(p_anyPacket->header.packetLength <= LONG_PACKET_LENGTH) ;
+    DebugRoutine("PacketSendAnyLength");
+    DebugCheck(p_anyPacket != NULL);
+    DebugCheck(p_anyPacket->header.packetLength <= LONG_PACKET_LENGTH);
 
     /* Store the header information in the packet. */
-    p_anyPacket->header.prefix = PACKET_PREFIX ;
+    p_anyPacket->header.prefix = PACKET_PREFIX;
 
     /* Make this a long packet. */
 //    p_anyPacket->header.packetLength = LONG_PACKET_LENGTH ;
 
     /* Put the id for this packet in the packet. */
-    p_anyPacket->header.id = G_packetID++ ;
+    p_anyPacket->header.id = G_packetID++;
 
     // Store the sender in the packet (needed for proper ack packets)
     DirectTalkGetUniqueAddress(&p_anyPacket->header.sender);
 
     /* Compute the checksum for this packet. */
-    p_anyPacket->header.checksum = IPacketComputeChecksum(p_anyPacket) ;
+    p_anyPacket->header.checksum = IPacketComputeChecksum(p_anyPacket);
 
     /* See if there is room to send the packet. */
     /* Actually send the data out the port. */
     DirectTalkSendData(
-        (T_byte8 *)p_anyPacket,
-        (T_word16)(sizeof(T_packetHeader) + p_anyPacket->header.packetLength)) ;
+        (T_byte8 *) p_anyPacket,
+        (T_word16) (sizeof(T_packetHeader) + p_anyPacket->header.packetLength));
 
     /* Note that the packet was sent. */
-    code = 0 ;
+    code = 0;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return code ;
+    return code;
 }
 
 /*-------------------------------------------------------------------------*
@@ -178,28 +183,27 @@ T_sword16 PacketSendAnyLength(T_packetEitherShortOrLong *p_anyPacket)
  *  @param p_packet -- packet to send.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 PacketSend(T_packetEitherShortOrLong *p_packet)
+T_sword16
+PacketSend(T_packetEitherShortOrLong *p_packet)
 {
-    T_sword16 status ;
+    T_sword16 status;
 
-    DebugRoutine("PacketSend") ;
+    DebugRoutine("PacketSend");
 
-    switch(p_packet->header.packetLength)  {
-        case SHORT_PACKET_LENGTH:
-            status = PacketSendShort((T_packetShort *)p_packet) ;
-            break ;
-        case LONG_PACKET_LENGTH:
-            status = PacketSendLong((T_packetLong *)p_packet) ;
-            break ;
-        default:
-            DebugCheck(p_packet->header.packetLength <= LONG_PACKET_LENGTH) ;
-            status = PacketSendAnyLength(p_packet) ;
-            break ;
+    switch (p_packet->header.packetLength)
+    {
+        case SHORT_PACKET_LENGTH:status = PacketSendShort((T_packetShort *) p_packet);
+            break;
+        case LONG_PACKET_LENGTH:status = PacketSendLong((T_packetLong *) p_packet);
+            break;
+        default:DebugCheck(p_packet->header.packetLength <= LONG_PACKET_LENGTH);
+            status = PacketSendAnyLength(p_packet);
+            break;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 /*-------------------------------------------------------------------------*
@@ -214,7 +218,8 @@ T_sword16 PacketSend(T_packetEitherShortOrLong *p_packet)
  *  @param packetID -- New ID to assign to the packet.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PacketSetId (T_packetEitherShortOrLong *p_packet, T_word32 packetID)
+T_void
+PacketSetId(T_packetEitherShortOrLong *p_packet, T_word32 packetID)
 {
     p_packet->header.id = packetID;
 }
@@ -232,33 +237,35 @@ T_void PacketSetId (T_packetEitherShortOrLong *p_packet, T_word32 packetID)
  *  @return Calculated checksum
  *
  *<!-----------------------------------------------------------------------*/
-static T_word16 IPacketComputeChecksum(T_packetEitherShortOrLong *packet)
+static T_word16
+IPacketComputeChecksum(T_packetEitherShortOrLong *packet)
 {
-    T_word16 checksum ;
-    T_word16 i ;
+    T_word16 checksum;
+    T_word16 i;
 
-    DebugRoutine("IPacketComputeChecksum") ;
-    DebugCheck(packet != NULL) ;
+    DebugRoutine("IPacketComputeChecksum");
+    DebugCheck(packet != NULL);
 
     /* Start out the checksum to equal the id of the block. */
-    checksum = packet->header.id ;
+    checksum = packet->header.id;
 
     /* Add in the packet type. */
-    checksum += packet->header.packetLength ;
+    checksum += packet->header.packetLength;
 
     /* Loop the length of the data. */
-    for (i=0; i<packet->header.packetLength; i++)  {
+    for (i = 0; i < packet->header.packetLength; i++)
+    {
         /* If i is odd, then add.  Otherwise, do an exclusive-or to mix */
         /* up the bits. */
-        if (i&1)
-            checksum += packet->data[i] ;
+        if (i & 1)
+            checksum += packet->data[i];
         else
-            checksum ^= packet->data[i] ;
+            checksum ^= packet->data[i];
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return checksum ;
+    return checksum;
 }
 
 /*-------------------------------------------------------------------------*
@@ -281,29 +288,33 @@ static T_word16 IPacketComputeChecksum(T_packetEitherShortOrLong *packet)
  *      packet was found.
  *
  *<!-----------------------------------------------------------------------*/
-static T_packetLong newPacket ;
-static E_Boolean newPacketFilled ;
+static T_packetLong newPacket;
+static E_Boolean newPacketFilled;
 
-T_sword16 PacketGet(T_packetLong *p_packet)
+T_sword16
+PacketGet(T_packetLong *p_packet)
 {
-    T_sword16 status ;
+    T_sword16 status;
 
-    DebugRoutine("PacketGet") ;
+    DebugRoutine("PacketGet");
 
-    newPacketFilled = FALSE ;
+    newPacketFilled = FALSE;
 
-    DirectTalkPollData() ;
+    DirectTalkPollData();
 
-    if (newPacketFilled)  {
-        status = 0 ;
-        *p_packet = newPacket ;
-    } else  {
-        status = -1 ;
+    if (newPacketFilled)
+    {
+        status = 0;
+        *p_packet = newPacket;
+    }
+    else
+    {
+        status = -1;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 #ifdef PACKET_CREATE_RECEIVE_FILE
@@ -315,11 +326,13 @@ T_void PacketCloseReceiveFile(T_void)
 }
 #endif
 
-T_void PacketReceiveData(T_void *p_data, T_word16 size)
+T_void
+PacketReceiveData(T_void *p_data, T_word16 size)
 {
-    void PacketPrint(void *aData, unsigned int aSize);
-    DebugRoutine("ConnectReceiveData") ;
-    DebugCheck(p_data != NULL) ;
+    void
+    PacketPrint(void *aData, unsigned int aSize);
+    DebugRoutine("ConnectReceiveData");
+    DebugCheck(p_data != NULL);
 
 #ifdef PACKET_CREATE_RECEIVE_FILE
     if (G_fpRecv == NULL)  {
@@ -333,11 +346,11 @@ T_void PacketReceiveData(T_void *p_data, T_word16 size)
     fprintf(G_fpRecv, "\n") ;
 #endif
 
-    memcpy(&newPacket, p_data, size) ;
-    newPacketFilled = TRUE ;
+    memcpy(&newPacket, p_data, size);
+    newPacketFilled = TRUE;
     PacketPrint(p_data, size);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

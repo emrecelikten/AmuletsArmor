@@ -26,19 +26,24 @@
 #define SMCPLAY_GAME_FLAG_UNKNOWN                             5
 #define NUMBER_SMCPLAY_GAME_FLAGS    SMCPLAY_GAME_FLAG_UNKNOWN
 
-T_stateMachineHandle SMCPlayGameInitialize(T_void) ;
+T_stateMachineHandle
+SMCPlayGameInitialize(T_void);
 
-T_void SMCPlayGameFinish(T_void) ;
+T_void
+SMCPlayGameFinish(T_void);
 
-T_void SMCPlayGameUpdate(T_void) ;
+T_void
+SMCPlayGameUpdate(T_void);
 
-E_Boolean SMCPlayGameCheckFlag(
-              T_stateMachineHandle handle,
-              T_word32 flag) ;
+E_Boolean
+SMCPlayGameCheckFlag(
+    T_stateMachineHandle handle,
+    T_word32 flag);
 
-T_void SMCPlayGameSetFlag(
-           T_word16 flag,
-           E_Boolean state) ;
+T_void
+SMCPlayGameSetFlag(
+    T_word16 flag,
+    E_Boolean state);
 
 #endif // _SMCPLAY_H_
 

@@ -6,7 +6,7 @@
 
 #include "GENERAL.H"
 
-typedef T_void *T_lightTable ;
+typedef T_void *T_lightTable;
 #define LIGHT_TABLE_BAD NULL
 
 #ifdef SERVER_ONLY
@@ -16,11 +16,14 @@ typedef T_void *T_lightTable ;
 #define LightTableRecalculate(light, out)
 
 #else
-T_lightTable LightTableLoad(T_word32 number) ;
+T_lightTable
+LightTableLoad(T_word32 number);
 
-T_void LightTableUnload(T_lightTable light) ;
+T_void
+LightTableUnload(T_lightTable light);
 
-T_void LightTableRecalculate(T_lightTable light, T_byte8 outsideLighting) ;
+T_void
+LightTableRecalculate(T_lightTable light, T_byte8 outsideLighting);
 #endif
 
 #endif

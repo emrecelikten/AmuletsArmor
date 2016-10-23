@@ -70,7 +70,6 @@ typedef enum
     EQUIP_MATERIAL_TYPE_UNDEFINED_4
 } E_equipMaterialTypes;
 
-
 typedef enum
 {
     EQUIP_OBJECT_TYPE_WEAPON,
@@ -122,7 +121,6 @@ typedef enum
     EQUIP_ARMOR_TYPE_UNKNOWN
 } E_equipArmorTypes;
 
-
 typedef enum
 {
     COIN_TYPE_COPPER,
@@ -132,7 +130,6 @@ typedef enum
     COIN_TYPE_FIVE,
     COIN_TYPE_UNKNOWN
 } E_equipCoinTypes;
-
 
 typedef enum
 {
@@ -146,7 +143,6 @@ typedef enum
     BOLT_TYPE_UNKNOWN
 } E_equipBoltTypes;
 
-
 typedef enum
 {
     THING_TYPE_RUNE,
@@ -154,7 +150,6 @@ typedef enum
     THING_TYPE_THING,
     THING_TYPE_UNKNOWN
 } E_equipThingTypes;
-
 
 typedef struct
 {
@@ -170,7 +165,7 @@ typedef struct
     /* effect enums */
     T_byte8 /*E_effectTriggerType*/  effectTriggerOn[MAX_ITEM_EFFECTS];
     T_byte8 /*E_effectType */        effectType[MAX_ITEM_EFFECTS];
-    T_word16             effectData[MAX_ITEM_EFFECTS][3];
+    T_word16 effectData[MAX_ITEM_EFFECTS][3];
 
     /* object destroy after action enum */
     T_byte8 /*E_effectTriggerType*/ objectDestroyOn;
@@ -181,7 +176,6 @@ typedef struct
     /* unique flag */
     T_byte8 unique;
 } T_equipItemDescription;
-
 
 typedef struct
 {
@@ -195,9 +189,9 @@ typedef struct
     T_byte8 numstackable;
 
     /* effect enums */
-    T_byte8              effectTriggerOn[MAX_ITEM_EFFECTS];
-    T_byte8              effectType[MAX_ITEM_EFFECTS];
-    T_word16             effectData[MAX_ITEM_EFFECTS][3];
+    T_byte8 effectTriggerOn[MAX_ITEM_EFFECTS];
+    T_byte8 effectType[MAX_ITEM_EFFECTS];
+    T_word16 effectData[MAX_ITEM_EFFECTS][3];
 
     /* object destroy after action enum */
     T_byte8 objectDestroyOn;
@@ -209,8 +203,6 @@ typedef struct
     T_byte8 unique;
 
 } T_equipItemDescriptionBorland;
-
-
 
 #endif
 

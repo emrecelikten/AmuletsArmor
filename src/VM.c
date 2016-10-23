@@ -21,81 +21,98 @@
 #define VM_ENTRY_GROW_SIZE 2000
 #define VM_SHIFT_BLOCK_SIZE 4000
 
-typedef T_byte8 F_vmFlags ;
+typedef T_byte8 F_vmFlags;
 
 #define VM_FLAG_IN_MEMORY    0x80
 #define VM_FLAG_DIRTY        0x40
 #define VM_SEMAPHORE_READ    0x20
 #define VM_SEMAPHORE_WRITE   0x10
 
-typedef struct {
-    T_word32 numEntries ;
-    T_word32 numAllocatedEntries ;
-    T_word32 numFreeEntries ;
-    T_word32 numTotalEntries ;
-    T_word32 firstFree ;              /* First index. */
-    T_word32 lastByte ;               /* Last byte position. */
-} T_vmHeader ;
+typedef struct
+{
+    T_word32 numEntries;
+    T_word32 numAllocatedEntries;
+    T_word32 numFreeEntries;
+    T_word32 numTotalEntries;
+    T_word32 firstFree;              /* First index. */
+    T_word32 lastByte;               /* Last byte position. */
+} T_vmHeader;
 
-typedef struct {
-    T_word16 refCount ;
-    F_vmFlags vmFlags ;
-    T_byte8 lockCount ;
-    T_word32 memoryOrNext ;
-    T_word32 fileOffset ;
-    T_word32 size ;
-} T_vmEntry ;
+typedef struct
+{
+    T_word16 refCount;
+    F_vmFlags vmFlags;
+    T_byte8 lockCount;
+    T_word32 memoryOrNext;
+    T_word32 fileOffset;
+    T_word32 size;
+} T_vmEntry;
 
-typedef struct {
-    T_vmHeader header ;
-    T_vmEntry entries[] ;
-} T_vmIndex ;
+typedef struct
+{
+    T_vmHeader header;
+    T_vmEntry entries[];
+} T_vmIndex;
 
-typedef struct {
-    T_byte8 filenameIndex[80] ;
-    T_file fileIndex ;
-    T_byte8 filenameRecords[80] ;
-    T_file fileRecords ;
-    T_vmIndex *p_index ;
-    T_word32 lockedRecords ;
-    T_word32 numEntries ;
-    E_Boolean opened ;
-} T_vmFileInfo ;
+typedef struct
+{
+    T_byte8 filenameIndex[80];
+    T_file fileIndex;
+    T_byte8 filenameRecords[80];
+    T_file fileRecords;
+    T_vmIndex *p_index;
+    T_word32 lockedRecords;
+    T_word32 numEntries;
+    E_Boolean opened;
+} T_vmFileInfo;
 
-typedef struct {
+typedef struct
+{
 #ifndef NDEBUG
     T_word32 vmBlockId ;
 #endif
-    T_vmFile file ;
-    T_vmBlock block ;
-    T_vmEntry *p_entry ;
-    T_byte8 data[] ;
-} T_vmDataBlock ;
+    T_vmFile file;
+    T_vmBlock block;
+    T_vmEntry *p_entry;
+    T_byte8 data[];
+} T_vmDataBlock;
 
 /* Internal prototypes: */
-T_void IVMCreate(T_vmFileInfo *p_fileInfo) ;
+T_void
+IVMCreate(T_vmFileInfo *p_fileInfo);
 
-T_void IVMUpdate(T_vmFileInfo *p_fileInfo) ;
+T_void
+IVMUpdate(T_vmFileInfo *p_fileInfo);
 
-T_vmBlock IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size) ;
+T_vmBlock
+IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size);
 
-T_vmBlock IVMCreateBlockAtEnd(T_vmFile file, T_word32 size) ;
+T_vmBlock
+IVMCreateBlockAtEnd(T_vmFile file, T_word32 size);
 
-T_void IVMFree(T_vmFile file, T_vmBlock block) ;
+T_void
+IVMFree(T_vmFile file, T_vmBlock block);
 
-T_void IVMRelease(T_vmFile file, T_vmBlock block) ;
+T_void
+IVMRelease(T_vmFile file, T_vmBlock block);
 
-T_vmBlock IVMFindLowestBlock(T_vmFile file, T_word32 place) ;
+T_vmBlock
+IVMFindLowestBlock(T_vmFile file, T_word32 place);
 
-T_void IVMSaveIfDirty(T_vmFileInfo *p_fileInfo, T_vmEntry *p_entry) ;
+T_void
+IVMSaveIfDirty(T_vmFileInfo *p_fileInfo, T_vmEntry *p_entry);
 
-T_void IVMSaveIndex(T_vmFileInfo *p_fileInfo) ;
+T_void
+IVMSaveIndex(T_vmFileInfo *p_fileInfo);
 
-T_word32 IVMAppendEntry(T_vmFile file) ;
+T_word32
+IVMAppendEntry(T_vmFile file);
 
-T_void IVMShiftBlockDown(T_vmFile file, T_vmBlock block, T_word32 *place) ;
+T_void
+IVMShiftBlockDown(T_vmFile file, T_vmBlock block, T_word32 *place);
 
-T_void IVMTruncate(T_vmFile file, T_word32 place) ;
+T_void
+IVMTruncate(T_vmFile file, T_word32 place);
 
 /*-------------------------------------------------------------------------*
  * Routine:  VMOpen
@@ -112,72 +129,76 @@ T_void IVMTruncate(T_vmFile file, T_word32 place) ;
  *  @return File that was opened.
  *
  *<!-----------------------------------------------------------------------*/
-T_vmFile VMOpen(T_byte8 *p_filename)
+T_vmFile
+VMOpen(T_byte8 *p_filename)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word32 indexSize ;
+    T_vmFileInfo *p_fileInfo;
+    T_word32 indexSize;
 
-    DebugRoutine("VMOpen") ;
-    DebugCheck(p_filename != NULL) ;
-    DebugCheck(strlen(p_filename) > 0) ;
+    DebugRoutine("VMOpen");
+    DebugCheck(p_filename != NULL);
+    DebugCheck(strlen(p_filename) > 0);
 
     /* Allocate a file structure. */
-    p_fileInfo = (T_vmFileInfo *)MemAlloc(sizeof(T_vmFileInfo)) ;
+    p_fileInfo = (T_vmFileInfo *) MemAlloc(sizeof(T_vmFileInfo));
 
     /* Create the two filenames we are going to use. */
-    strcpy(p_fileInfo->filenameIndex, p_filename) ;
-    strcpy(p_fileInfo->filenameRecords, p_filename) ;
-    strcat(p_fileInfo->filenameIndex, ".idx") ;
-    strcat(p_fileInfo->filenameRecords, ".rec") ;
+    strcpy(p_fileInfo->filenameIndex, p_filename);
+    strcpy(p_fileInfo->filenameRecords, p_filename);
+    strcat(p_fileInfo->filenameIndex, ".idx");
+    strcat(p_fileInfo->filenameRecords, ".rec");
 
     /* Try opening the file for reading (and writing). */
     p_fileInfo->fileIndex = FileOpen(
-                                p_fileInfo->filenameIndex,
-                                FILE_MODE_READ) ;
+        p_fileInfo->filenameIndex,
+        FILE_MODE_READ);
 
     /* Were we able to actually get the index file? */
-    if (p_fileInfo->fileIndex == FILE_BAD)  {
+    if (p_fileInfo->fileIndex == FILE_BAD)
+    {
         /* Does not exist.  Create the files. */
-        IVMCreate(p_fileInfo) ;
-    } else {
-        FileClose(p_fileInfo->fileIndex) ;
+        IVMCreate(p_fileInfo);
+    }
+    else
+    {
+        FileClose(p_fileInfo->fileIndex);
     }
 
     p_fileInfo->fileIndex = FileOpen(
-                                p_fileInfo->filenameIndex,
-                                FILE_MODE_READ_WRITE) ;
-    DebugCheck(p_fileInfo->fileIndex != FILE_BAD) ;
+        p_fileInfo->filenameIndex,
+        FILE_MODE_READ_WRITE);
+    DebugCheck(p_fileInfo->fileIndex != FILE_BAD);
 
     /* At this point we should have a valid index file. */
-    DebugCheck(p_fileInfo->fileIndex != FILE_BAD) ;
+    DebugCheck(p_fileInfo->fileIndex != FILE_BAD);
 
     /* Try getting a file handle to the records file. */
     p_fileInfo->fileRecords = FileOpen(
-                                 p_fileInfo->filenameRecords,
-                                 FILE_MODE_READ_WRITE) ;
+        p_fileInfo->filenameRecords,
+        FILE_MODE_READ_WRITE);
 
     /* Make sure the records file exists. */
     if (p_fileInfo->fileRecords == FILE_BAD)
         /* Something has gone wrong here.  You should never have an index */
         /* file without a records file (or visa-versa). */
-        DebugCheck(FALSE) ;
+        DebugCheck(FALSE);
 
     /* Load in the index. */
     p_fileInfo->p_index =
-        (T_vmIndex *)FileLoad(
-                         p_fileInfo->filenameIndex,
-                         &indexSize) ;
+        (T_vmIndex *) FileLoad(
+            p_fileInfo->filenameIndex,
+            &indexSize);
 
-    DebugCheck(indexSize != 0) ;
+    DebugCheck(indexSize != 0);
 
     /* Initialize the other fields for this session. */
-    p_fileInfo->lockedRecords = 0 ;
-    p_fileInfo->numEntries = indexSize / sizeof(T_vmEntry) ;
-    p_fileInfo->opened = TRUE ;
+    p_fileInfo->lockedRecords = 0;
+    p_fileInfo->numEntries = indexSize / sizeof(T_vmEntry);
+    p_fileInfo->opened = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return((T_vmFile)p_fileInfo) ;
+    return ((T_vmFile) p_fileInfo);
 }
 
 /*-------------------------------------------------------------------------*
@@ -191,38 +212,39 @@ T_vmFile VMOpen(T_byte8 *p_filename)
  *  @param file -- File that is to be closed.
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMClose(T_vmFile file)
+T_void
+VMClose(T_vmFile file)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("VMClose") ;
-    DebugCheck(file != NULL) ;
+    DebugRoutine("VMClose");
+    DebugCheck(file != NULL);
 
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure we are not trying to close twice. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
     /* Mark as closed. */
-    p_fileInfo->opened = FALSE ;
+    p_fileInfo->opened = FALSE;
 
     /* Make sure we don't have any locked records. */
-    DebugCheck(p_fileInfo->lockedRecords == 0) ;
+    DebugCheck(p_fileInfo->lockedRecords == 0);
 
     /* Save any changes to the index and records. */
-    IVMUpdate(p_fileInfo) ;
+    IVMUpdate(p_fileInfo);
 
     /* Close out the files. */
-    FileClose(p_fileInfo->fileIndex) ;
-    FileClose(p_fileInfo->fileRecords) ;
+    FileClose(p_fileInfo->fileIndex);
+    FileClose(p_fileInfo->fileRecords);
 
     /* Free the index in memory. */
-    MemFree(p_fileInfo->p_index) ;
+    MemFree(p_fileInfo->p_index);
 
     /* Free the memory used by the file handle. */
-    MemFree(p_fileInfo) ;
+    MemFree(p_fileInfo);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -239,31 +261,32 @@ T_void VMClose(T_vmFile file)
  *  @return block handle to block, or VM_BLOCK_BAD
  *
  *<!-----------------------------------------------------------------------*/
-T_vmBlock VMAlloc(T_vmFile file, T_word32 size)
+T_vmBlock
+VMAlloc(T_vmFile file, T_word32 size)
 {
-    T_vmBlock block ;
+    T_vmBlock block;
 
-    DebugRoutine("VMAlloc") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(size != 0) ;
+    DebugRoutine("VMAlloc");
+    DebugCheck(file != NULL);
+    DebugCheck(size != 0);
 
     /* Try to find a block on the free list that meets this size */
     /* requirement. */
-    block = IVMFindFreeBlockOfSize(file, size) ;
+    block = IVMFindFreeBlockOfSize(file, size);
     if (block == VM_BLOCK_BAD)
         /* If no block was found, just add another one to the end. */
         /* NOTE:  This routine can return a bad block if the disk */
         /* is out of space. */
-        block = IVMCreateBlockAtEnd(file, size) ;
+        block = IVMCreateBlockAtEnd(file, size);
 
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Immediately set the reference count. */
-    ((T_vmFileInfo *)file)->p_index->entries[block].refCount = 1 ;
+    ((T_vmFileInfo *) file)->p_index->entries[block].refCount = 1;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return block ;
+    return block;
 }
 
 /*-------------------------------------------------------------------------*
@@ -279,30 +302,31 @@ T_vmBlock VMAlloc(T_vmFile file, T_word32 size)
  *  @param block -- Block to increment in vm file.
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMIncRefCount(T_vmFile file, T_vmBlock block)
+T_void
+VMIncRefCount(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("VMIncRefCount") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugRoutine("VMIncRefCount");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure the file is opened. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
     /* Make sure this isn't a free block. */
-    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0) ;
+    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0);
 
     /* Increment the block's reference count. */
-    p_fileInfo->p_index->entries[block].refCount++ ;
+    p_fileInfo->p_index->entries[block].refCount++;
 
     /* Make sure we didn't roll over. */
-    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0) ;
+    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -324,32 +348,33 @@ T_void VMIncRefCount(T_vmFile file, T_vmBlock block)
  *  @param block -- Block to decrement in vm file.
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMDecRefCount(T_vmFile file, T_vmBlock block)
+T_void
+VMDecRefCount(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word16 refCount ;
+    T_vmFileInfo *p_fileInfo;
+    T_word16 refCount;
 
-    DebugRoutine("VMDecRefCount") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugRoutine("VMDecRefCount");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure the file is opened. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
     /* Make sure this isn't a free block. */
-    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0) ;
+    DebugCheck(p_fileInfo->p_index->entries[block].refCount != 0);
 
     /* Decrement the block's reference count. */
-    refCount = --(p_fileInfo->p_index->entries[block].refCount) ;
+    refCount = --(p_fileInfo->p_index->entries[block].refCount);
 
     /* If the reference count is now zero, then we can free it. */
     if (refCount == 0)
-        IVMFree(file, block) ;
+        IVMFree(file, block);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -362,27 +387,28 @@ T_void VMDecRefCount(T_vmFile file, T_vmBlock block)
  *  @param block -- Block to decrement in vm file.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 VMGetRefCount(T_vmFile file, T_vmBlock block)
+T_word16
+VMGetRefCount(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word16 refCount ;
+    T_vmFileInfo *p_fileInfo;
+    T_word16 refCount;
 
-    DebugRoutine("VMGetRefCount") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugRoutine("VMGetRefCount");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure the file is opened. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
     /* Get the block's reference count. */
-    refCount = p_fileInfo->p_index->entries[block].refCount ;
+    refCount = p_fileInfo->p_index->entries[block].refCount;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return refCount ;
+    return refCount;
 }
 
 /*-------------------------------------------------------------------------*
@@ -411,71 +437,75 @@ T_word16 VMGetRefCount(T_vmFile file, T_vmBlock block)
  *  @return Pointer to data block, or NULL
  *
  *<!-----------------------------------------------------------------------*/
-void *VMLock(
-         T_vmFile file,
-         T_vmBlock block)
+void *
+VMLock(
+    T_vmFile file,
+    T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_vmDataBlock *p_block ;
-    T_vmEntry *p_entry ;
+    T_vmFileInfo *p_fileInfo;
+    T_vmDataBlock *p_block;
+    T_vmEntry *p_entry;
 
-    DebugRoutine("VMLock") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugRoutine("VMLock");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure the file is opened. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
     /* Get a pointer to the entry for this block. */
-    p_entry = &p_fileInfo->p_index->entries[block] ;
+    p_entry = &p_fileInfo->p_index->entries[block];
 
     /* Make sure we have a block that we can lock (not free). */
-    DebugCheck(p_entry->refCount != 0) ;
+    DebugCheck(p_entry->refCount != 0);
 
     /* Is this block in memory or on disk? */
-    if ((p_entry->vmFlags & VM_FLAG_IN_MEMORY)==0)  {
+    if ((p_entry->vmFlags & VM_FLAG_IN_MEMORY) == 0)
+    {
         /* Block is NOT in memory and is still on disk. */
         /* Allocate memory for this block plus a bit of header. */
-        p_block = MemAlloc(p_entry->size) ;
+        p_block = MemAlloc(p_entry->size);
 
         /* Make sure we can allocate a block. */
-        DebugCheck(p_block != NULL) ;
+        DebugCheck(p_block != NULL);
         if (p_block == NULL)
-            return NULL ;
+            return NULL;
 
         /* Read in the block from the file into the newly declared memory. */
-        FileRead(p_fileInfo->fileRecords, p_block->data, p_entry->size) ;
+        FileRead(p_fileInfo->fileRecords, p_block->data, p_entry->size);
 
         /* Fill out the block's header. (Useful when unlocking) */
-        p_block->file = file ;
-        p_block->block = block ;
-        p_block->p_entry = p_entry ;
+        p_block->file = file;
+        p_block->block = block;
+        p_block->p_entry = p_entry;
 #ifndef NDEBUG
         p_block->vmBlockId = VM_BLOCK_ID ;
 #endif
 
         /* Record where the block now is in memory. */
-        p_entry->vmFlags |= VM_FLAG_IN_MEMORY ;
-printf("Locked in at %p\n", p_block) ;
-        p_entry->memoryOrNext = (T_word32)p_block ;
-    } else {
+        p_entry->vmFlags |= VM_FLAG_IN_MEMORY;
+        printf("Locked in at %p\n", p_block);
+        p_entry->memoryOrNext = (T_word32) p_block;
+    }
+    else
+    {
         /* Block is already in memory, just use this pointer. */
-        p_block = (T_vmDataBlock *)p_entry->memoryOrNext ;
+        p_block = (T_vmDataBlock *) p_entry->memoryOrNext;
     }
 
     /* Increment the reference count. */
-    VMIncRefCount(file, block) ;
+    VMIncRefCount(file, block);
 
     /* Increment the lock count. */
-    p_entry->lockCount++ ;
+    p_entry->lockCount++;
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return a pointer to the data of this block. */
-    return((T_void *)p_block->data) ;
+    return ((T_void *) p_block->data);
 }
 
 /*-------------------------------------------------------------------------*
@@ -489,34 +519,35 @@ printf("Locked in at %p\n", p_block) ;
  *  @param block -- Pointer to block previously locked
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMUnlock(void *block)
+T_void
+VMUnlock(void *block)
 {
-    T_vmDataBlock *p_block ;
-    T_vmEntry *p_entry ;
+    T_vmDataBlock *p_block;
+    T_vmEntry *p_entry;
 
-    DebugRoutine("VMUnlock") ;
-    DebugCheck(block != NULL) ;
+    DebugRoutine("VMUnlock");
+    DebugCheck(block != NULL);
 
     /* Get a pointer to the block's header. */
-    p_block = (T_vmDataBlock *)(((T_byte8 *)block)-sizeof(T_vmDataBlock)) ;
+    p_block = (T_vmDataBlock *) (((T_byte8 *) block) - sizeof(T_vmDataBlock));
 
     /* Make sure we are pointing at a block. */
-    DebugCheck(p_block->vmBlockId == VM_BLOCK_ID) ;
+    DebugCheck(p_block->vmBlockId == VM_BLOCK_ID);
 
     /* Now that we have a pointer, extract the pointer to the entry. */
-    p_entry = p_block->p_entry ;
-    DebugCheck(p_entry != NULL) ;
+    p_entry = p_block->p_entry;
+    DebugCheck(p_entry != NULL);
 
     /* Decrement the lock count and see if we are now no longer locked */
     /* in memory. */
     if ((--p_entry->lockCount) == 0)
         /* Not locked any more.  Release from memory. */
-        IVMRelease(p_block->file, p_block->block) ;
+        IVMRelease(p_block->file, p_block->block);
 
     /* Decrement the reference count on this block. */
-    VMDecRefCount(p_block->file, p_block->block) ;
+    VMDecRefCount(p_block->file, p_block->block);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -538,48 +569,50 @@ T_void VMUnlock(void *block)
  *  @param p_filename -- Name of file to clean-up
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMCleanUp(T_byte8 *p_filename)
+T_void
+VMCleanUp(T_byte8 *p_filename)
 {
-    T_vmFile file ;
-    T_vmBlock block ;
-    T_word32 place ;
-    T_vmHeader *p_header ;
+    T_vmFile file;
+    T_vmBlock block;
+    T_word32 place;
+    T_vmHeader *p_header;
 
-    DebugRoutine("VMCleanUp") ;
-    DebugCheck(p_filename != NULL) ;
-    DebugCheck(strlen(p_filename) != 0) ;
+    DebugRoutine("VMCleanUp");
+    DebugCheck(p_filename != NULL);
+    DebugCheck(strlen(p_filename) != 0);
 
     /* First block starts at zero. */
-    place = 0 ;
+    place = 0;
 
     /* Open the file to clean up. */
-    file = VMOpen(p_filename) ;
-    DebugCheck(file != NULL) ;
+    file = VMOpen(p_filename);
+    DebugCheck(file != NULL);
 
     /* Loop through all the blocks, picking them out in order of their */
     /* placement in the file. */
-    while ((block = IVMFindLowestBlock(file, place)) != 0)  {
+    while ((block = IVMFindLowestBlock(file, place)) != 0)
+    {
         /* Check to see if this is a free block. */
-        if ((((T_vmFileInfo *)file)->p_index->entries[block].refCount) != 0)
+        if ((((T_vmFileInfo *) file)->p_index->entries[block].refCount) != 0)
             /* Shift the block down and return where the end of the block */
             /* is. */
-            IVMShiftBlockDown(file, block, &place) ;
+            IVMShiftBlockDown(file, block, &place);
     }
 
     /* We're done with all the blocks.  Truncate the extra size off. */
-    IVMTruncate(file, place) ;
+    IVMTruncate(file, place);
 
     /* Change the index header so there is no free entries anymore. */
-    p_header = &(((T_vmFileInfo *)file)->p_index->header) ;
-    p_header->numEntries = p_header->numAllocatedEntries ;
-    p_header->numTotalEntries = p_header->numAllocatedEntries ;
-    p_header->numFreeEntries = 0 ;
-    p_header->firstFree = 0 ;
-    p_header->lastByte = 0 ;
+    p_header = &(((T_vmFileInfo *) file)->p_index->header);
+    p_header->numEntries = p_header->numAllocatedEntries;
+    p_header->numTotalEntries = p_header->numAllocatedEntries;
+    p_header->numFreeEntries = 0;
+    p_header->firstFree = 0;
+    p_header->lastByte = 0;
 
-    VMClose(file) ;
+    VMClose(file);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -593,25 +626,26 @@ T_void VMCleanUp(T_byte8 *p_filename)
  *  @param block -- Block in file to mark dirty
  *
  *<!-----------------------------------------------------------------------*/
-T_void VMDirty(T_vmFile file, T_vmBlock block)
+T_void
+VMDirty(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("VMDirty") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
+    DebugRoutine("VMDirty");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure the file is opened. */
-    DebugCheck(p_fileInfo->opened == TRUE) ;
+    DebugCheck(p_fileInfo->opened == TRUE);
 
-printf("Mark dirty block %d\n", block) ;
+    printf("Mark dirty block %d\n", block);
     /* Set the dirty bit in the flags for that block. */
-    p_fileInfo->p_index->entries[block].vmFlags |= VM_FLAG_DIRTY ;
+    p_fileInfo->p_index->entries[block].vmFlags |= VM_FLAG_DIRTY;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -625,44 +659,46 @@ printf("Mark dirty block %d\n", block) ;
  *      create.
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMCreate(T_vmFileInfo *p_fileInfo)
+T_void
+IVMCreate(T_vmFileInfo *p_fileInfo)
 {
-    T_file file ;
-    T_vmHeader header ;
+    T_file file;
+    T_vmHeader header;
 
-    DebugRoutine("IVMCreate") ;
-    DebugCheck(p_fileInfo != NULL) ;
-puts("IVMCreate") ;
+    DebugRoutine("IVMCreate");
+    DebugCheck(p_fileInfo != NULL);
+    puts("IVMCreate");
 
     /* Open up the new file (an old file doesn't matter since we are */
     /* over writing the important information). */
     p_fileInfo->fileIndex = file =
-        FileOpen(p_fileInfo->filenameIndex, FILE_MODE_READ_WRITE) ;
+        FileOpen(p_fileInfo->filenameIndex, FILE_MODE_READ_WRITE);
 
     /* Make sure the file is good. */
-    DebugCheck(file != FILE_BAD) ;
-    if (file != FILE_BAD)  {
-        header.numEntries = 0 ;
-        header.numTotalEntries = 0 ;
-        header.numAllocatedEntries = 0 ;
-        header.numFreeEntries = 0 ;
-        header.firstFree = 0 ;
-        header.lastByte = 0 ;
-        FileSeek(file, 0) ;
-        FileWrite(file, &header, sizeof(T_vmHeader)) ;
-        FileSeek(file, 0) ;
-        FileClose(file) ;
+    DebugCheck(file != FILE_BAD);
+    if (file != FILE_BAD)
+    {
+        header.numEntries = 0;
+        header.numTotalEntries = 0;
+        header.numAllocatedEntries = 0;
+        header.numFreeEntries = 0;
+        header.firstFree = 0;
+        header.lastByte = 0;
+        FileSeek(file, 0);
+        FileWrite(file, &header, sizeof(T_vmHeader));
+        FileSeek(file, 0);
+        FileClose(file);
     }
 
     /* Open up the other file. */
     p_fileInfo->fileRecords = file =
-        FileOpen(p_fileInfo->filenameRecords, FILE_MODE_READ_WRITE) ;
-    DebugCheck(file != FILE_BAD) ;
+        FileOpen(p_fileInfo->filenameRecords, FILE_MODE_READ_WRITE);
+    DebugCheck(file != FILE_BAD);
 
-    FileSeek(file, 0) ;
-    FileClose(file) ;
+    FileSeek(file, 0);
+    FileClose(file);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -676,26 +712,27 @@ puts("IVMCreate") ;
  *      update.
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMUpdate(T_vmFileInfo *p_fileInfo)
+T_void
+IVMUpdate(T_vmFileInfo *p_fileInfo)
 {
-    T_word32 i ;
-    T_word32 num ;
+    T_word32 i;
+    T_word32 num;
 
-    DebugRoutine("IVMUpdate") ;
-    DebugCheck(p_fileInfo != NULL) ;
+    DebugRoutine("IVMUpdate");
+    DebugCheck(p_fileInfo != NULL);
 
     /* Get the number of items in the list. */
-    num = p_fileInfo->p_index->header.numEntries ;
+    num = p_fileInfo->p_index->header.numEntries;
 
     /* Go through the list of blocks and update each one if */
     /* they are dirty. */
-    for (i=1; i<num; i++)
-        IVMSaveIfDirty(p_fileInfo, &p_fileInfo->p_index->entries[i]) ;
+    for (i = 1; i < num; i++)
+        IVMSaveIfDirty(p_fileInfo, &p_fileInfo->p_index->entries[i]);
 
     /* Now save the whole index. */
-    IVMSaveIndex(p_fileInfo) ;
+    IVMSaveIndex(p_fileInfo);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -714,61 +751,70 @@ T_void IVMUpdate(T_vmFileInfo *p_fileInfo)
  *  @param size -- Size to find
  *
  *<!-----------------------------------------------------------------------*/
-T_vmBlock IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size)
+T_vmBlock
+IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_vmBlock block = VM_BLOCK_BAD ;
-    T_word32 entry ;
-    T_word32 previous ;
-    T_sword32 diffSize ;
-    T_word32 newEntry ;
+    T_vmFileInfo *p_fileInfo;
+    T_vmBlock block = VM_BLOCK_BAD;
+    T_word32 entry;
+    T_word32 previous;
+    T_sword32 diffSize;
+    T_word32 newEntry;
 
-    DebugRoutine("IVMFindFreeBlockOfSize") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(size != 0) ;
+    DebugRoutine("IVMFindFreeBlockOfSize");
+    DebugCheck(file != NULL);
+    DebugCheck(size != 0);
 
     /* Get a quick pointer to the file structure. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Search through the free list. */
-    previous = 0 ;
-    entry = p_fileInfo->p_index->header.firstFree ;
-    while (entry != 0)  {
+    previous = 0;
+    entry = p_fileInfo->p_index->header.firstFree;
+    while (entry != 0)
+    {
         /* this had better be a free block. */
-        DebugCheck(p_fileInfo->p_index->entries[entry].refCount == 0) ;
+        DebugCheck(p_fileInfo->p_index->entries[entry].refCount == 0);
 
         /* Find the difference in the sizes. */
-        diffSize = (T_sword32)size -
-                       (T_sword32)p_fileInfo->p_index->entries[entry].size ;
+        diffSize = (T_sword32) size -
+            (T_sword32) p_fileInfo->p_index->entries[entry].size;
 
         /* See if this block is big enough. */
-        if (diffSize >= 0)  {
+        if (diffSize >= 0)
+        {
             /* We found one.  Is it the exact size, or do we need */
             /* to cut it apart? */
-            if (diffSize == 0)  {
+            if (diffSize == 0)
+            {
                 /* Same size. */
                 /* Remove the block from the list. */
-                if (previous == 0)  {
+                if (previous == 0)
+                {
                     /* No previous free entry, make the next one past this */
                     /* one be the next free. */
                     p_fileInfo->p_index->header.firstFree =
-                        p_fileInfo->p_index->entries[entry].memoryOrNext ;
-                } else {
+                        p_fileInfo->p_index->entries[entry].memoryOrNext;
+                }
+                else
+                {
                     /* Make the previous one point to the next one. */
                     p_fileInfo->p_index->entries[previous].memoryOrNext =
-                        p_fileInfo->p_index->entries[entry].memoryOrNext ;
+                        p_fileInfo->p_index->entries[entry].memoryOrNext;
                 }
-                newEntry = entry ;
-            } else {
+                newEntry = entry;
+            }
+            else
+            {
                 /* Bigger. */
                 /* We need to split the block into two halves, the part */
                 /* we need and the part that is free.  Just make this block */
                 /* smaller and add a new entry in the index for the part */
                 /* that is to be used. */
-                p_fileInfo->p_index->entries[entry].size -= diffSize ;
+                p_fileInfo->p_index->entries[entry].size -= diffSize;
 
                 /* Now create a new entry at the end. */
-                newEntry = IVMAppendEntry(file) ;
+                newEntry = IVMAppendEntry(file);
 
                 /* Note where the block starts in the record file. */
                 /* (This, in effect, splits the free block and makes */
@@ -776,29 +822,29 @@ T_vmBlock IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size)
                 /* new block).  The great thing about doing it this way */
                 /* is that the links are still the same. */
                 p_fileInfo->p_index->entries[newEntry].fileOffset =
-                    p_fileInfo->p_index->entries[entry].fileOffset+diffSize ;
+                    p_fileInfo->p_index->entries[entry].fileOffset + diffSize;
             }
 
             /* Prepare this new block. */
-            p_fileInfo->p_index->entries[newEntry].refCount = 0 ;
-            p_fileInfo->p_index->entries[newEntry].vmFlags = 0 ;
-            p_fileInfo->p_index->entries[newEntry].memoryOrNext = 0 ;
-            p_fileInfo->p_index->entries[newEntry].size = size ;
-            p_fileInfo->p_index->entries[newEntry].lockCount = 0 ;
+            p_fileInfo->p_index->entries[newEntry].refCount = 0;
+            p_fileInfo->p_index->entries[newEntry].vmFlags = 0;
+            p_fileInfo->p_index->entries[newEntry].memoryOrNext = 0;
+            p_fileInfo->p_index->entries[newEntry].size = size;
+            p_fileInfo->p_index->entries[newEntry].lockCount = 0;
 
             /* Note this is the block we want to return. */
-            block = (T_vmBlock)newEntry ;
-            break ;
+            block = (T_vmBlock) newEntry;
+            break;
         }
 
         /* Haven't found the right size block yet. */
-        previous = entry ;
-        entry = p_fileInfo->p_index->entries[entry].memoryOrNext ;
+        previous = entry;
+        entry = p_fileInfo->p_index->entries[entry].memoryOrNext;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return block ;
+    return block;
 }
 
 /*-------------------------------------------------------------------------*
@@ -813,38 +859,39 @@ T_vmBlock IVMFindFreeBlockOfSize(T_vmFile file, T_word32 size)
  *  @param size -- Size of block
  *
  *<!-----------------------------------------------------------------------*/
-T_vmBlock IVMCreateBlockAtEnd(T_vmFile file, T_word32 size)
+T_vmBlock
+IVMCreateBlockAtEnd(T_vmFile file, T_word32 size)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word32 newEntry ;
+    T_vmFileInfo *p_fileInfo;
+    T_word32 newEntry;
 
-    DebugRoutine("IVMCreateBlockAtEnd") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(size != 0) ;
+    DebugRoutine("IVMCreateBlockAtEnd");
+    DebugCheck(file != NULL);
+    DebugCheck(size != 0);
 
     /* Find a new entry in the file. */
-    newEntry = IVMAppendEntry(file) ;
+    newEntry = IVMAppendEntry(file);
 
     /* Get a quick file pointer. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Prepare this new block. */
-    p_fileInfo->p_index->entries[newEntry].refCount = 0 ;
-    p_fileInfo->p_index->entries[newEntry].vmFlags = 0 ;
-    p_fileInfo->p_index->entries[newEntry].memoryOrNext = 0 ;
-    p_fileInfo->p_index->entries[newEntry].size = size ;
-    p_fileInfo->p_index->entries[newEntry].lockCount = 0 ;
+    p_fileInfo->p_index->entries[newEntry].refCount = 0;
+    p_fileInfo->p_index->entries[newEntry].vmFlags = 0;
+    p_fileInfo->p_index->entries[newEntry].memoryOrNext = 0;
+    p_fileInfo->p_index->entries[newEntry].size = size;
+    p_fileInfo->p_index->entries[newEntry].lockCount = 0;
 
     /* Now allocate space at the end of the file. */
     p_fileInfo->p_index->entries[newEntry].fileOffset =
-        p_fileInfo->p_index->header.lastByte ;
+        p_fileInfo->p_index->header.lastByte;
 
     /* Move where the end is now located. */
-    p_fileInfo->p_index->header.lastByte += size ;
+    p_fileInfo->p_index->header.lastByte += size;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return newEntry ;
+    return newEntry;
 }
 
 /*-------------------------------------------------------------------------*
@@ -861,36 +908,37 @@ T_vmBlock IVMCreateBlockAtEnd(T_vmFile file, T_word32 size)
  *  @param block -- Block that is being freed
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMFree(T_vmFile file, T_vmBlock block)
+T_void
+IVMFree(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("IVMFree") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != 0) ;
+    DebugRoutine("IVMFree");
+    DebugCheck(file != NULL);
+    DebugCheck(block != 0);
 
     /* Get a quick file pointer. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Make sure this is considered a to-be-freed block. */
-    DebugCheck(p_fileInfo->p_index->entries[block].refCount == 0) ;
+    DebugCheck(p_fileInfo->p_index->entries[block].refCount == 0);
 
     /* If there is any memory attached to this block, then we need to */
     /* dispose of it.  No saving is necessary since the block is being */
     /* freed. */
-printf("Free %p\n", (T_void *)p_fileInfo->p_index->entries[block].memoryOrNext) ;
+    printf("Free %p\n", (T_void *) p_fileInfo->p_index->entries[block].memoryOrNext);
     if (p_fileInfo->p_index->entries[block].vmFlags & VM_FLAG_IN_MEMORY)
-        MemFree((T_void *)p_fileInfo->p_index->entries[block].memoryOrNext) ;
+        MemFree((T_void *) p_fileInfo->p_index->entries[block].memoryOrNext);
 
     /* Just put the given block on the free list.  Since order does */
     /* not matter, put the newly freed block on the beginning of the */
     /* free list. */
     p_fileInfo->p_index->entries[block].memoryOrNext =
-        p_fileInfo->p_index->header.firstFree ;
+        p_fileInfo->p_index->header.firstFree;
 
-    p_fileInfo->p_index->header.firstFree = block ;
+    p_fileInfo->p_index->header.firstFree = block;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -907,16 +955,17 @@ printf("Free %p\n", (T_void *)p_fileInfo->p_index->entries[block].memoryOrNext) 
  *  @param block -- Block that is being released
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMRelease(T_vmFile file, T_vmBlock block)
+T_void
+IVMRelease(T_vmFile file, T_vmBlock block)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("IVMRelease") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != 0) ;
+    DebugRoutine("IVMRelease");
+    DebugCheck(file != NULL);
+    DebugCheck(block != 0);
 
     /* Get a quick file pointer. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* !!! For now, we will just save the block to disk and remove it */
     /* from memory.  However, later I want to make this use the */
@@ -924,12 +973,12 @@ T_void IVMRelease(T_vmFile file, T_vmBlock block)
     /* as long as possible. */
 
     /* Check to see if the block needs to be saved, and if so, save it. */
-    IVMSaveIfDirty(p_fileInfo, &p_fileInfo->p_index->entries[block]) ;
+    IVMSaveIfDirty(p_fileInfo, &p_fileInfo->p_index->entries[block]);
 
     /* Now that it is saved, we can remove it from memory. */
-    MemFree((T_void *)p_fileInfo->p_index->entries[block].memoryOrNext) ;
+    MemFree((T_void *) p_fileInfo->p_index->entries[block].memoryOrNext);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -943,42 +992,45 @@ T_void IVMRelease(T_vmFile file, T_vmBlock block)
  *  @param place -- Place in VM
  *
  *<!-----------------------------------------------------------------------*/
-T_vmBlock IVMFindLowestBlock(T_vmFile file, T_word32 place)
+T_vmBlock
+IVMFindLowestBlock(T_vmFile file, T_word32 place)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word32 i ;
-    T_word32 bestBlock = 0 ;
-    T_word32 bestOffset = 0xFFFFFFFF ;
-    T_vmEntry *p_entry ;
-    T_word32 num ;
+    T_vmFileInfo *p_fileInfo;
+    T_word32 i;
+    T_word32 bestBlock = 0;
+    T_word32 bestOffset = 0xFFFFFFFF;
+    T_vmEntry *p_entry;
+    T_word32 num;
 
-    DebugRoutine("IVMFindLowestBlock") ;
-    DebugCheck(file != NULL) ;
+    DebugRoutine("IVMFindLowestBlock");
+    DebugCheck(file != NULL);
 
     /* Get a quick file pointer. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Find out how many entries are in use. */
-    num = p_fileInfo->p_index->header.numEntries ;
+    num = p_fileInfo->p_index->header.numEntries;
 
     /* Loop through all entries looking for the lowest. */
-    for (i=1; i<num; i++)  {
+    for (i = 1; i < num; i++)
+    {
         /* Get a quick pointer to this entry. */
-        p_entry = &p_fileInfo->p_index->entries[i] ;
+        p_entry = &p_fileInfo->p_index->entries[i];
 
         /* Are we above the limit and below the last found block? */
         if ((p_entry->fileOffset >= place) &&
-            (p_entry->fileOffset < bestOffset))  {
+            (p_entry->fileOffset < bestOffset))
+        {
             /* Yes, we are.  Make this the best one so far. */
-            bestOffset = p_entry->fileOffset ;
-            bestBlock = i ;
+            bestOffset = p_entry->fileOffset;
+            bestBlock = i;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return who was the best block. */
-    return bestBlock ;
+    return bestBlock;
 }
 
 /*-------------------------------------------------------------------------*
@@ -992,30 +1044,32 @@ T_vmBlock IVMFindLowestBlock(T_vmFile file, T_word32 place)
  *  @param p_entry -- Pointer to entry to check to save
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMSaveIfDirty(T_vmFileInfo *p_fileInfo, T_vmEntry *p_entry)
+T_void
+IVMSaveIfDirty(T_vmFileInfo *p_fileInfo, T_vmEntry *p_entry)
 {
-    DebugRoutine("IVMSaveIfDirty") ;
-    DebugCheck(p_fileInfo != NULL) ;
-    DebugCheck(p_entry != NULL) ;
+    DebugRoutine("IVMSaveIfDirty");
+    DebugCheck(p_fileInfo != NULL);
+    DebugCheck(p_entry != NULL);
 
-    if ((p_entry->vmFlags & VM_FLAG_DIRTY) != 0)  {
-puts("Saving block") ;
+    if ((p_entry->vmFlags & VM_FLAG_DIRTY) != 0)
+    {
+        puts("Saving block");
         /* Block is dirty, save it. */
 
         /* Seek the location to save. */
-        FileSeek(p_fileInfo->fileRecords, p_entry->fileOffset) ;
+        FileSeek(p_fileInfo->fileRecords, p_entry->fileOffset);
 
         /* Write out all of the data. */
         FileWrite(
             p_fileInfo->fileRecords,
-            (T_void *)p_entry->memoryOrNext,
-            p_entry->size) ;
+            (T_void *) p_entry->memoryOrNext,
+            p_entry->size);
 
         /* Clear the dirty flag. */
-        p_entry->vmFlags &= (~VM_FLAG_DIRTY) ;
+        p_entry->vmFlags &= (~VM_FLAG_DIRTY);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1027,22 +1081,23 @@ puts("Saving block") ;
  *  @param p_fileInfo -- Pointer to the file information struct
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMSaveIndex(T_vmFileInfo *p_fileInfo)
+T_void
+IVMSaveIndex(T_vmFileInfo *p_fileInfo)
 {
-    DebugRoutine("IVMSaveIndex") ;
-    DebugCheck(p_fileInfo != NULL) ;
+    DebugRoutine("IVMSaveIndex");
+    DebugCheck(p_fileInfo != NULL);
 
     /* Move back to the start. */
-    FileSeek(p_fileInfo->fileIndex, 0) ;
+    FileSeek(p_fileInfo->fileIndex, 0);
 
     /* Save the index. */
     FileWrite(
         p_fileInfo->fileIndex,
         p_fileInfo->p_index,
         p_fileInfo->p_index->header.numTotalEntries * sizeof(T_vmEntry) +
-            sizeof(T_vmHeader)) ;
+            sizeof(T_vmHeader));
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1054,67 +1109,71 @@ T_void IVMSaveIndex(T_vmFileInfo *p_fileInfo)
  *  @param file -- File to append an entry.
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 IVMAppendEntry(T_vmFile file)
+T_word32
+IVMAppendEntry(T_vmFile file)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word32 block ;
-    T_vmIndex *p_newIndex ;
+    T_vmFileInfo *p_fileInfo;
+    T_word32 block;
+    T_vmIndex *p_newIndex;
 
-    DebugRoutine("IVMAppendEntry") ;
+    DebugRoutine("IVMAppendEntry");
 
     /* Get a quick file pointer. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* In any case, we are taking the last one on the list. */
-    block = p_fileInfo->p_index->header.numEntries ;
+    block = p_fileInfo->p_index->header.numEntries;
 
     /* Get rid of zero as the first case. */
     if (block == 0)
-        block = 1 ;
+        block = 1;
 
     /* Is there enough room for another entry? */
-    if (block < p_fileInfo->p_index->header.numTotalEntries)  {
+    if (block < p_fileInfo->p_index->header.numTotalEntries)
+    {
         /* Enough space in the current version.  Just take one more. */
-        p_fileInfo->p_index->header.numEntries = block+1 ;
-    } else {
+        p_fileInfo->p_index->header.numEntries = block + 1;
+    }
+    else
+    {
         /* Not enough space.  Now we have a big problem.  We need to */
         /* expand the whole list. */
 
         /* Grow the total size. */
-        p_fileInfo->p_index->header.numTotalEntries += VM_ENTRY_GROW_SIZE ;
+        p_fileInfo->p_index->header.numTotalEntries += VM_ENTRY_GROW_SIZE;
 
         /* Now we need to allocate more memory for this routine. */
         /* To be safe, go ahead and save everything. */
-        IVMUpdate(p_fileInfo) ;
+        IVMUpdate(p_fileInfo);
 
         /* Now allocate memory for another index. */
         p_newIndex = MemAlloc(
             p_fileInfo->p_index->header.numTotalEntries * sizeof(T_vmEntry) +
-            sizeof(T_vmHeader)) ;
+                sizeof(T_vmHeader));
 
         /* Make sure we go the memory. */
-        DebugCheck(p_newIndex != NULL) ;
+        DebugCheck(p_newIndex != NULL);
 
         /* Copy the index over. */
         memcpy(
             p_newIndex,
             p_fileInfo->p_index,
             sizeof(T_vmHeader) +
-                p_fileInfo->p_index->header.numEntries * sizeof(T_vmEntry)) ;
+                p_fileInfo->p_index->header.numEntries * sizeof(T_vmEntry));
 
         /* Free the old index. */
-        MemFree(p_fileInfo->p_index) ;
+        MemFree(p_fileInfo->p_index);
 
         /* Declare the new index. */
-        p_fileInfo->p_index = p_newIndex ;
+        p_fileInfo->p_index = p_newIndex;
 
         /* Increment the number of entries. */
-        p_fileInfo->p_index->header.numEntries = block+1 ;
+        p_fileInfo->p_index->header.numEntries = block + 1;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return block ;
+    return block;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1130,68 +1189,71 @@ T_word32 IVMAppendEntry(T_vmFile file)
  *      to record end of block).
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMShiftBlockDown(T_vmFile file, T_vmBlock block, T_word32 *place)
+T_void
+IVMShiftBlockDown(T_vmFile file, T_vmBlock block, T_word32 *place)
 {
-    T_vmFileInfo *p_fileInfo ;
-    T_word32 where ;
-    T_word32 size ;
-    T_file recordsFile ;
-    T_byte8 *tempBlock ;
-    T_word32 newPlace ;
+    T_vmFileInfo *p_fileInfo;
+    T_word32 where;
+    T_word32 size;
+    T_file recordsFile;
+    T_byte8 *tempBlock;
+    T_word32 newPlace;
 
-    DebugRoutine("IVMShiftBlockDown") ;
-    DebugCheck(file != NULL) ;
-    DebugCheck(block != VM_BLOCK_BAD) ;
-    DebugCheck(place != NULL) ;
+    DebugRoutine("IVMShiftBlockDown");
+    DebugCheck(file != NULL);
+    DebugCheck(block != VM_BLOCK_BAD);
+    DebugCheck(place != NULL);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* Find where the block is currently at. */
-    where = p_fileInfo->p_index->entries[block].fileOffset ;
+    where = p_fileInfo->p_index->entries[block].fileOffset;
 
     /* What is the handle to the records file. */
-    recordsFile = p_fileInfo->fileRecords ;
+    recordsFile = p_fileInfo->fileRecords;
 
     /* How big is the block? */
-    size = p_fileInfo->p_index->entries[block].size ;
+    size = p_fileInfo->p_index->entries[block].size;
 
     /* Copy where we are trying to go to. */
-    newPlace = *place ;
+    newPlace = *place;
 
     /* Allocate some memory for transfering data. */
-    tempBlock = MemAlloc(VM_SHIFT_BLOCK_SIZE) ;
-    DebugCheck(tempBlock != NULL) ;
+    tempBlock = MemAlloc(VM_SHIFT_BLOCK_SIZE);
+    DebugCheck(tempBlock != NULL);
 
     /* Somethings a block is bigger than one shift, so we must keep */
     /* shifting a group at a time. */
-    while (size >= VM_SHIFT_BLOCK_SIZE)  {
-        FileSeek(recordsFile, where) ;
-        FileRead(recordsFile, tempBlock, VM_SHIFT_BLOCK_SIZE) ;
-        FileSeek(recordsFile, *place) ;
-        FileWrite(recordsFile, tempBlock, VM_SHIFT_BLOCK_SIZE) ;
-        size -= VM_SHIFT_BLOCK_SIZE ;
-        *place += VM_SHIFT_BLOCK_SIZE ;
-        where += VM_SHIFT_BLOCK_SIZE ;
+    while (size >= VM_SHIFT_BLOCK_SIZE)
+    {
+        FileSeek(recordsFile, where);
+        FileRead(recordsFile, tempBlock, VM_SHIFT_BLOCK_SIZE);
+        FileSeek(recordsFile, *place);
+        FileWrite(recordsFile, tempBlock, VM_SHIFT_BLOCK_SIZE);
+        size -= VM_SHIFT_BLOCK_SIZE;
+        *place += VM_SHIFT_BLOCK_SIZE;
+        where += VM_SHIFT_BLOCK_SIZE;
     }
 
     /* Now shift the last block if it is not zero in size. */
-    if (size != 0)  {
-        FileSeek(recordsFile, where) ;
-        FileRead(recordsFile, tempBlock, size) ;
-        FileSeek(recordsFile, *place) ;
-        FileWrite(recordsFile, tempBlock, size) ;
-        *place += size ;
-        where += size ;
+    if (size != 0)
+    {
+        FileSeek(recordsFile, where);
+        FileRead(recordsFile, tempBlock, size);
+        FileSeek(recordsFile, *place);
+        FileWrite(recordsFile, tempBlock, size);
+        *place += size;
+        where += size;
     }
 
     /* Free the temporary transfer block. */
-    MemFree(tempBlock) ;
+    MemFree(tempBlock);
 
     /* Note where the block can now be found. */
-    p_fileInfo->p_index->entries[block].fileOffset = newPlace ;
+    p_fileInfo->p_index->entries[block].fileOffset = newPlace;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1205,19 +1267,20 @@ T_void IVMShiftBlockDown(T_vmFile file, T_vmBlock block, T_word32 *place)
  *  @param place -- where to truncate the file
  *
  *<!-----------------------------------------------------------------------*/
-T_void IVMTruncate(T_vmFile file, T_word32 place)
+T_void
+IVMTruncate(T_vmFile file, T_word32 place)
 {
-    T_vmFileInfo *p_fileInfo ;
+    T_vmFileInfo *p_fileInfo;
 
-    DebugRoutine("IVMTruncate") ;
-    DebugCheck(file != NULL) ;
+    DebugRoutine("IVMTruncate");
+    DebugCheck(file != NULL);
 
     /* Get a pointer to the file information. */
-    p_fileInfo = (T_vmFileInfo *)file ;
+    p_fileInfo = (T_vmFileInfo *) file;
 
     /* !!! At this point, I do not know what the truncate code should be. */
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

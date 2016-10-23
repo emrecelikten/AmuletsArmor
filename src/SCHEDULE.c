@@ -16,21 +16,24 @@
 #include "SYNCTIME.H"
 #include "TICKER.H"
 
-typedef struct {
-    T_word32 when ;
-    T_scheduleEventHandler handler ;
-    T_word32 data ;
-    T_void *next ;
-} T_scheduleEvent ;
+typedef struct
+{
+    T_word32 when;
+    T_scheduleEventHandler handler;
+    T_word32 data;
+    T_void *next;
+} T_scheduleEvent;
 
 static T_scheduleEvent *G_firstScheduleEvent = NULL;
 
-typedef struct {
-    T_scheduleEvent *p_firstScheduleEvent ;
-} T_scheduleHandleStruct ;
+typedef struct
+{
+    T_scheduleEvent *p_firstScheduleEvent;
+} T_scheduleHandleStruct;
 
 /* Internal prototypes: */
-T_void IScheduleInsertSortEvent(T_scheduleEvent *p_newEvent, T_word32 when) ;
+T_void
+IScheduleInsertSortEvent(T_scheduleEvent *p_newEvent, T_word32 when);
 
 /*-------------------------------------------------------------------------*
  * Routine:  ScheduleAddEvent
@@ -47,31 +50,33 @@ T_void IScheduleInsertSortEvent(T_scheduleEvent *p_newEvent, T_word32 when) ;
  *      32 bit value).
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScheduleAddEvent(
-           T_word32 when,
-           T_scheduleEventHandler handler,
-           T_word32 data)
+T_void
+ScheduleAddEvent(
+    T_word32 when,
+    T_scheduleEventHandler handler,
+    T_word32 data)
 {
-    T_scheduleEvent *p_event ;
+    T_scheduleEvent *p_event;
 
-    DebugRoutine("ScheduleAddEvent") ;
+    DebugRoutine("ScheduleAddEvent");
 
     /* Allocate memory for this new event. */
-    p_event = MemAlloc(sizeof(T_scheduleEvent)) ;
+    p_event = MemAlloc(sizeof(T_scheduleEvent));
 
-    DebugCheck(p_event != NULL) ;
+    DebugCheck(p_event != NULL);
 
     /* Make sure it was allocated. */
-    if (p_event != NULL)  {
+    if (p_event != NULL)
+    {
         /* Store the data in the structure. */
-        p_event->when = when ;
-        p_event->handler = handler ;
-        p_event->data = data ;
+        p_event->when = when;
+        p_event->handler = handler;
+        p_event->data = data;
 
         /* Insert sort this item into our linked list of events. */
-        IScheduleInsertSortEvent(p_event, when) ;
+        IScheduleInsertSortEvent(p_event, when);
     }
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -82,19 +87,21 @@ T_void ScheduleAddEvent(
  *  useful when you need to quit processing those events.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScheduleClearEvents(T_void)
+T_void
+ScheduleClearEvents(T_void)
 {
-    T_scheduleEvent *p_event ;
-    DebugRoutine("ScheduleClearEvents") ;
+    T_scheduleEvent *p_event;
+    DebugRoutine("ScheduleClearEvents");
 
     /* Loop and free each event until all are gone. */
-    while (G_firstScheduleEvent != NULL)  {
-        p_event = G_firstScheduleEvent->next ;
-        MemFree(G_firstScheduleEvent) ;
-        G_firstScheduleEvent = p_event ;
+    while (G_firstScheduleEvent != NULL)
+    {
+        p_event = G_firstScheduleEvent->next;
+        MemFree(G_firstScheduleEvent);
+        G_firstScheduleEvent = p_event;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -109,38 +116,40 @@ T_void ScheduleClearEvents(T_void)
  *  @return Flag that tells if an event occured
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean ScheduleUpdateEvents(T_void)
+E_Boolean
+ScheduleUpdateEvents(T_void)
 {
-    T_scheduleEvent *p_event ;
-    E_Boolean f_eventOccured = FALSE ;
-    TICKER_TIME_ROUTINE_PREPARE() ;
+    T_scheduleEvent *p_event;
+    E_Boolean f_eventOccured = FALSE;
+    TICKER_TIME_ROUTINE_PREPARE();
 
-    TICKER_TIME_ROUTINE_START() ;
+    TICKER_TIME_ROUTINE_START();
 
-    DebugRoutine("ScheduleUpdateEvents") ;
+    DebugRoutine("ScheduleUpdateEvents");
 
     /* Loop while there are events that can be processed. */
     while ((G_firstScheduleEvent != NULL) &&
-           (G_firstScheduleEvent->when <= SyncTimeGet()))  {
+        (G_firstScheduleEvent->when <= SyncTimeGet()))
+    {
         /* An event is now going off.  Get that event. */
-        p_event = G_firstScheduleEvent ;
+        p_event = G_firstScheduleEvent;
 
         /* Call the handler for this event. */
-        DebugCheck(p_event->handler != NULL) ;
-        p_event->handler(p_event->data) ;
+        DebugCheck(p_event->handler != NULL);
+        p_event->handler(p_event->data);
 
         /* Remove the event from the list. */
-        G_firstScheduleEvent = p_event->next ;
-        MemFree(p_event) ;
+        G_firstScheduleEvent = p_event->next;
+        MemFree(p_event);
 
         /* Note that some event occured. */
-        f_eventOccured = TRUE ;
+        f_eventOccured = TRUE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    TICKER_TIME_ROUTINE_END(stdout, "ScheduleUpdateEvents", 500) ;
-    return f_eventOccured ;
+    TICKER_TIME_ROUTINE_END(stdout, "ScheduleUpdateEvents", 500);
+    return f_eventOccured;
 }
 
 /*-------------------------------------------------------------------------*
@@ -155,41 +164,46 @@ E_Boolean ScheduleUpdateEvents(T_void)
  *  @param when -- When the event is to occur
  *
  *<!-----------------------------------------------------------------------*/
-T_void IScheduleInsertSortEvent(T_scheduleEvent *p_newEvent, T_word32 when)
+T_void
+IScheduleInsertSortEvent(T_scheduleEvent *p_newEvent, T_word32 when)
 {
-    T_scheduleEvent *p_prev = NULL ;
-    T_scheduleEvent *p_event ;
+    T_scheduleEvent *p_prev = NULL;
+    T_scheduleEvent *p_event;
 
-    DebugRoutine("IScheduleInsertSortEvent") ;
+    DebugRoutine("IScheduleInsertSortEvent");
 
     /* Start at the beginning. */
-    p_event = G_firstScheduleEvent ;
+    p_event = G_firstScheduleEvent;
 
-    while (p_event != NULL)  {
+    while (p_event != NULL)
+    {
         /* See if the current event is older than our event. */
         /* If it is, stop looping. */
         if (p_event->when > when)
-            break ;
+            break;
         /* If not, make this the last event we got and go forward. */
-        p_prev = p_event ;
-        p_event = p_event->next ;
+        p_prev = p_event;
+        p_event = p_event->next;
     }
 
     /* Now link up the previous and next links. */
     /* The next is easy, just make it to wherever we got to (even a NULL). */
-    p_newEvent->next = p_event ;
+    p_newEvent->next = p_event;
 
     /* The previous link is a little tricky.  If the previous link is */
     /* NULL, then we are at the beginning of the list and need to */
     /* make it the first event.  Otherwise, we make that previous event */
     /* point to this event. */
-    if (p_prev == NULL)  {
-        G_firstScheduleEvent = p_newEvent ;
-    } else {
-        p_prev->next = p_newEvent ;
+    if (p_prev == NULL)
+    {
+        G_firstScheduleEvent = p_newEvent;
+    }
+    else
+    {
+        p_prev->next = p_newEvent;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

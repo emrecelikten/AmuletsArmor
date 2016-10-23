@@ -11,19 +11,26 @@
 
 #define TICKS_PER_SECOND 70
 
-T_void TickerOn(T_void) ;
+T_void
+TickerOn(T_void);
 
-T_void TickerOff(T_void) ;
+T_void
+TickerOff(T_void);
 
-T_word32 TickerGet(T_void) ;
+T_word32
+TickerGet(T_void);
 
-T_word32 TickerGetAccurate(T_void) ;
+T_word32
+TickerGetAccurate(T_void);
 
-T_void TickerPause(T_void) ;
+T_void
+TickerPause(T_void);
 
-T_void TickerContinue(T_void) ;
+T_void
+TickerContinue(T_void);
 
-T_void TickerInc(T_void) ;
+T_void
+TickerInc(T_void);
 
 #ifdef HISPEED_TESTING
 #  define TICKER_TIME_ROUTINE_PREPARE()         \

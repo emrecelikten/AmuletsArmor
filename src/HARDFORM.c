@@ -15,7 +15,6 @@
  *<!-----------------------------------------------------------------------*/
 #include "BANNER.H"
 #include "BANKUI.H"
-#include "BUTTON.H"
 #include "CLI_SEND.H"
 #include "CLIENT.H"
 #include "CSYNCPCK.H"
@@ -26,7 +25,6 @@
 #include "PEOPHERE.H"
 #include "SCHEDULE.H"
 #include "STATS.H"
-#include "STORE.H"
 #include "TOWNUI.H"
 #include "GUILDUI.H"
 #include "TICKER.H"
@@ -39,7 +37,8 @@
 /*-------------------------------------------------------------------------*
  * Types:
  *-------------------------------------------------------------------------*/
-typedef struct {
+typedef struct
+{
     T_hardFormStart start;
     T_hardFormEnd end;
     T_hardFormUpdate update;
@@ -50,7 +49,8 @@ typedef struct {
  * Globals:
  *-------------------------------------------------------------------------*/
 static T_buttonID G_closeButton = NULL;
-static T_void HardFormExit(T_buttonID buttonID);
+static T_void
+HardFormExit(T_buttonID buttonID);
 static E_Boolean HardFormOpen = FALSE;
 static T_word32 G_timeIDLastUpdated = 0;
 
@@ -88,10 +88,10 @@ static T_hardFormCallbackGroup G_callbackGroups[HARD_FORM_UNKNOWN] = {
         StoreUIUpdate,
         StoreHandleTransaction
     },
-    {   InnUIStart,
-        InnUIEnd,
-        InnUIUpdate,
-        NULL
+    {InnUIStart,
+     InnUIEnd,
+     InnUIUpdate,
+     NULL
     },
     {
         HouseUIStart,
@@ -115,7 +115,8 @@ static T_hardFormCallbackGroup G_callbackGroups[HARD_FORM_UNKNOWN] = {
 
 static T_word32 G_currentForm = HARD_FORM_UNKNOWN;
 
-T_void HardFormStart(T_word32 formNum)
+T_void
+HardFormStart(T_word32 formNum)
 {
     T_word32 formID;
 
@@ -132,11 +133,14 @@ T_void HardFormStart(T_word32 formNum)
     DebugCheck(G_currentForm == HARD_FORM_UNKNOWN);
 
 //    if (formID!=HARD_FORM_TOWN)
-    if (1) {
+    if (1)
+    {
         /* create hardform close button */
         G_closeButton = ButtonCreate(196, 5, "UI/COMMON/CLOSEWIN", FALSE, 0,
-                NULL, HardFormExit);
-    } else {
+                                     NULL, HardFormExit);
+    }
+    else
+    {
         G_closeButton = NULL;
     }
 
@@ -145,7 +149,7 @@ T_void HardFormStart(T_word32 formNum)
 
     G_currentForm = formNum;
 
-    if (G_callbackGroups[G_currentForm].start != NULL )
+    if (G_callbackGroups[G_currentForm].start != NULL)
         G_callbackGroups[G_currentForm].start(formID);
 
     if (G_timeIDLastUpdated)
@@ -154,11 +158,13 @@ T_void HardFormStart(T_word32 formNum)
     DebugEnd();
 }
 
-T_void HardFormEnd(T_void)
+T_void
+HardFormEnd(T_void)
 {
     DebugRoutine("HardFormEnd");
 
-    if (G_closeButton) {
+    if (G_closeButton)
+    {
         ButtonDelete(G_closeButton);
         G_closeButton = NULL;
     }
@@ -168,7 +174,7 @@ T_void HardFormEnd(T_void)
         BannerUIModeOff();
 
     DebugCheck(G_currentForm != HARD_FORM_UNKNOWN);
-    if (G_callbackGroups[G_currentForm].end != NULL )
+    if (G_callbackGroups[G_currentForm].end != NULL)
         G_callbackGroups[G_currentForm].end();
 
     G_currentForm = HARD_FORM_UNKNOWN;
@@ -179,7 +185,8 @@ T_void HardFormEnd(T_void)
     DebugEnd();
 }
 
-static T_void HardFormExit(T_buttonID buttonID)
+static T_void
+HardFormExit(T_buttonID buttonID)
 {
     DebugRoutine("HardFormExit");
 
@@ -196,36 +203,42 @@ static T_void HardFormExit(T_buttonID buttonID)
 
     ButtonDelete(G_closeButton);
     G_closeButton = NULL;
-    if (TownUIIsOpen()) {
+    if (TownUIIsOpen())
+    {
         // Save the character!
         StatsSaveCharacter(StatsGetActive());
 
         // Exit town
         ClientSetNextPlace(0, 0);
-    } else {
+    }
+    else
+    {
         ClientSetNextPlace(HARDFORM_GOTO_PLACE_OFFSET + HARD_FORM_TOWN, 0);
     }
 
     DebugEnd();
 }
 
-T_void HardFormHandleMouse(
-        E_mouseEvent event,
-        T_word16 x,
-        T_word16 y,
-        T_buttonClick buttons)
+T_void
+HardFormHandleMouse(
+    E_mouseEvent event,
+    T_word16 x,
+    T_word16 y,
+    T_buttonClick buttons)
 {
     DebugRoutine("HardFormHandleMouse");
 
-    if (G_currentForm < HARD_FORM_UNKNOWN) {
-        if (G_callbackGroups[G_currentForm].handleMouse != NULL )
+    if (G_currentForm < HARD_FORM_UNKNOWN)
+    {
+        if (G_callbackGroups[G_currentForm].handleMouse != NULL)
             G_callbackGroups[G_currentForm].handleMouse(event, x, y, buttons);
     }
 
     DebugEnd();
 }
 
-void HardFormNetworkUpdate(void)
+void
+HardFormNetworkUpdate(void)
 {
     T_word32 time;
 
@@ -235,7 +248,8 @@ void HardFormNetworkUpdate(void)
     // every so often.  If the list is not updated, players will be
     // dropped.
     time = TickerGet();
-    if ((time - G_timeIDLastUpdated) >= PLAYER_ID_INTERVAL) {
+    if ((time - G_timeIDLastUpdated) >= PLAYER_ID_INTERVAL)
+    {
         G_timeIDLastUpdated += PLAYER_ID_INTERVAL;
         ClientSendPlayerIDSelf();
     }
@@ -243,10 +257,12 @@ void HardFormNetworkUpdate(void)
     DebugEnd();
 }
 
-T_void HardFormUpdate(T_void)
+T_void
+HardFormUpdate(T_void)
 {
     DebugRoutine("HardFormUpdate");
-    if (G_currentForm < HARD_FORM_UNKNOWN) {
+    if (G_currentForm < HARD_FORM_UNKNOWN)
+    {
         GrScreenSet(GRAPHICS_ACTUAL_SCREEN);
         BannerUpdate();
         StatsUpdatePlayerStatistics();
@@ -254,7 +270,7 @@ T_void HardFormUpdate(T_void)
         ScheduleUpdateEvents();
         KeyboardUpdateEvents();
         MouseUpdateEvents();
-        if (G_callbackGroups[G_currentForm].update != NULL )
+        if (G_callbackGroups[G_currentForm].update != NULL)
             G_callbackGroups[G_currentForm].update();
         HardFormNetworkUpdate();
     }
@@ -262,7 +278,8 @@ T_void HardFormUpdate(T_void)
     DebugEnd();
 }
 
-E_Boolean HardFormIsOpen(T_void)
+E_Boolean
+HardFormIsOpen(T_void)
 {
     return (HardFormOpen);
 }

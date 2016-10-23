@@ -52,39 +52,39 @@ static T_word16 G_numberOpenFiles = 0;
  *
  *<!-----------------------------------------------------------------------*/
 T_file
-FileOpen (T_byte8 *p_filename, E_fileMode mode)
+FileOpen(T_byte8 *p_filename, E_fileMode mode)
 {
-  T_file file;
+    T_file file;
 #if defined(TARGET_WIN32)
-  static T_word32 fileOpenModes[4] = {
-       O_RDONLY|O_BINARY,
-       O_WRONLY|O_CREAT|O_BINARY,
-       O_RDWR|O_APPEND|O_CREAT|O_BINARY,
-       O_RDWR|O_CREAT|O_BINARY
-  } ;
+    static T_word32 fileOpenModes[4] = {
+         O_RDONLY|O_BINARY,
+         O_WRONLY|O_CREAT|O_BINARY,
+         O_RDWR|O_APPEND|O_CREAT|O_BINARY,
+         O_RDWR|O_CREAT|O_BINARY
+    } ;
 #elif defined(TARGET_UNIX)
-  static T_word32 fileOpenModes[4] = {
-      O_RDONLY,
-      O_WRONLY | O_CREAT,
-      O_RDWR | O_APPEND | O_CREAT,
-      O_RDWR | O_CREAT
-  };
+    static T_word32 fileOpenModes[4] = {
+        O_RDONLY,
+        O_WRONLY | O_CREAT,
+        O_RDWR | O_APPEND | O_CREAT,
+        O_RDWR | O_CREAT
+    };
 #else
-  UNSPECIFIED PLATFORM /* Fail to compile */
+    UNSPECIFIED PLATFORM /* Fail to compile */
 #endif
 
-  DebugRoutine("FileOpen");
-  DebugCheck(p_filename != NULL);
-  DebugCheck(mode < FILE_MODE_UNKNOWN);
-  DebugCheck(G_numberOpenFiles < MAX_FILES);
+    DebugRoutine("FileOpen");
+    DebugCheck(p_filename != NULL);
+    DebugCheck(mode < FILE_MODE_UNKNOWN);
+    DebugCheck(G_numberOpenFiles < MAX_FILES);
 
-  file = open (p_filename, fileOpenModes[mode], S_IREAD | S_IWRITE);
-  if (file != FILE_BAD)
-    G_numberOpenFiles++;
+    file = open(p_filename, fileOpenModes[mode], S_IREAD | S_IWRITE);
+    if (file != FILE_BAD)
+        G_numberOpenFiles++;
 
-  DebugEnd();
+    DebugEnd();
 
-  return file;
+    return file;
 }
 
 /*-------------------------------------------------------------------------*
@@ -97,17 +97,17 @@ FileOpen (T_byte8 *p_filename, E_fileMode mode)
  *
  *<!-----------------------------------------------------------------------*/
 T_void
-FileClose (T_file file)
+FileClose(T_file file)
 {
-  DebugRoutine("FileClose");
-  DebugCheck(file != FILE_BAD);
+    DebugRoutine("FileClose");
+    DebugCheck(file != FILE_BAD);
 
-  close (file);
+    close(file);
 
-  /* Decrement the number of open files. */
-  G_numberOpenFiles--;
+    /* Decrement the number of open files. */
+    G_numberOpenFiles--;
 
-  DebugEnd();
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -130,14 +130,14 @@ FileClose (T_file file)
  *<!-----------------------------------------------------------------------*/
 /* All seeks are from the beginning of the file. */
 T_void
-FileSeek (T_file file, T_word32 position)
+FileSeek(T_file file, T_word32 position)
 {
-  DebugRoutine("FileSeek");
-  DebugCheck(file != FILE_BAD);
+    DebugRoutine("FileSeek");
+    DebugCheck(file != FILE_BAD);
 
-  lseek (file, position, SEEK_SET);
+    lseek(file, position, SEEK_SET);
 
-  DebugEnd();
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -160,20 +160,20 @@ FileSeek (T_file file, T_word32 position)
  *
  *<!-----------------------------------------------------------------------*/
 T_sword32
-FileRead (T_file file, T_void *p_buffer, T_word32 size)
+FileRead(T_file file, T_void *p_buffer, T_word32 size)
 {
-  T_sword32 result;
+    T_sword32 result;
 
-  DebugRoutine("FileRead");
-  DebugCheck(file != FILE_BAD);
+    DebugRoutine("FileRead");
+    DebugCheck(file != FILE_BAD);
 //    DebugCheck(size > 0) ;
-  DebugCheck(p_buffer != NULL);
+    DebugCheck(p_buffer != NULL);
 
-  result = read (file, p_buffer, size);
+    result = read(file, p_buffer, size);
 
-  DebugEnd();
+    DebugEnd();
 
-  return result;
+    return result;
 }
 
 /*-------------------------------------------------------------------------*
@@ -196,20 +196,20 @@ FileRead (T_file file, T_void *p_buffer, T_word32 size)
  *
  *<!-----------------------------------------------------------------------*/
 T_sword32
-FileWrite (T_file file, T_void *p_buffer, T_word32 size)
+FileWrite(T_file file, T_void *p_buffer, T_word32 size)
 {
-  T_sword32 result;
+    T_sword32 result;
 
-  DebugRoutine("FileWrite");
-  DebugCheck(file != FILE_BAD);
-  DebugCheck(size > 0);
-  DebugCheck(p_buffer != NULL);
+    DebugRoutine("FileWrite");
+    DebugCheck(file != FILE_BAD);
+    DebugCheck(size > 0);
+    DebugCheck(p_buffer != NULL);
 
-  result = write (file, p_buffer, size);
+    result = write(file, p_buffer, size);
 
-  DebugEnd();
+    DebugEnd();
 
-  return result;
+    return result;
 }
 
 /*-------------------------------------------------------------------------*
@@ -225,52 +225,52 @@ FileWrite (T_file file, T_void *p_buffer, T_word32 size)
  *
  *<!-----------------------------------------------------------------------*/
 T_void *
-FileLoad (T_byte8 *p_filename, T_word32 *p_size)
+FileLoad(T_byte8 *p_filename, T_word32 *p_size)
 {
-  T_byte8 *p_data;
-  T_file file;
+    T_byte8 *p_data;
+    T_file file;
 
-  DebugRoutine("FileLoad");
-  DebugCheck(p_filename != NULL);
-  DebugCheck(p_size != NULL);
+    DebugRoutine("FileLoad");
+    DebugCheck(p_filename != NULL);
+    DebugCheck(p_size != NULL);
 
-  /* See how big the file is so we know how much memory to allocate. */
-  *p_size = FileGetSize (p_filename);
+    /* See how big the file is so we know how much memory to allocate. */
+    *p_size = FileGetSize(p_filename);
 #ifdef COMPILE_OPTION_FILE_OUTPUT
-  printf("!A 1 file_%s\n", p_filename) ;
-  printf("!A 1 file_r_%s\n", DebugGetCallerName()) ;
+    printf("!A 1 file_%s\n", p_filename) ;
+    printf("!A 1 file_r_%s\n", DebugGetCallerName()) ;
 #endif
-  if (*p_size)
+    if (*p_size)
     {
-      /* Allocate the memory for the file. */
-      p_data = MemAlloc (*p_size);
+        /* Allocate the memory for the file. */
+        p_data = MemAlloc(*p_size);
 
-      DebugCheck(p_data != NULL);
+        DebugCheck(p_data != NULL);
 
-      /* Make sure we got the memory. */
-      if (p_data != NULL)
+        /* Make sure we got the memory. */
+        if (p_data != NULL)
         {
-          /* If memory was allocated, read in the file into this memory. */
-          file = FileOpen (p_filename, FILE_MODE_READ);
-          FileRead (file, p_data, *p_size);
-          FileClose (file);
+            /* If memory was allocated, read in the file into this memory. */
+            file = FileOpen(p_filename, FILE_MODE_READ);
+            FileRead(file, p_data, *p_size);
+            FileClose(file);
         }
-      else
+        else
         {
-          /* If memory was not allocated, return with a zero length. */
-          *p_size = 0;
+            /* If memory was not allocated, return with a zero length. */
+            *p_size = 0;
         }
     }
-  else
+    else
     {
-      *p_size = 0;
-      p_data = NULL;
+        *p_size = 0;
+        p_data = NULL;
     }
 
-  DebugEnd();
+    DebugEnd();
 
-  /* Return the pointer to the data. */
-  return p_data;
+    /* Return the pointer to the data. */
+    return p_data;
 }
 
 /*-------------------------------------------------------------------------*
@@ -289,55 +289,55 @@ FileLoad (T_byte8 *p_filename, T_word32 *p_size)
  *
  *<!-----------------------------------------------------------------------*/
 T_word32
-FileGetSize (T_byte8 *p_filename)
+FileGetSize(T_byte8 *p_filename)
 {
-  T_word32 size;
-  DebugRoutine("FileGetSize");
+    T_word32 size;
+    DebugRoutine("FileGetSize");
 
 #if defined(TARGET_WIN32)
-  FILE *fp;
+    FILE *fp;
 
-  DebugRoutine("FileGetSize");
-  fp = fopen(p_filename, "rb");
-  if (fp) {
-      size = filelength(fileno(fp));
-      fclose(fp);
-  } else {
-      size = 0;
-  }
-#elif defined(TARGET_UNIX)
-  FILE *fp;
-
-  DebugRoutine("FileGetSize");
-  fp = fopen (p_filename, "rb");
-  if (fp)
-    {
-      fseek (fp, 0L, SEEK_END);
-      size = ftell (fp);
-      fclose (fp);
+    DebugRoutine("FileGetSize");
+    fp = fopen(p_filename, "rb");
+    if (fp) {
+        size = filelength(fileno(fp));
+        fclose(fp);
+    } else {
+        size = 0;
     }
-  else
+#elif defined(TARGET_UNIX)
+    FILE *fp;
+
+    DebugRoutine("FileGetSize");
+    fp = fopen(p_filename, "rb");
+    if (fp)
     {
-      size = 0;
+        fseek(fp, 0L, SEEK_END);
+        size = ftell(fp);
+        fclose(fp);
+    }
+    else
+    {
+        size = 0;
     }
 #else
-  struct find_t fileinfo;
+    struct find_t fileinfo;
 
-  /* Get information about the file. */
-  if (_dos_findfirst(p_filename, _A_NORMAL, &fileinfo) == 0)
-  {
-      /* If we found the file, return the file size. */
-      size = fileinfo.size;
-  }
-  else
-  {
-      /* If we didn't find the file, return a zero. */
-      size = 0;
-  }
+    /* Get information about the file. */
+    if (_dos_findfirst(p_filename, _A_NORMAL, &fileinfo) == 0)
+    {
+        /* If we found the file, return the file size. */
+        size = fileinfo.size;
+    }
+    else
+    {
+        /* If we didn't find the file, return a zero. */
+        size = 0;
+    }
 #endif
 
-  DebugEnd();
-  return size;
+    DebugEnd();
+    return size;
 }
 
 /*-------------------------------------------------------------------------*
@@ -352,24 +352,24 @@ FileGetSize (T_byte8 *p_filename)
  *
  *<!-----------------------------------------------------------------------*/
 E_Boolean
-FileExist (T_byte8 *p_filename)
+FileExist(T_byte8 *p_filename)
 {
-  E_Boolean fileFound = FALSE;
-  T_file file;
+    E_Boolean fileFound = FALSE;
+    T_file file;
 
-  DebugRoutine("FileExist");
-  DebugCheck(p_filename != NULL);
+    DebugRoutine("FileExist");
+    DebugCheck(p_filename != NULL);
 
-  file = FileOpen (p_filename, FILE_MODE_READ);
-  if (file != FILE_BAD)
+    file = FileOpen(p_filename, FILE_MODE_READ);
+    if (file != FILE_BAD)
     {
-      fileFound = TRUE;
-      FileClose (file);
+        fileFound = TRUE;
+        FileClose(file);
     }
 
-  DebugEnd();
+    DebugEnd();
 
-  return fileFound;
+    return fileFound;
 }
 
 /** @} */

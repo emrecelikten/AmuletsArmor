@@ -31,18 +31,27 @@ typedef enum
     CONTROL_MOUSE_POINTER_UNKNOWN
 } E_controlMousePointerType;
 
-
 /* function prototypes */
-T_void ControlInitForGamePlay(T_void);
-T_void ControlInitForJustUI(T_void);
-T_void ControlSetDefaultPointer (E_controlMousePointerType type);
-T_void ControlSetObjectPointer (T_3dObject *p_obj);
-T_void ControlFinish (T_void);
-T_void ControlPointerReset (T_void);
-T_sword16 ControlGetLookAngle (T_void);
-T_sword16 ControlGetLookOffset(T_void) ;
-T_void ControlDisplayControlPage (T_void);
-T_void ControlColorizeLookString (T_byte8 *string);
+T_void
+ControlInitForGamePlay(T_void);
+T_void
+ControlInitForJustUI(T_void);
+T_void
+ControlSetDefaultPointer(E_controlMousePointerType type);
+T_void
+ControlSetObjectPointer(T_3dObject *p_obj);
+T_void
+ControlFinish(T_void);
+T_void
+ControlPointerReset(T_void);
+T_sword16
+ControlGetLookAngle(T_void);
+T_sword16
+ControlGetLookOffset(T_void);
+T_void
+ControlDisplayControlPage(T_void);
+T_void
+ControlColorizeLookString(T_byte8 *string);
 
 #endif
 

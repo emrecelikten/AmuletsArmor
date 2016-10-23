@@ -45,14 +45,14 @@ typedef enum
 typedef struct
 {
     /* keypad combo (ex 4,4,3,2) code to access spell */
-	T_byte8  code[4];
+    T_byte8 code[4];
     /* effect type called when casting spell */
     T_word16 type;
     /* subtype of effect called (or data1 field for effect) */
     T_word16 subtype;
 
     /* duration of spell (or data2 field for effect) */
-	T_word16 duration;
+    T_word16 duration;
     /* this field modifies the duration of the spell by */
     /* character level * value */
     /* duration can never exceed typedef MAX_EFFECT_DURATION */
@@ -92,9 +92,9 @@ typedef struct
     /* purposes of the script-compiler written in borlandc */
 
     /* color splash when casting spell */
-	T_sbyte8 filtr;
-	T_sbyte8 filtg;
-	T_sbyte8 filtb;
+    T_sbyte8 filtr;
+    T_sbyte8 filtg;
+    T_sbyte8 filtb;
 
     /* sound effect to play on successful casting of spell */
     T_word16 sound;

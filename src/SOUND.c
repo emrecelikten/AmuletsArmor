@@ -13,10 +13,7 @@
 #include "CONFIG.H"
 #include "FILE.H"
 #include "MEMORY.H"
-#include "RESOURCE.H"
 #include "SOUND.H"
-
-#include "keys.h"         // Include #define's for keyboard commands
 
 #ifdef USE_SOS_LIBRARY
 #include "sos.h"
@@ -79,104 +76,114 @@ static E_Boolean G_musicNeedsUpdate = FALSE ;
 #define  _PAN_CENTER       0x00008000
 #define  _PAN_RIGHT        0x0000ffff
 
-typedef struct {
-        // Actively used buffer?
-        E_Boolean inUse;
+typedef struct
+{
+    // Actively used buffer?
+    E_Boolean inUse;
 
-        // Are we playing?
-        E_Boolean isPlaying;
+    // Are we playing?
+    E_Boolean isPlaying;
 
-        // Pointer to the raw sample data
-        void *data;
+    // Pointer to the raw sample data
+    void *data;
 
-        // Sample length
-        T_word32 length;
+    // Sample length
+    T_word32 length;
 
-        // Sample position
-        T_word32 position;
+    // Sample position
+    T_word32 position;
 
-        // freq divider
-        T_word16 frequencyDivider;
+    // freq divider
+    T_word16 frequencyDivider;
 
-        // Current sound level on left and right
-        T_byte8 volume;
+    // Current sound level on left and right
+    T_byte8 volume;
 
-        // Panning position (0x0000 = all left, 0xFFFF = all right, 0x8000 = centered)
-        T_word16 pan;
+    // Panning position (0x0000 = all left, 0xFFFF = all right, 0x8000 = centered)
+    T_word16 pan;
 
-        // ETrue if 16bit, else 8bit
-        E_Boolean is16Bit;
-        // Is this a signed or unsigned input sample?
-        E_Boolean isUnsigned;
+    // ETrue if 16bit, else 8bit
+    E_Boolean is16Bit;
+    // Is this a signed or unsigned input sample?
+    E_Boolean isUnsigned;
 
-        // Keep playing this in a loop?
-        E_Boolean loop;
+    // Keep playing this in a loop?
+    E_Boolean loop;
 
-        // Is this Music (TRUE) or normal sound (FALSE)
-        E_Boolean isMusic;
+    // Is this Music (TRUE) or normal sound (FALSE)
+    E_Boolean isMusic;
 
-        T_word16 sampleRate;
+    T_word16 sampleRate;
 } T_SDLSoundBuffer;
 static T_SDLSoundBuffer G_soundBuffers[MAX_SOUND_CHANNELS];
 
 /* Keep a structure per sound. */
-typedef struct {
-    T_resource resource ;
+typedef struct
+{
+    T_resource resource;
 #ifdef USE_SOS_LIBRARY
     _SOS_SAMPLE sosSample ;
     W32 sosHandle ;
 #else
     T_SDLSoundBuffer *sample;
 #endif
-    T_word16 volume ;
-    T_soundDoneCallback doneCallback ;
-    T_void *doneCallbackData ;
-    E_Boolean isAllocated ;
-    T_word16 next ;
-    T_word16 prev ;
-    T_void *p_sample ;
-    T_word32 size ;
-} T_soundBuffer ;
+    T_word16 volume;
+    T_soundDoneCallback doneCallback;
+    T_void *doneCallbackData;
+    E_Boolean isAllocated;
+    T_word16 next;
+    T_word16 prev;
+    T_void *p_sample;
+    T_word32 size;
+} T_soundBuffer;
 
-static T_byte8 G_currentSong[20] = "" ;
+static T_byte8 G_currentSong[20] = "";
 
-static T_resourceFile G_soundsFile ;
-static E_Boolean G_soundsInit = FALSE ;
+static T_resourceFile G_soundsFile;
+static E_Boolean G_soundsInit = FALSE;
 
 /* How many sounds are currently being played? */
-T_word16 G_numSoundsPlaying = 0 ;
-static T_word16 G_firstFreeBuffer = 0 ;
-static T_word16 G_playingList = BUFFER_ID_BAD ;
+T_word16 G_numSoundsPlaying = 0;
+static T_word16 G_firstFreeBuffer = 0;
+static T_word16 G_playingList = BUFFER_ID_BAD;
 
 /* Volume of sound effects. */
-static T_word16 G_soundVolume = 192 ;
+static T_word16 G_soundVolume = 192;
 
 /* Volume of background music. */
-static T_word16 G_musicVolume = 192 ;
+static T_word16 G_musicVolume = 192;
 
 /* Flag to tell if we are doing 16 bit sound. */
-static E_Boolean G_is16BitSound = FALSE ;
+static E_Boolean G_is16BitSound = FALSE;
 
 /* Internal prototypes: */
-static T_sword16 IAllocateBuffer(T_resource res) ;
+static T_sword16
+IAllocateBuffer(T_resource res);
 
-static T_void IFreeBuffer(T_word16 bufferId) ;
+static T_void
+IFreeBuffer(T_word16 bufferId);
 
-static T_void ISoundStopAtExit(T_void) ;
+static T_void
+ISoundStopAtExit(T_void);
 
-static T_void ISoundFadeMusic(T_word32 originalVolume) ;
+static T_void
+ISoundFadeMusic(T_word32 originalVolume);
 
-static T_void ISoundFadeInMusic(T_word32 originalVolume) ;
+static T_void
+ISoundFadeInMusic(T_word32 originalVolume);
 
-static T_void ISoundStartStreamIO(char *filename) ;
+static T_void
+ISoundStartStreamIO(char *filename);
 
-static T_void ICheckForNextMusicUpdate(T_void) ;
+static T_void
+ICheckForNextMusicUpdate(T_void);
 
-static T_sword16 IAllocateBufferDirect(void *aRawSound, T_word32 aSize);
+static T_sword16
+IAllocateBufferDirect(void *aRawSound, T_word32 aSize);
 
-T_soundBuffer G_soundBufferArray[MAX_SOUND_CHANNELS] ;
+T_soundBuffer G_soundBufferArray[MAX_SOUND_CHANNELS];
 
-static E_Boolean G_allowFreqShift = TRUE ;
+static E_Boolean G_allowFreqShift = TRUE;
 
 static T_void *G_backgroundMusic = 0;
 static T_word16 G_backgroundMusicID = BUFFER_ID_BAD;
@@ -186,7 +193,6 @@ static T_void ICheckLists(T_void) ;
 #else
 #define ICheckLists()
 #endif
-
 
 #ifdef USE_SOS_LIBRARY
 /*-------------------------------------------------------------------------*
@@ -238,7 +244,7 @@ T_void SoundInitialize(T_void)
     /* Note if sound is on or off and take appropriate actions. */
     if (report == 0)  {
 //        puts("Sound system is ON") ;
-	    G_soundsInit = TRUE ;
+        G_soundsInit = TRUE ;
 
         /* put in a stopper to keep things from crashing */
         atexit(ISoundStopAtExit) ;
@@ -293,7 +299,7 @@ T_void SoundFinish(T_void)
         G_soundsInit = FALSE ;
 
         /* Close the resource file. */
-	    ResourceClose(G_soundsFile) ;
+        ResourceClose(G_soundsFile) ;
         G_soundsFile = RESOURCE_FILE_BAD;
 
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
@@ -314,7 +320,7 @@ T_void SoundFinish(T_void)
 /**
  *  SoundSetBackgroundMusic loads and plays a background song.
  *
- *  NOTE: 
+ *  NOTE:
  *  At this point, I don't know what happens when you call this routine
  *  while a song is already in progress.
  *
@@ -325,7 +331,7 @@ T_void SoundSetBackgroundMusic(T_byte8 *filename)
 {
     W32 newSong;
     char realFilename[80] ;
-	DebugRoutine("SoundSetBackgroundMusic") ;
+    DebugRoutine("SoundSetBackgroundMusic") ;
 
     if (SoundIsOn())  {
         /* See if we are already playing this one. */
@@ -491,7 +497,7 @@ T_sword16 SoundPlayLoopByNumber(T_word16 soundNum, T_word16 volume)
 
     DebugRoutine("SoundPlayLoopByNumber") ;
     if (G_soundsInit == TRUE)  {
-	    sprintf(filename, "snd#%d", soundNum) ;
+        sprintf(filename, "snd#%d", soundNum) ;
         sound = ResourceFind(G_soundsFile, filename) ;
         if (sound != RESOURCE_BAD)  {
             bufferId = IAllocateBuffer(sound) ;
@@ -591,8 +597,8 @@ T_sword16 SoundPlayByNumber(T_word16 num, T_word16 volume)
 
     /* Don't play any sound unless the sound system was initialized. */
     if (G_soundsInit == TRUE)  {
-	    sprintf(buffer, "snd#%d", (T_word32)num) ;
-	    bufferId = SoundPlayByName(buffer, volume) ;
+        sprintf(buffer, "snd#%d", (T_word32)num) ;
+        bufferId = SoundPlayByName(buffer, volume) ;
     }
 
     DebugEnd() ;
@@ -983,7 +989,7 @@ static T_void ISoundStartStreamIO(char *filename)
     _SOS_SAMPLE *p_sample ;
     char realFilename[80] ;
 
-	DebugRoutine("ISoundStartStreamIO") ;
+    DebugRoutine("ISoundStartStreamIO") ;
 
 #if 0
     sprintf(
@@ -1046,12 +1052,12 @@ T_void SoundStopBackgroundMusic(T_void)
     DebugRoutine("SoundStopBackgroundMusic") ;
 
     /* Stop the original MIDI song (if playing). */
-	if (G_backSong != -1)
-	{
+    if (G_backSong != -1)
+    {
         /* stop playing the last song. */
         sosMIDIStopSong(G_backSong);
         G_backSong = -1 ;
-	}
+    }
 
     /* Stop any digital music */
     if (G_musicFile != FILE_BAD)  {
@@ -1151,14 +1157,16 @@ T_sword16 SoundPlayByNameWithDetails(
 #define SOUND_STREAM_NUM_SAMPLES      1024
 SDL_AudioSpec G_audioSpec;
 
-static void IMixer(void *userdata, Uint8 *stream, int len)
+static void
+IMixer(void *userdata, Uint8 *stream, int len)
 {
     unsigned int i;
-    typedef struct {
-            T_word16 left;
-            T_word16 right;
+    typedef struct
+    {
+        T_word16 left;
+        T_word16 right;
     } T_stereoSample;
-    T_stereoSample *p = (T_stereoSample *)stream;
+    T_stereoSample *p = (T_stereoSample *) stream;
     T_SDLSoundBuffer *p_buffer;
     T_sword32 left, right;
     T_sword32 v16;
@@ -1169,45 +1177,64 @@ static void IMixer(void *userdata, Uint8 *stream, int len)
     // In this case, 4 bytes per sample, signed word16 on left, then signed word16 on right
 
     // For now, fill with zeros
-    for (i=0; i<(unsigned int)len; i++) {
+    for (i = 0; i < (unsigned int) len; i++)
+    {
         // Compute sum of samples
         left = 0;
         right = 0;
-        for (buffer=0; buffer<MAX_SOUND_CHANNELS; buffer++) {
+        for (buffer = 0; buffer < MAX_SOUND_CHANNELS; buffer++)
+        {
             p_buffer = &G_soundBuffers[buffer];
-            if (p_buffer->inUse) {
-                if (p_buffer->isPlaying) {
-                    if (p_buffer->isUnsigned) {
-                        if (p_buffer->is16Bit) {
-                            v16 = (T_word16)(((T_sword16 *)p_buffer->data)[p_buffer->position]);
-                        } else {
-                            v16 = (T_word16)((((T_sbyte8 *)p_buffer->data)[p_buffer->position]) << 8);
+            if (p_buffer->inUse)
+            {
+                if (p_buffer->isPlaying)
+                {
+                    if (p_buffer->isUnsigned)
+                    {
+                        if (p_buffer->is16Bit)
+                        {
+                            v16 = (T_word16) (((T_sword16 *) p_buffer->data)[p_buffer->position]);
+                        }
+                        else
+                        {
+                            v16 = (T_word16) (
+                                (((T_sbyte8 *) p_buffer->data)[p_buffer->position]) << 8);
                         }
                         v16 -= 0x8000;
-                    } else {
-                        if (p_buffer->is16Bit) {
-                            v16 = ((T_sword16 *)p_buffer->data)[p_buffer->position];
-                        } else {
-                            v16 = (((T_sbyte8 *)p_buffer->data)[p_buffer->position]) << 8;
+                    }
+                    else
+                    {
+                        if (p_buffer->is16Bit)
+                        {
+                            v16 = ((T_sword16 *) p_buffer->data)[p_buffer->position];
+                        }
+                        else
+                        {
+                            v16 = (((T_sbyte8 *) p_buffer->data)[p_buffer->position]) << 8;
                         }
                     }
                     v16 *= p_buffer->volume;
                     v16 /= 256;
                     v16 *= (p_buffer->isMusic) ? G_musicVolume : G_soundVolume;
                     v16 /= 256;
-                    left += (v16 * (0xFFFF-p_buffer->pan)) / 0x10000;
+                    left += (v16 * (0xFFFF - p_buffer->pan)) / 0x10000;
                     right += (v16 * p_buffer->pan) / 0x10000;
                 }
                 p_buffer->frequencyDivider += p_buffer->sampleRate;
-                if (p_buffer->frequencyDivider >= G_audioSpec.freq) {
+                if (p_buffer->frequencyDivider >= G_audioSpec.freq)
+                {
                     p_buffer->position++;
                     p_buffer->frequencyDivider -= G_audioSpec.freq;
                 }
-                if (p_buffer->position >= p_buffer->length) {
-                    if (p_buffer->loop) {
+                if (p_buffer->position >= p_buffer->length)
+                {
+                    if (p_buffer->loop)
+                    {
                         // Loop back at the start
                         p_buffer->position = 0;
-                    } else {
+                    }
+                    else
+                    {
                         // Sound is complete, stop here
                         p_buffer->isPlaying = FALSE;
                     }
@@ -1230,7 +1257,6 @@ static void IMixer(void *userdata, Uint8 *stream, int len)
         p++;
     }
 }
-
 
 #if 0 // test code
 #include <math.h>
@@ -1300,41 +1326,48 @@ void TestSoundsPlay(void)
 }
 #endif
 
-T_void SoundInitialize(T_void)
+T_void
+SoundInitialize(T_void)
 {
     SDL_AudioSpec desired;
-    T_word16 i ;
-    T_word16 report = 1 ;
-    DebugRoutine("SoundInitialize") ;
+    T_word16 i;
+    T_word16 report = 1;
+    DebugRoutine("SoundInitialize");
 
-    if (G_soundsInit == FALSE)  {
+    if (G_soundsInit == FALSE)
+    {
         /* Clear out the buffers. */
-        memset(G_soundBufferArray, 0, sizeof(G_soundBufferArray)) ;
+        memset(G_soundBufferArray, 0, sizeof(G_soundBufferArray));
 
         // No buffers are active
-        for (i=0; i<MAX_SOUND_CHANNELS; i++) {
+        for (i = 0; i < MAX_SOUND_CHANNELS; i++)
+        {
             G_soundBuffers[i].inUse = FALSE;
             // 1 for 1 in this implementation
             G_soundBufferArray[i].sample = &G_soundBuffers[i];
         }
 
         /* Link the buffers together into the free buffer. */
-        for (i=0; i<MAX_SOUND_CHANNELS; i++)  {
-            G_soundBufferArray[i].next = i+1 ;
-            G_soundBufferArray[i].prev = i-1 ;
+        for (i = 0; i < MAX_SOUND_CHANNELS; i++)
+        {
+            G_soundBufferArray[i].next = i + 1;
+            G_soundBufferArray[i].prev = i - 1;
         }
         /* Fix the end points. */
-        G_soundBufferArray[0].prev = BUFFER_ID_BAD ;
-        G_soundBufferArray[MAX_SOUND_CHANNELS-1].next = BUFFER_ID_BAD ;
-        G_firstFreeBuffer = 0 ;
-        G_playingList = BUFFER_ID_BAD ;
-        ICheckLists() ;
+        G_soundBufferArray[0].prev = BUFFER_ID_BAD;
+        G_soundBufferArray[MAX_SOUND_CHANNELS - 1].next = BUFFER_ID_BAD;
+        G_firstFreeBuffer = 0;
+        G_playingList = BUFFER_ID_BAD;
+        ICheckLists();
 
         /* Choose the resource file based on 16 or 8 bit sound. */
-        if (G_is16BitSound)  {
-            G_soundsFile = ResourceOpen("res/SOUNDS16.RES") ;
-        } else {
-            G_soundsFile = ResourceOpen("res/SOUNDS.res") ;
+        if (G_is16BitSound)
+        {
+            G_soundsFile = ResourceOpen("res/SOUNDS16.RES");
+        }
+        else
+        {
+            G_soundsFile = ResourceOpen("res/SOUNDS.res");
         }
 
         // 44KHz, let's go high fidelity
@@ -1349,7 +1382,8 @@ T_void SoundInitialize(T_void)
         desired.callback = IMixer;
         desired.userdata = 0;
         // Open the audio device
-        if (SDL_OpenAudio(&desired, &G_audioSpec) < 0) {
+        if (SDL_OpenAudio(&desired, &G_audioSpec) < 0)
+        {
             printf("Couldn't open audio: %s\n", SDL_GetError());
             exit(-1);
         }
@@ -1364,8 +1398,7 @@ T_void SoundInitialize(T_void)
 
     /* Note if sound is on or off and take appropriate actions. */
 //        puts("Sound system is ON") ;
-	G_soundsInit = TRUE ;
-
+    G_soundsInit = TRUE;
 
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
     fileBadSounds = fopen("badsound.lst", "a") ;
@@ -1373,20 +1406,22 @@ T_void SoundInitialize(T_void)
     fflush(stdout) ;
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 
     G_soundsInit = TRUE;
 }
 
-T_void SoundFinish(T_void)
+T_void
+SoundFinish(T_void)
 {
     G_soundsInit = FALSE;
     SDL_CloseAudio();
 }
 
-static T_void IBackgroundMusicDone(void *data)
+static T_void
+IBackgroundMusicDone(void *data)
 {
-    T_soundBuffer *p_buffer = (T_soundBuffer *)data;
+    T_soundBuffer *p_buffer = (T_soundBuffer *) data;
 
     // Free the music on this buffer
     MemFree(p_buffer->p_sample);
@@ -1394,25 +1429,29 @@ static T_void IBackgroundMusicDone(void *data)
     MemCheck(8203);
 }
 
-T_void SoundSetBackgroundMusic(T_byte8 *filename)
+T_void
+SoundSetBackgroundMusic(T_byte8 *filename)
 {
-    T_byte8 realFilename[80] ;
+    T_byte8 realFilename[80];
     T_file file;
     T_word32 length;
-    T_soundBuffer *p_buffer ;
+    T_soundBuffer *p_buffer;
     T_SDLSoundBuffer *p_sample;
 
-	DebugRoutine("SoundSetBackgroundMusic") ;
+    DebugRoutine("SoundSetBackgroundMusic");
     MemCheck(8200);
 
-    if (SoundIsOn())  {
+    if (SoundIsOn())
+    {
         /* See if we are already playing this one. */
-        if (strcmp((const char *)filename, (const char *)G_currentSong) != 0)  {
+        if (strcmp((const char *) filename, (const char *) G_currentSong) != 0)
+        {
             MemCheck(8201);
             /* Record as the new song. */
-            strcpy((char *)G_currentSong, (const char *)filename) ;
+            strcpy((char *) G_currentSong, (const char *) filename);
 
-            if (G_backgroundMusic) {
+            if (G_backgroundMusic)
+            {
                 MemCheck(8202);
                 /* Stop whatever sound is currently playing. */
                 SoundStopBackgroundMusic();
@@ -1420,39 +1459,41 @@ T_void SoundSetBackgroundMusic(T_byte8 *filename)
 
             // Load the new music (even if we are not going to play it yet)
             sprintf(realFilename, "AAMUSIC\\%s.MUS", filename);
-            file = FileOpen(realFilename, FILE_MODE_READ) ;
-            if (file != FILE_BAD) {
-                length = FileGetSize(realFilename)/2;
+            file = FileOpen(realFilename, FILE_MODE_READ);
+            if (file != FILE_BAD)
+            {
+                length = FileGetSize(realFilename) / 2;
                 G_backgroundMusic = MemAlloc(length);
                 DebugCheck(G_backgroundMusic != 0);
                 MemCheck(8204);
                 FileRead(file, G_backgroundMusic, length);
                 MemCheck(8205);
 
-                G_backgroundMusicID = IAllocateBufferDirect(G_backgroundMusic, length) ;
-                if (G_backgroundMusicID != BUFFER_ID_BAD)  {
-                    DebugCheck(G_backgroundMusicID < MAX_SOUND_CHANNELS) ;
-                    DebugCheck(G_backgroundMusicID >= 0) ;
-                    p_buffer = G_soundBufferArray + G_backgroundMusicID ;
-                    p_sample = p_buffer->sample ;
-                    DebugCheck(p_sample != NULL) ;
+                G_backgroundMusicID = IAllocateBufferDirect(G_backgroundMusic, length);
+                if (G_backgroundMusicID != BUFFER_ID_BAD)
+                {
+                    DebugCheck(G_backgroundMusicID < MAX_SOUND_CHANNELS);
+                    DebugCheck(G_backgroundMusicID >= 0);
+                    p_buffer = G_soundBufferArray + G_backgroundMusicID;
+                    p_sample = p_buffer->sample;
+                    DebugCheck(p_sample != NULL);
 
-                    memset(p_sample, 0, sizeof(*p_sample)) ;
+                    memset(p_sample, 0, sizeof(*p_sample));
                     p_sample->inUse = TRUE; // we are about to use this one
                     p_sample->data = p_buffer->p_sample;
                     // 16-bit music uses half the samples
-                    p_sample->length = p_buffer->size/2;
+                    p_sample->length = p_buffer->size / 2;
 
-                    p_sample->is16Bit = TRUE ;
-                    p_sample->sampleRate = 22050 ;
+                    p_sample->is16Bit = TRUE;
+                    p_sample->sampleRate = 22050;
                     p_sample->isUnsigned = FALSE;
 
-                    p_sample->pan = _PAN_CENTER ;
+                    p_sample->pan = _PAN_CENTER;
                     p_sample->volume = 255;
                     p_sample->loop = TRUE;
                     p_sample->isMusic = TRUE;
-                    p_buffer->doneCallback = IBackgroundMusicDone ;
-                    p_buffer->doneCallbackData = (void *)p_buffer;
+                    p_buffer->doneCallback = IBackgroundMusicDone;
+                    p_buffer->doneCallbackData = (void *) p_buffer;
 
                     // Start playing the music
                     p_sample->isPlaying = TRUE;
@@ -1460,7 +1501,9 @@ T_void SoundSetBackgroundMusic(T_byte8 *filename)
                 MemCheck(8210);
                 FileClose(file);
             }
-        } else {
+        }
+        else
+        {
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
             fprintf(fileBadSounds, "sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
             MessagePrintf("sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
@@ -1468,62 +1511,71 @@ T_void SoundSetBackgroundMusic(T_byte8 *filename)
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_sword16 SoundPlayByName(const char *filename, T_word16 volume)
+T_sword16
+SoundPlayByName(const char *filename, T_word16 volume)
 {
-    T_resource sound ;
+    T_resource sound;
     T_SDLSoundBuffer *p_sample;
-    T_word16 bufferId = BUFFER_ID_BAD ;
-    T_soundBuffer *p_buffer ;
+    T_word16 bufferId = BUFFER_ID_BAD;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("PlaySoundByName") ;
+    DebugRoutine("PlaySoundByName");
 
-    if (G_soundsInit == TRUE)  {
-        sound = ResourceFind(G_soundsFile, (T_byte8 *)filename) ;
-        if (sound != RESOURCE_BAD)  {
-            bufferId = IAllocateBuffer(sound) ;
-            if (bufferId != BUFFER_ID_BAD)  {
-                DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-                DebugCheck(bufferId >= 0) ;
-                p_buffer = G_soundBufferArray + bufferId ;
+    if (G_soundsInit == TRUE)
+    {
+        sound = ResourceFind(G_soundsFile, (T_byte8 *) filename);
+        if (sound != RESOURCE_BAD)
+        {
+            bufferId = IAllocateBuffer(sound);
+            if (bufferId != BUFFER_ID_BAD)
+            {
+                DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+                DebugCheck(bufferId >= 0);
+                p_buffer = G_soundBufferArray + bufferId;
                 p_sample = p_buffer->sample;
-                DebugCheck(p_sample != NULL) ;
+                DebugCheck(p_sample != NULL);
 
-                memset(p_sample, 0, sizeof(*p_sample)) ;
+                memset(p_sample, 0, sizeof(*p_sample));
                 p_sample->inUse = TRUE; // we are about to use this one
                 p_sample->data = p_buffer->p_sample;
                 p_sample->length = p_buffer->size;
 
-                if (G_is16BitSound)  {
+                if (G_is16BitSound)
+                {
                     // 16-bit has half the samples
                     p_sample->length /= 2;
-                    p_sample->is16Bit = TRUE ;
+                    p_sample->is16Bit = TRUE;
                     if (G_allowFreqShift)
-                        p_sample->sampleRate = 22050 + (rand() & 2047) - 1000 ;
+                        p_sample->sampleRate = 22050 + (rand() & 2047) - 1000;
                     else
-                        p_sample->sampleRate = 22050 ;
+                        p_sample->sampleRate = 22050;
                     p_sample->isUnsigned = FALSE;
-                } else {
-                    p_sample->is16Bit = FALSE ;
+                }
+                else
+                {
+                    p_sample->is16Bit = FALSE;
                     if (G_allowFreqShift)
-                        p_sample->sampleRate = 11000 + (rand() & 1023) - 500 ;
+                        p_sample->sampleRate = 11000 + (rand() & 1023) - 500;
                     else
-                        p_sample->sampleRate = 11000 ;
+                        p_sample->sampleRate = 11000;
 
                     p_sample->isUnsigned = TRUE;
                 }
 
-                p_sample->pan = _PAN_CENTER ;
-                p_sample->volume = (T_byte8)volume;
+                p_sample->pan = _PAN_CENTER;
+                p_sample->volume = (T_byte8) volume;
                 p_sample->isMusic = FALSE;
-                p_buffer->doneCallback = NULL ;
+                p_buffer->doneCallback = NULL;
 
                 // Start playing the sound
                 p_sample->isPlaying = TRUE;
             }
-        } else {
+        }
+        else
+        {
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
             fprintf(fileBadSounds, "sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
             MessagePrintf("sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
@@ -1532,117 +1584,134 @@ T_sword16 SoundPlayByName(const char *filename, T_word16 volume)
 
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
-T_sword16 SoundPlayByNumber(T_word16 num, T_word16 volume)
+T_sword16
+SoundPlayByNumber(T_word16 num, T_word16 volume)
 {
-    char buffer[20] ;
-    T_word16 bufferId = BUFFER_ID_BAD ;
+    char buffer[20];
+    T_word16 bufferId = BUFFER_ID_BAD;
 
-    DebugRoutine("PlaySoundByNumber") ;
+    DebugRoutine("PlaySoundByNumber");
 
     /* Don't play any sound unless the sound system was initialized. */
-    if (G_soundsInit == TRUE)  {
-	    sprintf(buffer, "snd#%d", (T_word32)num) ;
-	    bufferId = SoundPlayByName((T_byte8 *)buffer, volume) ;
+    if (G_soundsInit == TRUE)
+    {
+        sprintf(buffer, "snd#%d", (T_word32) num);
+        bufferId = SoundPlayByName((T_byte8 *) buffer, volume);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
-T_void SoundSetBackgroundVolume(T_byte8 volume)
+T_void
+SoundSetBackgroundVolume(T_byte8 volume)
 {
-    T_word16 oldVol ;
-    char filename[80] ;
+    T_word16 oldVol;
+    char filename[80];
 
-    DebugRoutine("SoundSetBackgroundVolume") ;
+    DebugRoutine("SoundSetBackgroundVolume");
 
-    oldVol = G_musicVolume ;
-    if (G_soundsInit)  {
+    oldVol = G_musicVolume;
+    if (G_soundsInit)
+    {
         /* Just turn off the music */
-        if (volume == 0)  {
-            G_musicVolume = 0 ;
-            SoundStopBackgroundMusic() ;
-        } else {
-            G_musicVolume = volume ;
+        if (volume == 0)
+        {
+            G_musicVolume = 0;
+            SoundStopBackgroundMusic();
+        }
+        else
+        {
+            G_musicVolume = volume;
 
             /* Music was off ... start it up */
-            if ((oldVol == 0) && (volume != 0))  {
-                strcpy(filename, G_currentSong) ;
-                G_currentSong[0] = '\0' ;
-                SoundSetBackgroundMusic(filename) ;
+            if ((oldVol == 0) && (volume != 0))
+            {
+                strcpy(filename, G_currentSong);
+                G_currentSong[0] = '\0';
+                SoundSetBackgroundMusic(filename);
             }
         }
     }
 
-
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_byte8 SoundGetBackgroundVolume(T_void)
+T_byte8
+SoundGetBackgroundVolume(T_void)
 {
-    return (T_byte8)G_musicVolume ;
+    return (T_byte8) G_musicVolume;
 }
 
-T_sword16 SoundPlayLoopByNumber(T_word16 soundNum, T_word16 volume)
+T_sword16
+SoundPlayLoopByNumber(T_word16 soundNum, T_word16 volume)
 {
-    T_resource sound ;
-    T_word16 bufferId = BUFFER_ID_BAD ;
-    T_soundBuffer *p_buffer ;
+    T_resource sound;
+    T_word16 bufferId = BUFFER_ID_BAD;
+    T_soundBuffer *p_buffer;
     T_SDLSoundBuffer *p_sample;
-    char filename[20] ;
+    char filename[20];
 
-    DebugRoutine("SoundPlayLoopByNumber") ;
-    if (G_soundsInit == TRUE)  {
-	    sprintf(filename, "snd#%d", soundNum) ;
-        sound = ResourceFind(G_soundsFile, (T_byte8 *)filename) ;
-        if (sound != RESOURCE_BAD)  {
-            bufferId = IAllocateBuffer(sound) ;
-            if (bufferId != BUFFER_ID_BAD)  {
-                DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-                DebugCheck(bufferId >= 0) ;
-                p_buffer= G_soundBufferArray + bufferId ;
-                p_sample = p_buffer->sample ;
-                DebugCheck(p_sample != NULL) ;
+    DebugRoutine("SoundPlayLoopByNumber");
+    if (G_soundsInit == TRUE)
+    {
+        sprintf(filename, "snd#%d", soundNum);
+        sound = ResourceFind(G_soundsFile, (T_byte8 *) filename);
+        if (sound != RESOURCE_BAD)
+        {
+            bufferId = IAllocateBuffer(sound);
+            if (bufferId != BUFFER_ID_BAD)
+            {
+                DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+                DebugCheck(bufferId >= 0);
+                p_buffer = G_soundBufferArray + bufferId;
+                p_sample = p_buffer->sample;
+                DebugCheck(p_sample != NULL);
 
-                memset(p_sample, 0, sizeof(*p_sample)) ;
+                memset(p_sample, 0, sizeof(*p_sample));
                 p_sample->inUse = TRUE; // we are about to use this one
                 p_sample->data = p_buffer->p_sample;
                 p_sample->length = p_buffer->size;
 
-                if (G_is16BitSound)  {
+                if (G_is16BitSound)
+                {
                     // 16-bit samples have half as many samples
                     p_sample->length /= 2;
-                    p_sample->is16Bit = TRUE ;
+                    p_sample->is16Bit = TRUE;
                     if (G_allowFreqShift)
-                        p_sample->sampleRate = 22050 + (rand() & 2047) - 1000 ;
+                        p_sample->sampleRate = 22050 + (rand() & 2047) - 1000;
                     else
-                        p_sample->sampleRate = 22050 ;
+                        p_sample->sampleRate = 22050;
                     p_sample->isUnsigned = FALSE;
-                } else {
-                    p_sample->is16Bit = FALSE ;
+                }
+                else
+                {
+                    p_sample->is16Bit = FALSE;
                     if (G_allowFreqShift)
-                        p_sample->sampleRate = 11000 + (rand() & 1023) - 500 ;
+                        p_sample->sampleRate = 11000 + (rand() & 1023) - 500;
                     else
-                        p_sample->sampleRate = 11000 ;
+                        p_sample->sampleRate = 11000;
 
                     p_sample->isUnsigned = TRUE;
                 }
 
-                p_sample->pan = _PAN_CENTER ;
-                p_sample->volume = (T_byte8)G_soundVolume;
+                p_sample->pan = _PAN_CENTER;
+                p_sample->volume = (T_byte8) G_soundVolume;
                 p_sample->loop = TRUE;
-                p_buffer->doneCallback = NULL ;
+                p_buffer->doneCallback = NULL;
 
                 // Start playing the sound
                 p_sample->isPlaying = TRUE;
             }
-        } else {
+        }
+        else
+        {
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
             fprintf(fileBadSounds, "sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
             MessagePrintf("sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
@@ -1650,12 +1719,13 @@ T_sword16 SoundPlayLoopByNumber(T_word16 soundNum, T_word16 volume)
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
-T_void SoundSetEffectsVolume(T_word16 volume)
+T_void
+SoundSetEffectsVolume(T_word16 volume)
 {
 #if 0
     T_word16 i ;
@@ -1663,10 +1733,10 @@ T_void SoundSetEffectsVolume(T_word16 volume)
     T_word16 bufferId ;
 #endif
 
-    DebugRoutine("SoundSetEffectsVolume") ;
-    DebugCheck(volume < 256) ;
+    DebugRoutine("SoundSetEffectsVolume");
+    DebugCheck(volume < 256);
 
-    G_soundVolume = volume ;
+    G_soundVolume = volume;
 
 #if 0
     /* Go through the list of all playing sounds and modify */
@@ -1685,141 +1755,159 @@ T_void SoundSetEffectsVolume(T_word16 volume)
     }
 #endif
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void SoundUpdate(T_void)
+T_void
+SoundUpdate(T_void)
 {
-    T_word16 bufferId ;
-    T_soundBuffer *p_buffer ;
-    T_sword16 nextId ;
+    T_word16 bufferId;
+    T_soundBuffer *p_buffer;
+    T_sword16 nextId;
 
-    DebugRoutine("SoundUpdate") ;
+    DebugRoutine("SoundUpdate");
 
-    if (SoundIsOn())  {
+    if (SoundIsOn())
+    {
         /* Free all buffers that are complete. */
-        bufferId = G_playingList ;
-        while (bufferId != BUFFER_ID_BAD)  {
-            DebugCheck(bufferId >= 0) ;
-            DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-            p_buffer = G_soundBufferArray + bufferId ;
-            nextId = p_buffer->next ;
+        bufferId = G_playingList;
+        while (bufferId != BUFFER_ID_BAD)
+        {
+            DebugCheck(bufferId >= 0);
+            DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+            p_buffer = G_soundBufferArray + bufferId;
+            nextId = p_buffer->next;
 
             /* See if any sounds are done. */
-            if (!p_buffer->sample->isPlaying)  {
+            if (!p_buffer->sample->isPlaying)
+            {
                 /* Do the callback first, then free. */
-                if (p_buffer->doneCallback != NULL)  {
+                if (p_buffer->doneCallback != NULL)
+                {
                     /* call the done callback reporting the */
                     /* sound complete. */
-                    p_buffer->doneCallback(p_buffer->doneCallbackData) ;
-                    p_buffer->doneCallback = NULL ;
+                    p_buffer->doneCallback(p_buffer->doneCallbackData);
+                    p_buffer->doneCallback = NULL;
                 }
                 /* If so, close out the buffer. */
-                IFreeBuffer(bufferId) ;
+                IFreeBuffer(bufferId);
             }
-            bufferId = nextId ;
+            bufferId = nextId;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-E_Boolean SoundIsDone(T_word16 bufferId)
+E_Boolean
+SoundIsDone(T_word16 bufferId)
 {
-    E_Boolean isDone ;
-    T_soundBuffer *p_buffer ;
+    E_Boolean isDone;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("SoundIsDone") ;
-    DebugCheck(bufferId != BUFFER_ID_BAD) ;
-    DebugCheck(bufferId >= 0) ;
-    DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    DebugRoutine("SoundIsDone");
+    DebugCheck(bufferId != BUFFER_ID_BAD);
+    DebugCheck(bufferId >= 0);
+    DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
     /* Get a buffer entry. */
-    p_buffer = G_soundBufferArray + bufferId ;
-    DebugCheck(p_buffer->isAllocated == TRUE) ;
+    p_buffer = G_soundBufferArray + bufferId;
+    DebugCheck(p_buffer->isAllocated == TRUE);
 
-    if (p_buffer->sample->isPlaying)  {
-        isDone = FALSE ;
-    } else {
-        isDone = TRUE ;
+    if (p_buffer->sample->isPlaying)
+    {
+        isDone = FALSE;
+    }
+    else
+    {
+        isDone = TRUE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isDone ;
+    return isDone;
 }
 
-T_void SoundSetVolume(T_word16 bufferId, T_word16 volume)
+T_void
+SoundSetVolume(T_word16 bufferId, T_word16 volume)
 {
-    T_soundBuffer *p_buffer ;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("SoundSetVolume") ;
+    DebugRoutine("SoundSetVolume");
 
-    if (SoundIsOn())  {
-        DebugCheck(bufferId != BUFFER_ID_BAD) ;
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    if (SoundIsOn())
+    {
+        DebugCheck(bufferId != BUFFER_ID_BAD);
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
         /* Get a buffer entry. */
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == TRUE) ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == TRUE);
 
-        p_buffer->sample->volume = (T_byte8)volume;
+        p_buffer->sample->volume = (T_byte8) volume;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void SoundSetStereoPanLocation(T_word16 bufferId, T_word16 panLocation)
+T_void
+SoundSetStereoPanLocation(T_word16 bufferId, T_word16 panLocation)
 {
-    T_soundBuffer *p_buffer ;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("SoundSetStereoPanLocation") ;
+    DebugRoutine("SoundSetStereoPanLocation");
 
-    if (SoundIsOn())  {
-        DebugCheck(bufferId != BUFFER_ID_BAD) ;
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    if (SoundIsOn())
+    {
+        DebugCheck(bufferId != BUFFER_ID_BAD);
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
         /* Get a buffer entry. */
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == TRUE) ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == TRUE);
 
         p_buffer->sample->pan = panLocation;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void SoundStop(T_word16 bufferId)
+T_void
+SoundStop(T_word16 bufferId)
 {
-    T_soundBuffer *p_buffer ;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("SoundStop") ;
+    DebugRoutine("SoundStop");
 
-    DebugCheck(bufferId != BUFFER_ID_BAD) ;
-    DebugCheck(bufferId >= 0) ;
-    DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    DebugCheck(bufferId != BUFFER_ID_BAD);
+    DebugCheck(bufferId >= 0);
+    DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
-    if (SoundIsOn())  {
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == TRUE) ;
+    if (SoundIsOn())
+    {
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == TRUE);
 
         p_buffer->sample->isPlaying = FALSE;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
-T_void SoundUpdateOften(T_void)
+T_void
+SoundUpdateOften(T_void)
 {
     // TODO: Music feed
 }
 
-T_void SoundStopBackgroundMusic(T_void)
+T_void
+SoundStopBackgroundMusic(T_void)
 {
     DebugRoutine("SoundStopBackgroundMusic");
-    if (G_backgroundMusicID != BUFFER_ID_BAD) {
+    if (G_backgroundMusicID != BUFFER_ID_BAD)
+    {
         SoundStop(G_backgroundMusicID);
         G_backgroundMusic = 0;
         G_backgroundMusicID = BUFFER_ID_BAD;
@@ -1827,57 +1915,66 @@ T_void SoundStopBackgroundMusic(T_void)
     DebugEnd();
 }
 
-T_sword16 SoundPlayByNameWithDetails(
-              T_byte8 *filename,
-              T_word16 volume,
-              T_word16 frequency,
-              T_word16 bits,
-              E_Boolean isStereo)
+T_sword16
+SoundPlayByNameWithDetails(
+    T_byte8 *filename,
+    T_word16 volume,
+    T_word16 frequency,
+    T_word16 bits,
+    E_Boolean isStereo)
 {
-    T_resource sound ;
+    T_resource sound;
     T_SDLSoundBuffer *p_sample;
-    T_word16 bufferId = BUFFER_ID_BAD ;
-    T_soundBuffer *p_buffer ;
+    T_word16 bufferId = BUFFER_ID_BAD;
+    T_soundBuffer *p_buffer;
     // TODO: Don't do isStereo!
 
-    DebugRoutine("PlaySoundByNameWithDetails") ;
+    DebugRoutine("PlaySoundByNameWithDetails");
 
-    if (G_soundsInit == TRUE)  {
-        sound = ResourceFind(G_soundsFile, filename) ;
-        if (sound != RESOURCE_BAD)  {
-            bufferId = IAllocateBuffer(sound) ;
-            if (bufferId != BUFFER_ID_BAD)  {
-                DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-                DebugCheck(bufferId >= 0) ;
-                p_buffer= G_soundBufferArray + bufferId ;
-                p_sample = p_buffer->sample ;
-                DebugCheck(p_sample != NULL) ;
+    if (G_soundsInit == TRUE)
+    {
+        sound = ResourceFind(G_soundsFile, filename);
+        if (sound != RESOURCE_BAD)
+        {
+            bufferId = IAllocateBuffer(sound);
+            if (bufferId != BUFFER_ID_BAD)
+            {
+                DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+                DebugCheck(bufferId >= 0);
+                p_buffer = G_soundBufferArray + bufferId;
+                p_sample = p_buffer->sample;
+                DebugCheck(p_sample != NULL);
 
-                memset(p_sample, 0, sizeof(*p_sample)) ;
+                memset(p_sample, 0, sizeof(*p_sample));
                 p_sample->inUse = TRUE; // we are about to use this one
                 p_sample->data = p_buffer->p_sample;
                 p_sample->length = p_buffer->size;
 
-                if (bits == 16)  {
+                if (bits == 16)
+                {
                     // 16-bit samples have half as many samples
                     p_sample->length /= 2;
-                    p_sample->is16Bit = TRUE ;
+                    p_sample->is16Bit = TRUE;
                     p_sample->isUnsigned = FALSE;
-                } else {
-                    p_sample->is16Bit = FALSE ;
+                }
+                else
+                {
+                    p_sample->is16Bit = FALSE;
                     p_sample->isUnsigned = TRUE;
                 }
 
-                p_sample->sampleRate = frequency ;
-                p_sample->pan = _PAN_CENTER ;
-                p_sample->volume = (T_byte8)volume;
+                p_sample->sampleRate = frequency;
+                p_sample->pan = _PAN_CENTER;
+                p_sample->volume = (T_byte8) volume;
                 p_sample->loop = TRUE;
-                p_buffer->doneCallback = NULL ;
+                p_buffer->doneCallback = NULL;
 
                 // Start playing the sound
                 p_sample->isPlaying = TRUE;
             }
-        } else {
+        }
+        else
+        {
 #ifdef COMPILE_OPTION_OUTPUT_BAD_SOUNDS
             fprintf(fileBadSounds, "sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
             MessagePrintf("sound '%s' not found\n", filename) ;  fflush(fileBadSounds) ;
@@ -1886,9 +1983,9 @@ T_sword16 SoundPlayByNameWithDetails(
 
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
 #endif
@@ -1902,89 +1999,93 @@ T_sword16 SoundPlayByNameWithDetails(
  *  @return index to buffer, or -1 for none.
  *
  *<!-----------------------------------------------------------------------*/
-static T_sword16 IAllocateBuffer(T_resource res)
+static T_sword16
+IAllocateBuffer(T_resource res)
 {
-    T_word16 bufferId ;
-    T_soundBuffer *p_buffer ;
+    T_word16 bufferId;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("IAllocateBuffer") ;
+    DebugRoutine("IAllocateBuffer");
     /* Pull one off the front. */
-    bufferId = G_firstFreeBuffer ;
+    bufferId = G_firstFreeBuffer;
 
     /* Is there any? */
-    if (bufferId != BUFFER_ID_BAD)  {
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    if (bufferId != BUFFER_ID_BAD)
+    {
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
         /* Fix up the next free buffer. */
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == FALSE) ;
-        G_firstFreeBuffer = p_buffer->next ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == FALSE);
+        G_firstFreeBuffer = p_buffer->next;
         if (G_firstFreeBuffer != BUFFER_ID_BAD)
-            G_soundBufferArray[G_firstFreeBuffer].prev = BUFFER_ID_BAD ;
+            G_soundBufferArray[G_firstFreeBuffer].prev = BUFFER_ID_BAD;
 
         /* Put the new item on the play list. */
-        p_buffer->next = G_playingList ;
-        p_buffer->prev = BUFFER_ID_BAD ;
+        p_buffer->next = G_playingList;
+        p_buffer->prev = BUFFER_ID_BAD;
         if (G_playingList != BUFFER_ID_BAD)
-            G_soundBufferArray[G_playingList].prev = bufferId ;
-        G_playingList = bufferId ;
+            G_soundBufferArray[G_playingList].prev = bufferId;
+        G_playingList = bufferId;
 
-        p_buffer->resource = res ;
-        p_buffer->p_sample = ResourceLock(res) ;
-        p_buffer->size = ResourceGetSize(res) ;
+        p_buffer->resource = res;
+        p_buffer->p_sample = ResourceLock(res);
+        p_buffer->size = ResourceGetSize(res);
 
-        G_numSoundsPlaying++ ;
-        p_buffer->isAllocated = TRUE ;
+        G_numSoundsPlaying++;
+        p_buffer->isAllocated = TRUE;
 
-        ICheckLists() ;
+        ICheckLists();
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
-static T_sword16 IAllocateBufferDirect(void *aRawSound, T_word32 aSize)
+static T_sword16
+IAllocateBufferDirect(void *aRawSound, T_word32 aSize)
 {
-    T_word16 bufferId ;
-    T_soundBuffer *p_buffer ;
+    T_word16 bufferId;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("IAllocateBufferDirect") ;
+    DebugRoutine("IAllocateBufferDirect");
     /* Pull one off the front. */
-    bufferId = G_firstFreeBuffer ;
+    bufferId = G_firstFreeBuffer;
 
     /* Is there any? */
-    if (bufferId != BUFFER_ID_BAD)  {
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    if (bufferId != BUFFER_ID_BAD)
+    {
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
         /* Fix up the next free buffer. */
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == FALSE) ;
-        G_firstFreeBuffer = p_buffer->next ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == FALSE);
+        G_firstFreeBuffer = p_buffer->next;
         if (G_firstFreeBuffer != BUFFER_ID_BAD)
-            G_soundBufferArray[G_firstFreeBuffer].prev = BUFFER_ID_BAD ;
+            G_soundBufferArray[G_firstFreeBuffer].prev = BUFFER_ID_BAD;
 
         /* Put the new item on the play list. */
-        p_buffer->next = G_playingList ;
-        p_buffer->prev = BUFFER_ID_BAD ;
+        p_buffer->next = G_playingList;
+        p_buffer->prev = BUFFER_ID_BAD;
         if (G_playingList != BUFFER_ID_BAD)
-            G_soundBufferArray[G_playingList].prev = bufferId ;
-        G_playingList = bufferId ;
+            G_soundBufferArray[G_playingList].prev = bufferId;
+        G_playingList = bufferId;
 
         p_buffer->resource = RESOURCE_BAD;
         p_buffer->p_sample = aRawSound;
         p_buffer->size = aSize;
-        p_buffer->isAllocated = TRUE ;
-        G_numSoundsPlaying++ ;
+        p_buffer->isAllocated = TRUE;
+        G_numSoundsPlaying++;
 
-        ICheckLists() ;
+        ICheckLists();
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1996,45 +2097,51 @@ static T_sword16 IAllocateBufferDirect(void *aRawSound, T_word32 aSize)
  *  @return index to buffer, or -1 for none.
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IFreeBuffer(T_word16 bufferId)
+static T_void
+IFreeBuffer(T_word16 bufferId)
 {
-    T_soundBuffer *p_buffer ;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("IFreeBuffer") ;
-    DebugCheck(bufferId >= 0) ;
-    DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-    p_buffer = G_soundBufferArray + bufferId ;
-    DebugCheck(p_buffer->isAllocated == TRUE) ;
+    DebugRoutine("IFreeBuffer");
+    DebugCheck(bufferId >= 0);
+    DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+    p_buffer = G_soundBufferArray + bufferId;
+    DebugCheck(p_buffer->isAllocated == TRUE);
 
-    if (p_buffer->resource != RESOURCE_BAD) {
-        ResourceUnlock(p_buffer->resource) ;
-        ResourceUnfind(p_buffer->resource) ;
-        p_buffer->resource = RESOURCE_BAD ;
+    if (p_buffer->resource != RESOURCE_BAD)
+    {
+        ResourceUnlock(p_buffer->resource);
+        ResourceUnfind(p_buffer->resource);
+        p_buffer->resource = RESOURCE_BAD;
     }
-    p_buffer->isAllocated = FALSE ;
+    p_buffer->isAllocated = FALSE;
 
     /* Take the buffer off the playing list. */
-    if (p_buffer->prev != BUFFER_ID_BAD)  {
-        G_soundBufferArray[p_buffer->prev].next = p_buffer->next ;
-    } else {
-        G_playingList = p_buffer->next ;
+    if (p_buffer->prev != BUFFER_ID_BAD)
+    {
+        G_soundBufferArray[p_buffer->prev].next = p_buffer->next;
     }
-    if (p_buffer->next != BUFFER_ID_BAD)  {
-        G_soundBufferArray[p_buffer->next].prev = p_buffer->prev ;
+    else
+    {
+        G_playingList = p_buffer->next;
+    }
+    if (p_buffer->next != BUFFER_ID_BAD)
+    {
+        G_soundBufferArray[p_buffer->next].prev = p_buffer->prev;
     }
 
     /* Put the buffer on the free list. */
-    p_buffer->next = G_firstFreeBuffer ;
-    p_buffer->prev = BUFFER_ID_BAD ;
+    p_buffer->next = G_firstFreeBuffer;
+    p_buffer->prev = BUFFER_ID_BAD;
     if (G_firstFreeBuffer != BUFFER_ID_BAD)
-        G_soundBufferArray[G_firstFreeBuffer].prev = bufferId ;
-    G_firstFreeBuffer = bufferId ;
+        G_soundBufferArray[G_firstFreeBuffer].prev = bufferId;
+    G_firstFreeBuffer = bufferId;
 
-    G_numSoundsPlaying-- ;
+    G_numSoundsPlaying--;
 
-    ICheckLists() ;
+    ICheckLists();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #ifdef COMPILE_OPTION_SOUND_CHECK_LIST
@@ -2087,63 +2194,67 @@ static T_void ICheckLists(T_void)
 #endif
 
 /* LES: 04/08/96 */
-T_sword16 SoundPlayByNumberWithCallback(
-              T_word16 num,
-              T_word16 volume,
-              T_soundDoneCallback callback,
-              T_void *p_data)
+T_sword16
+SoundPlayByNumberWithCallback(
+    T_word16 num,
+    T_word16 volume,
+    T_soundDoneCallback callback,
+    T_void *p_data)
 {
-    T_soundBuffer *p_buffer ;
-    T_word16 bufferId ;
+    T_soundBuffer *p_buffer;
+    T_word16 bufferId;
 
-    DebugRoutine("SoundPlayByNumberWithCallback") ;
+    DebugRoutine("SoundPlayByNumberWithCallback");
 
-    bufferId = SoundPlayByNumber(num, volume) ;
-    if (bufferId != BUFFER_ID_BAD)  {
-        DebugCheck(bufferId != BUFFER_ID_BAD) ;
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    bufferId = SoundPlayByNumber(num, volume);
+    if (bufferId != BUFFER_ID_BAD)
+    {
+        DebugCheck(bufferId != BUFFER_ID_BAD);
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == TRUE) ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == TRUE);
 
-        p_buffer->doneCallback = callback ;
-        p_buffer->doneCallbackData = p_data ;
+        p_buffer->doneCallback = callback;
+        p_buffer->doneCallbackData = p_data;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
 /* LES: 04/08/96 */
-T_sword16 SoundPlayLoopByNumberWithCallback(
-              T_word16 num,
-              T_word16 volume,
-              T_soundDoneCallback callback,
-              T_void *p_data)
+T_sword16
+SoundPlayLoopByNumberWithCallback(
+    T_word16 num,
+    T_word16 volume,
+    T_soundDoneCallback callback,
+    T_void *p_data)
 {
-    T_soundBuffer *p_buffer ;
-    T_word16 bufferId ;
+    T_soundBuffer *p_buffer;
+    T_word16 bufferId;
 
-    DebugRoutine("SoundPlayLoopByNumberWithCallback") ;
+    DebugRoutine("SoundPlayLoopByNumberWithCallback");
 
-    bufferId = SoundPlayLoopByNumber(num, volume) ;
-    if (bufferId != BUFFER_ID_BAD)  {
-        DebugCheck(bufferId != BUFFER_ID_BAD) ;
-        DebugCheck(bufferId >= 0) ;
-        DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
+    bufferId = SoundPlayLoopByNumber(num, volume);
+    if (bufferId != BUFFER_ID_BAD)
+    {
+        DebugCheck(bufferId != BUFFER_ID_BAD);
+        DebugCheck(bufferId >= 0);
+        DebugCheck(bufferId < MAX_SOUND_CHANNELS);
 
-        p_buffer = G_soundBufferArray + bufferId ;
-        DebugCheck(p_buffer->isAllocated == TRUE) ;
+        p_buffer = G_soundBufferArray + bufferId;
+        DebugCheck(p_buffer->isAllocated == TRUE);
 
-        p_buffer->doneCallback = callback ;
-        p_buffer->doneCallbackData = p_data ;
+        p_buffer->doneCallback = callback;
+        p_buffer->doneCallbackData = p_data;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2155,18 +2266,19 @@ T_sword16 SoundPlayLoopByNumberWithCallback(
  *  @return Level of sound
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 SoundGetEffectsVolume(T_void)
+T_word16
+SoundGetEffectsVolume(T_void)
 {
-    T_word16 volume ;
+    T_word16 volume;
 
-    DebugRoutine("SoundGetEffectsVolume") ;
+    DebugRoutine("SoundGetEffectsVolume");
 
-    volume = G_soundVolume ;
+    volume = G_soundVolume;
 
-    DebugCheck(volume < 256) ;
-    DebugEnd() ;
+    DebugCheck(volume < 256);
+    DebugEnd();
 
-    return volume ;
+    return volume;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2177,20 +2289,23 @@ T_word16 SoundGetEffectsVolume(T_void)
  *  form.  The music is not affected.
  *
  *<!-----------------------------------------------------------------------*/
-T_void SoundStopAllSounds(T_void)
+T_void
+SoundStopAllSounds(T_void)
 {
-    T_word16 bufferId ;
-    T_soundBuffer *p_buffer ;
+    T_word16 bufferId;
+    T_soundBuffer *p_buffer;
 
-    DebugRoutine("SoundStopAllSounds") ;
+    DebugRoutine("SoundStopAllSounds");
 
-    if (SoundIsOn())  {
+    if (SoundIsOn())
+    {
         /* Free all buffers that are complete. */
-        bufferId = G_playingList ;
-        while (bufferId != BUFFER_ID_BAD)  {
-            DebugCheck(bufferId >= 0) ;
-            DebugCheck(bufferId < MAX_SOUND_CHANNELS) ;
-            p_buffer = G_soundBufferArray + bufferId ;
+        bufferId = G_playingList;
+        while (bufferId != BUFFER_ID_BAD)
+        {
+            DebugCheck(bufferId >= 0);
+            DebugCheck(bufferId < MAX_SOUND_CHANNELS);
+            p_buffer = G_soundBufferArray + bufferId;
 #ifdef WIN32
             if (!p_buffer->sample->isMusic)
                 SoundStop(bufferId) ;
@@ -2198,27 +2313,29 @@ T_void SoundStopAllSounds(T_void)
 #ifdef USE_SOS_LIBRARY
             SoundStop(bufferId) ;
 #endif
-            bufferId = p_buffer->next ;
+            bufferId = p_buffer->next;
         }
     }
 
     /* Update the resource manager to tell */
     /* that the sounds are now freed. */
-    SoundUpdate() ;
+    SoundUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* LES 07/31/96 Created */
-E_Boolean SoundGetAllowFreqShift(T_void)
+E_Boolean
+SoundGetAllowFreqShift(T_void)
 {
-    return G_allowFreqShift ;
+    return G_allowFreqShift;
 }
 
 /* LES 07/31/96 Created */
-T_void SoundSetAllowFreqShift(E_Boolean newAllow)
+T_void
+SoundSetAllowFreqShift(E_Boolean newAllow)
 {
-    G_allowFreqShift = newAllow ;
+    G_allowFreqShift = newAllow;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2227,32 +2344,34 @@ T_void SoundSetAllowFreqShift(E_Boolean newAllow)
 /**
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 SoundPlayByNumberWithDetails(
-             T_word16 num,
-             T_word16 volume,
-             T_word16 frequency,
-             T_word16 bits,
-             E_Boolean isStereo)
+T_sword16
+SoundPlayByNumberWithDetails(
+    T_word16 num,
+    T_word16 volume,
+    T_word16 frequency,
+    T_word16 bits,
+    E_Boolean isStereo)
 {
-    char buffer[20] ;
-    T_word16 bufferId = BUFFER_ID_BAD ;
+    char buffer[20];
+    T_word16 bufferId = BUFFER_ID_BAD;
 
-    DebugRoutine("PlaySoundByNumberWithDetails") ;
+    DebugRoutine("PlaySoundByNumberWithDetails");
 
     /* Don't play any sound unless the sound system was initialized. */
-    if (G_soundsInit == TRUE)  {
-	    sprintf(buffer, "snd#%d", (T_word32)num) ;
-	    bufferId = SoundPlayByNameWithDetails(
-                       buffer,
-                       volume,
-                       frequency,
-                       bits,
-                       isStereo) ;
+    if (G_soundsInit == TRUE)
+    {
+        sprintf(buffer, "snd#%d", (T_word32) num);
+        bufferId = SoundPlayByNameWithDetails(
+            buffer,
+            volume,
+            frequency,
+            bits,
+            isStereo);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return bufferId ;
+    return bufferId;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2265,17 +2384,18 @@ T_sword16 SoundPlayByNumberWithDetails(
  *  @return TRUE if sound is enabled, FALSE if not
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean SoundIsOn(T_void)
+E_Boolean
+SoundIsOn(T_void)
 {
-    E_Boolean ret ;
-    DebugRoutine("SoundIsOn") ;
+    E_Boolean ret;
+    DebugRoutine("SoundIsOn");
 
-    ret = G_soundsInit ;
+    ret = G_soundsInit;
 
-    DebugCheck(ret < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(ret < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return ret ;
+    return ret;
 }
 
 

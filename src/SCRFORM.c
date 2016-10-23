@@ -18,19 +18,21 @@
 #include "SCRIPTEV.H"
 
 static E_Boolean G_scriptCommExit = FALSE;
-static T_word32 G_currentFormNumber = 0 ;
-static E_Boolean G_scriptCommActive = FALSE ;
-static T_script G_formScript = SCRIPT_BAD ;
+static T_word32 G_currentFormNumber = 0;
+static E_Boolean G_scriptCommActive = FALSE;
+static T_script G_formScript = SCRIPT_BAD;
 
-static T_keyboardEventHandler G_oldKeyboardHandler = NULL ;
-static T_mouseEventHandler G_oldMouseHandler = NULL ;
+static T_keyboardEventHandler G_oldKeyboardHandler = NULL;
+static T_mouseEventHandler G_oldMouseHandler = NULL;
 
 /* Internal prototypes: */
-static T_void IScriptFormEventOneNumber(T_word16 eventNumber, T_sword32 num) ;
-static T_void IScriptFormEventTwoNumbers(
-                  T_word16 eventNumber,
-                  T_sword32 num1,
-                  T_sword32 num2) ;
+static T_void
+IScriptFormEventOneNumber(T_word16 eventNumber, T_sword32 num);
+static T_void
+IScriptFormEventTwoNumbers(
+    T_word16 eventNumber,
+    T_sword32 num1,
+    T_sword32 num2);
 
 /*-------------------------------------------------------------------------*
  * Routine:  ScriptFormStart
@@ -47,49 +49,51 @@ static T_void IScriptFormEventTwoNumbers(
  *  @param uiFormNumber -- Number of form to load
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFormStart(T_word32 uiFormNumber)
+T_void
+ScriptFormStart(T_word32 uiFormNumber)
 {
-    T_byte8 formName[80] ;
-    static E_Boolean inThisRoutine = FALSE ;
+    T_byte8 formName[80];
+    static E_Boolean inThisRoutine = FALSE;
 
     DebugRoutine ("ScriptFormStart");
-    DebugCheck(inThisRoutine == FALSE) ;
-    DebugCheck(G_scriptCommActive == FALSE) ;
+    DebugCheck(inThisRoutine == FALSE);
+    DebugCheck(G_scriptCommActive == FALSE);
 
     /* This routine cannot be recursed. */
-    inThisRoutine = TRUE ;
+    inThisRoutine = TRUE;
 
-    G_formScript = ScriptLock(uiFormNumber) ;
-    DebugCheck(G_formScript != SCRIPT_BAD) ;
+    G_formScript = ScriptLock(uiFormNumber);
+    DebugCheck(G_formScript != SCRIPT_BAD);
 
-    if (G_formScript != SCRIPT_BAD)  {
+    if (G_formScript != SCRIPT_BAD)
+    {
         /* This module is now active. */
-        G_scriptCommActive = TRUE ;
+        G_scriptCommActive = TRUE;
 
-        sprintf(formName, "frm/UI%06ld.FRM", uiFormNumber) ;
+        sprintf(formName, "frm/UI%06ld.FRM", uiFormNumber);
 
         /* load the form for this page */
-        FormLoadFromFile (formName);
+        FormLoadFromFile(formName);
 
         /* set the form callback routine to MainUIControl */
-        FormSetCallbackRoutine (ScriptFormCallback);
+        FormSetCallbackRoutine(ScriptFormCallback);
 
         /* double buffer drawing */
-        GraphicUpdateAllGraphicsBuffered ();
+        GraphicUpdateAllGraphicsBuffered();
 
         /* Set up the current form. */
-        G_currentFormNumber = uiFormNumber ;
+        G_currentFormNumber = uiFormNumber;
 
         /* go into generic control loop */
-     //  FormGenericControl(&G_mainExit);
+        //  FormGenericControl(&G_mainExit);
 
-        inThisRoutine = FALSE ;
+        inThisRoutine = FALSE;
 
-        G_oldKeyboardHandler = KeyboardGetEventHandler ();
-        G_oldMouseHandler = MouseGetEventHandler ();
+        G_oldKeyboardHandler = KeyboardGetEventHandler();
+        G_oldMouseHandler = MouseGetEventHandler();
 
-        MouseSetEventHandler    (FormHandleMouse);
-        KeyboardSetEventHandler (FormHandleKey);
+        MouseSetEventHandler(FormHandleMouse);
+        KeyboardSetEventHandler(FormHandleKey);
 
         /* Initialize the script for the first time.*/
         ScriptEvent(
@@ -100,11 +104,11 @@ T_void ScriptFormStart(T_word32 uiFormNumber)
             SCRIPT_DATA_TYPE_NONE,
             NULL,
             SCRIPT_DATA_TYPE_NONE,
-            NULL) ;
+            NULL);
 
-        KeyboardBufferOn() ;
+        KeyboardBufferOn();
     }
-ColorUpdate(0) ;
+    ColorUpdate(0);
 
     DebugEnd();
 }
@@ -118,25 +122,26 @@ ColorUpdate(0) ;
  *  form and all related functionality.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFormEnd(T_void)
+T_void
+ScriptFormEnd(T_void)
 {
-    DebugRoutine("ScriptFormEnd") ;
-    DebugCheck(G_scriptCommActive == TRUE) ;
+    DebugRoutine("ScriptFormEnd");
+    DebugCheck(G_scriptCommActive == TRUE);
 
     /* Get rid of the current form. */
-	FormCleanUp();
+    FormCleanUp();
 
     /* Release the script. */
-    ScriptUnlock(G_formScript) ;
-    G_formScript = SCRIPT_BAD ;
+    ScriptUnlock(G_formScript);
+    G_formScript = SCRIPT_BAD;
 
     /* Note that we don't have a form to work with any more. */
-    G_scriptCommActive = FALSE ;
+    G_scriptCommActive = FALSE;
 
     MouseSetEventHandler(G_oldMouseHandler);
     KeyboardSetEventHandler(G_oldKeyboardHandler);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -157,67 +162,71 @@ T_void ScriptFormEnd(T_void)
  *  @param objID -- ID of particular object
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFormCallback(
-           E_formObjectType objtype,
-		   T_word16 objstatus,
-		   T_word32 objID)
+T_void
+ScriptFormCallback(
+    E_formObjectType objtype,
+    T_word16 objstatus,
+    T_word32 objID)
 {
-    T_sword32 id ;
-    T_sword32 selection ;
+    T_sword32 id;
+    T_sword32 selection;
 
     DebugRoutine ("ScriptFormCallback");
 
-    id = objID ;
-    switch(objtype)  {
+    id = objID;
+    switch (objtype)
+    {
         case FORM_OBJECT_BUTTON:
         case FORM_OBJECT_TEXTBUTTON:
-            switch(objstatus)  {
+            switch (objstatus)
+            {
                 case BUTTON_ACTION_RELEASED:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_BUTTON_RELEASED,
-                        id) ;
-                    break ;
+                        id);
+                    break;
                 case BUTTON_ACTION_PUSHED:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_BUTTON_PUSHED,
-                        id) ;
-                    break ;
+                        id);
+                    break;
             }
-            break ;
+            break;
         case FORM_OBJECT_TEXTBOX:
-            switch(objstatus)  {
+            switch (objstatus)
+            {
                 case Txtbox_ACTION_GAINED_FOCUS:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_TEXT_BOX_GAINED_FOCUS,
-                        id) ;
-                    break ;
+                        id);
+                    break;
                 case Txtbox_ACTION_LOST_FOCUS:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_TEXT_BOX_LOST_FOCUS,
-                        id) ;
-                    break ;
+                        id);
+                    break;
                 case Txtbox_ACTION_ACCEPTED:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_TEXT_BOX_ACCEPTED,
-                        id) ;
-                    break ;
+                        id);
+                    break;
                 case Txtbox_ACTION_DATA_CHANGED:
                     IScriptFormEventOneNumber(
                         SCRIPT_EVENT_TEXT_BOX_DATA_CHANGED,
-                        id) ;
-                    break ;
+                        id);
+                    break;
                 case Txtbox_ACTION_SELECTION_CHANGED:
                     /* Get what is the new selection. */
-                    selection = TxtboxGetSelectionNumber(FormGetObjID(id)) ;
+                    selection = TxtboxGetSelectionNumber(FormGetObjID(id));
 
                     /* Send this event to the script. */
                     IScriptFormEventTwoNumbers(
                         SCRIPT_EVENT_TEXT_BOX_SELECTION_CHANGED,
                         id,
-                        selection) ;
-                    break ;
+                        selection);
+                    break;
             }
-            break ;
+            break;
     }
 //printf(">%d %d %d\n", objstatus, objtype, objID) ;
 
@@ -232,14 +241,15 @@ T_void ScriptFormCallback(
  *  events necessary for doing UI via the comm port.
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFormUpdate(T_void)
+T_void
+ScriptFormUpdate(T_void)
 {
-    DebugRoutine("ScriptFormUpdate") ;
-    DebugCheck(G_scriptCommActive == TRUE) ;
+    DebugRoutine("ScriptFormUpdate");
+    DebugCheck(G_scriptCommActive == TRUE);
 
-    GraphicUpdateAllGraphics() ;
+    GraphicUpdateAllGraphics();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -254,22 +264,23 @@ T_void ScriptFormUpdate(T_void)
  *  @param num -- Number to send with event
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IScriptFormEventOneNumber(T_word16 eventNumber, T_sword32 num)
+static T_void
+IScriptFormEventOneNumber(T_word16 eventNumber, T_sword32 num)
 {
-     DebugRoutine("ScriptFormEventOneNumberParm") ;
-     DebugCheck(eventNumber < SCRIPT_EVENT_UNKNOWN) ;
+    DebugRoutine("ScriptFormEventOneNumberParm");
+    DebugCheck(eventNumber < SCRIPT_EVENT_UNKNOWN);
 
-     ScriptEvent(
-         G_formScript,
-         eventNumber,
-         SCRIPT_DATA_TYPE_32_BIT_NUMBER,
-         (T_void *)num,
-         SCRIPT_DATA_TYPE_NONE,
-         NULL,
-         SCRIPT_DATA_TYPE_NONE,
-         NULL) ;
+    ScriptEvent(
+        G_formScript,
+        eventNumber,
+        SCRIPT_DATA_TYPE_32_BIT_NUMBER,
+        (T_void *) num,
+        SCRIPT_DATA_TYPE_NONE,
+        NULL,
+        SCRIPT_DATA_TYPE_NONE,
+        NULL);
 
-     DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -283,25 +294,26 @@ static T_void IScriptFormEventOneNumber(T_word16 eventNumber, T_sword32 num)
  *  @param num -- Number to send with event
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IScriptFormEventTwoNumbers(
-                  T_word16 eventNumber,
-                  T_sword32 num1,
-                  T_sword32 num2)
+static T_void
+IScriptFormEventTwoNumbers(
+    T_word16 eventNumber,
+    T_sword32 num1,
+    T_sword32 num2)
 {
-     DebugRoutine("IScriptFormEventTwoNumbers") ;
-     DebugCheck(eventNumber < SCRIPT_EVENT_UNKNOWN) ;
+    DebugRoutine("IScriptFormEventTwoNumbers");
+    DebugCheck(eventNumber < SCRIPT_EVENT_UNKNOWN);
 
-     ScriptEvent(
-         G_formScript,
-         eventNumber,
-         SCRIPT_DATA_TYPE_32_BIT_NUMBER,
-         (T_void *)num1,
-         SCRIPT_DATA_TYPE_32_BIT_NUMBER,
-         (T_void *)num2,
-         SCRIPT_DATA_TYPE_NONE,
-         NULL) ;
+    ScriptEvent(
+        G_formScript,
+        eventNumber,
+        SCRIPT_DATA_TYPE_32_BIT_NUMBER,
+        (T_void *) num1,
+        SCRIPT_DATA_TYPE_32_BIT_NUMBER,
+        (T_void *) num2,
+        SCRIPT_DATA_TYPE_NONE,
+        NULL);
 
-     DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -316,19 +328,20 @@ static T_void IScriptFormEventTwoNumbers(
  *  @param selection -- Selection number/row
  *
  *<!-----------------------------------------------------------------------*/
-T_void ScriptFormTextBoxSetSelection(
-           T_word16 id,
-           T_word16 selection)
+T_void
+ScriptFormTextBoxSetSelection(
+    T_word16 id,
+    T_word16 selection)
 {
-    T_TxtboxID textBoxID ;
+    T_TxtboxID textBoxID;
 
-    DebugRoutine("ScriptFormTextBoxSetSelection") ;
-    DebugCheck(G_formScript != SCRIPT_BAD) ;
+    DebugRoutine("ScriptFormTextBoxSetSelection");
+    DebugCheck(G_formScript != SCRIPT_BAD);
 
-    textBoxID = FormGetObjID(id) ;
-    TxtboxCursSetRow(textBoxID, selection) ;
+    textBoxID = FormGetObjID(id);
+    TxtboxCursSetRow(textBoxID, selection);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

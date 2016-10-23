@@ -23,145 +23,177 @@
 #include "SMMAIN.H"
 #include "STATS.H"
 
-typedef struct {
-    E_Boolean stateFlags[NUMBER_SMCCHOOSE_FLAGS] ;
-    T_byte8 attemptPassword[MAX_SIZE_PASSWORD+100] ;
-} T_SMCChooseData ;
+typedef struct
+{
+    E_Boolean stateFlags[NUMBER_SMCCHOOSE_FLAGS];
+    T_byte8 attemptPassword[MAX_SIZE_PASSWORD + 100];
+} T_SMCChooseData;
 
 /* Internal prototypes: */
-T_void SMCChooseDataInit(T_stateMachineHandle handle) ;
+T_void
+SMCChooseDataInit(T_stateMachineHandle handle);
 
-T_void SMCChooseDataFinish(T_stateMachineHandle handle) ;
+T_void
+SMCChooseDataFinish(T_stateMachineHandle handle);
 
-T_void SMCChooseWaitForListEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseWaitForListEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseWaitForListIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseWaitForListIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseChoicesEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseChoicesEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseChoicesIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseChoicesIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseChoicesExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMCChooseChoicesExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMCChooseCreateEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCreateEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseCreateExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMCChooseCreateExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMCChooseCreateIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCreateIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseRequestCreateEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseRequestCreateEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseRequestCreateIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseRequestCreateIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseLoadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseLoadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseLoadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseLoadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDownloadCharacterEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDownloadCharacterEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDisplayStatsEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDisplayStatsEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDisplayStatsIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDisplayStatsIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDisplayStatsExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMCChooseDisplayStatsExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMCChooseCheckPasswordForLoadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCheckPasswordForLoadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseCheckPasswordForLoadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCheckPasswordForLoadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseChangePasswordEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseChangePasswordEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseChangePasswordIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseChangePasswordIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseEnableBeginEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseEnableBeginEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDeleteEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDeleteEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDeleteExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMCChooseDeleteExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMCChooseDeleteCharacterEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDeleteCharacterEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseDeleteCharacterIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseDeleteCharacterIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChoosePlayGameEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChoosePlayGameEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseExitEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseExitEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseCreateUploadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCreateUploadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMCChooseCreateUploadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMCChooseCreateUploadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-static T_void ICreateUploadComplete(
-                  T_void *p_data,
-                  T_word32 size,
-                  T_word32 extraData) ;
+static T_void
+ICreateUploadComplete(
+    T_void *p_data,
+    T_word32 size,
+    T_word32 extraData);
 
 /* Internal global variables: */
-static T_stateMachineHandle G_smHandle ;
-static E_Boolean G_init = FALSE ;
-
+static T_stateMachineHandle G_smHandle;
+static E_Boolean G_init = FALSE;
 
 static T_stateMachineConditional SMCChooseWaitForListCond[] = {
     {
@@ -169,7 +201,7 @@ static T_stateMachineConditional SMCChooseWaitForListCond[] = {
         SMCCHOOSE_FLAG_ENTER_COMPLETE,                /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseChoicesCond[] = {
     {
@@ -197,7 +229,7 @@ static T_stateMachineConditional SMCChooseChoicesCond[] = {
         SMCCHOOSE_FLAG_CHOOSE_REDRAW,                 /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseCreateCond[] = {
     {
@@ -210,7 +242,7 @@ static T_stateMachineConditional SMCChooseCreateCond[] = {
         SMCCHOOSE_FLAG_CREATE_ABORT,                  /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseRequestCreateCond[] = {
     {
@@ -228,7 +260,7 @@ static T_stateMachineConditional SMCChooseRequestCreateCond[] = {
         SMCCHOOSE_FLAG_CREATE_ABORT,                  /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseLoadCond[] = {
     {
@@ -241,7 +273,7 @@ static T_stateMachineConditional SMCChooseLoadCond[] = {
         SMCCHOOSE_FLAG_LOAD_STATUS_INCORRECT,         /* extra data */
         SMCCHOOSE_DOWNLOAD_CHARACTER_STATE            /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseDownloadCharacterCond[] = {
     {
@@ -249,7 +281,7 @@ static T_stateMachineConditional SMCChooseDownloadCharacterCond[] = {
         SMCCHOOSE_FLAG_DOWNLOAD_COMPLETE,             /* extra data */
         SMCCHOOSE_DISPLAY_STATS_STATE                 /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseDisplayStatsCond[] = {
     {
@@ -273,7 +305,7 @@ static T_stateMachineConditional SMCChooseDisplayStatsCond[] = {
         SMCCHOOSE_FLAG_EXIT,                          /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseCheckPasswordForLoadCond[] = {
     {
@@ -287,7 +319,7 @@ static T_stateMachineConditional SMCChooseCheckPasswordForLoadCond[] = {
         SMCCHOOSE_FLAG_PASSWORD_NOT_OK,               /* extra data */
         SMCCHOOSE_DISPLAY_STATS_STATE                 /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseChangePasswordCond[] = {
     {
@@ -300,7 +332,7 @@ static T_stateMachineConditional SMCChooseChangePasswordCond[] = {
         SMCCHOOSE_FLAG_CHANGE_PASSWORD_ABORT,         /* extra data */
         SMCCHOOSE_DISPLAY_STATS_STATE                 /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseEnableBeginCond[] = {
     {
@@ -308,7 +340,7 @@ static T_stateMachineConditional SMCChooseEnableBeginCond[] = {
         SMCCHOOSE_FLAG_ENABLE_COMPLETE,               /* extra data */
         SMCCHOOSE_DISPLAY_STATS_STATE                 /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseDeleteCond[] = {
     {
@@ -321,7 +353,7 @@ static T_stateMachineConditional SMCChooseDeleteCond[] = {
         SMCCHOOSE_FLAG_DELETE_PASSWORD_NOT_OK,        /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseDeleteCharacterCond[] = {
     {
@@ -329,7 +361,7 @@ static T_stateMachineConditional SMCChooseDeleteCharacterCond[] = {
         SMCCHOOSE_FLAG_DELETE_COMPLETE,               /* extra data */
         SMCCHOOSE_CHOICES_STATE                       /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 static T_stateMachineConditional SMCChooseCreateUploadCond[] = {
     {
@@ -337,7 +369,7 @@ static T_stateMachineConditional SMCChooseCreateUploadCond[] = {
         SMCCHOOSE_FLAG_CREATE_UPLOAD_OK,              /* extra data */
         SMCCHOOSE_PLAY_GAME_STATE                     /* next state */
     }
-} ;
+};
 /*-------------------------------------------------------------------------*/
 
 
@@ -491,7 +523,7 @@ static T_stateMachineState SMCChooseStates[] = {
         0,                                      /* Num conditionals */
         NULL                                    /* conditinal list. */
     }
-} ;
+};
 
 /***************************************************************************/
 /*                             STATE MACHINE                               */
@@ -502,7 +534,7 @@ static T_stateMachine SMCChooseStateMachine = {
     SMCChooseDataFinish,      /* Finish callback */
     NUMBER_SMCCHOOSE_STATES,   /* Number states */
     SMCChooseStates           /* State list */
-} ;
+};
 
 
 
@@ -515,20 +547,21 @@ static T_stateMachine SMCChooseStateMachine = {
  *  @return Handle to state machine created
  *
  *<!-----------------------------------------------------------------------*/
-T_stateMachineHandle SMCChooseInitialize(T_void)
+T_stateMachineHandle
+SMCChooseInitialize(T_void)
 {
-    DebugRoutine("SMCChooseInitialize") ;
+    DebugRoutine("SMCChooseInitialize");
 
-    DebugCheck(G_init == FALSE) ;
+    DebugCheck(G_init == FALSE);
 
-    G_init = TRUE ;
+    G_init = TRUE;
 
-    G_smHandle = StateMachineCreate(&SMCChooseStateMachine) ;
-    StateMachineGotoState(G_smHandle, SMCCHOOSE_INITIAL_STATE) ;
+    G_smHandle = StateMachineCreate(&SMCChooseStateMachine);
+    StateMachineGotoState(G_smHandle, SMCCHOOSE_INITIAL_STATE);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return G_smHandle ;
+    return G_smHandle;
 }
 
 
@@ -539,19 +572,20 @@ T_stateMachineHandle SMCChooseInitialize(T_void)
  *  SMCChooseFinish
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseFinish(T_void)
+T_void
+SMCChooseFinish(T_void)
 {
-    DebugRoutine("SMCChooseFinish") ;
+    DebugRoutine("SMCChooseFinish");
 
-    DebugCheck(G_init == TRUE) ;
+    DebugCheck(G_init == TRUE);
 
     /* Destroy the state machine. */
-    StateMachineDestroy(G_smHandle) ;
-    G_smHandle = STATE_MACHINE_HANDLE_BAD ;
+    StateMachineDestroy(G_smHandle);
+    G_smHandle = STATE_MACHINE_HANDLE_BAD;
 
-    G_init = FALSE ;
+    G_init = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -562,13 +596,14 @@ T_void SMCChooseFinish(T_void)
  *  SMCChooseUpdate
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseUpdate(T_void)
+T_void
+SMCChooseUpdate(T_void)
 {
-    DebugRoutine("SMCChooseUpdate") ;
+    DebugRoutine("SMCChooseUpdate");
 
-    StateMachineUpdate(G_smHandle) ;
+    StateMachineUpdate(G_smHandle);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -581,20 +616,21 @@ T_void SMCChooseUpdate(T_void)
  *  @param handle -- Handle to state machine
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDataInit(T_stateMachineHandle handle)
+T_void
+SMCChooseDataInit(T_stateMachineHandle handle)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDataInit") ;
+    DebugRoutine("SMCChooseDataInit");
 
-    p_data = MemAlloc(sizeof(T_SMCChooseData)) ;
+    p_data = MemAlloc(sizeof(T_SMCChooseData));
 
-    DebugCheck(p_data != NULL) ;
-    memset(p_data, 0, sizeof(T_SMCChooseData)) ;
+    DebugCheck(p_data != NULL);
+    memset(p_data, 0, sizeof(T_SMCChooseData));
 
-    StateMachineSetExtraData(handle, p_data) ;
+    StateMachineSetExtraData(handle, p_data);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -607,20 +643,21 @@ T_void SMCChooseDataInit(T_stateMachineHandle handle)
  *  @param handle -- Handle to state machine
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDataFinish(T_stateMachineHandle handle)
+T_void
+SMCChooseDataFinish(T_stateMachineHandle handle)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDataFinish") ;
+    DebugRoutine("SMCChooseDataFinish");
 
     /* Destroy the extra data attached to the state machine. */
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
 
-    DebugCheck(p_data != NULL) ;
-    MemFree(p_data) ;
-    StateMachineSetExtraData(handle, NULL) ;
+    DebugCheck(p_data != NULL);
+    MemFree(p_data);
+    StateMachineSetExtraData(handle, NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -634,27 +671,28 @@ T_void SMCChooseDataFinish(T_stateMachineHandle handle)
  *  @param flag -- Flag to change
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean SMCChooseCheckFlag(
-              T_stateMachineHandle handle,
-              T_word32 flag)
+E_Boolean
+SMCChooseCheckFlag(
+    T_stateMachineHandle handle,
+    T_word32 flag)
 {
-    E_Boolean stateFlag = FALSE ;        /* Return status will default */
-                                         /* to FALSE. */
-    T_SMCChooseData *p_data ;
+    E_Boolean stateFlag = FALSE;        /* Return status will default */
+    /* to FALSE. */
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCheckFlag") ;
-    DebugCheck(G_smHandle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("SMCChooseCheckFlag");
+    DebugCheck(G_smHandle != STATE_MACHINE_HANDLE_BAD);
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     /* If a valid flag, get the state */
-    DebugCheck(flag < SMCCHOOSE_FLAG_UNKNOWN) ;
+    DebugCheck(flag < SMCCHOOSE_FLAG_UNKNOWN);
     if (flag < SMCCHOOSE_FLAG_UNKNOWN)
-        stateFlag = p_data->stateFlags[flag] ;
+        stateFlag = p_data->stateFlags[flag];
 
-    DebugEnd() ;
-    return stateFlag ;
+    DebugEnd();
+    return stateFlag;
 }
 
 
@@ -668,24 +706,25 @@ E_Boolean SMCChooseCheckFlag(
  *  @param state -- New state of flag
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseSetFlag(
-           T_word16 flag,
-           E_Boolean state)
+T_void
+SMCChooseSetFlag(
+    T_word16 flag,
+    E_Boolean state)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseSetFlag") ;
-    DebugCheck(G_smHandle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("SMCChooseSetFlag");
+    DebugCheck(G_smHandle != STATE_MACHINE_HANDLE_BAD);
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     /* If a valid index, set to the new state */
-    DebugCheck(flag < SMCCHOOSE_FLAG_UNKNOWN) ;
+    DebugCheck(flag < SMCCHOOSE_FLAG_UNKNOWN);
     if (flag < SMCCHOOSE_FLAG_UNKNOWN)
-        p_data->stateFlags[flag] = state ;
+        p_data->stateFlags[flag] = state;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -699,17 +738,18 @@ T_void SMCChooseSetFlag(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseWaitForListEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseWaitForListEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
-    T_statsSavedCharArray *p_charArray ;
+    T_SMCChooseData *p_data;
+    T_statsSavedCharArray *p_charArray;
 
-    DebugRoutine("SMCChooseWaitForListEnter") ;
+    DebugRoutine("SMCChooseWaitForListEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     /* make stats get the current list of characters */
 //    StatsGetSavedCharacterList();
@@ -717,20 +757,20 @@ T_void SMCChooseWaitForListEnter(
     /* Note that enter is not complete. */
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_ENTER_COMPLETE,
-        FALSE) ;
+        FALSE);
 
     /* Get the saved character listing. */
-    p_charArray = StatsGetSavedCharacterList() ;
+    p_charArray = StatsGetSavedCharacterList();
 
     /* Make this listing active. */
-    StatsSetSavedCharacterList(p_charArray) ;
+    StatsSetSavedCharacterList(p_charArray);
 
     /* Note that we are done "entering" the character list. */
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_ENTER_COMPLETE,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -744,18 +784,19 @@ T_void SMCChooseWaitForListEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseWaitForListIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseWaitForListIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseWaitForListIdle") ;
+    DebugRoutine("SMCChooseWaitForListIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -769,37 +810,38 @@ T_void SMCChooseWaitForListIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseChoicesEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseChoicesEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseChoicesEnter") ;
+    DebugRoutine("SMCChooseChoicesEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_EXIT,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHOOSE_CREATE,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHOOSE_LOAD,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHOOSE_DELETE,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHOOSE_REDRAW,
-        FALSE) ;
+        FALSE);
 
-    ControlInitForJustUI() ;
-    MainUIStart() ;
+    ControlInitForJustUI();
+    MainUIStart();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -813,19 +855,20 @@ T_void SMCChooseChoicesEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseChoicesIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseChoicesIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseChoicesIdle") ;
+    DebugRoutine("SMCChooseChoicesIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
-    MainUIUpdate() ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
+    MainUIUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -840,22 +883,23 @@ T_void SMCChooseChoicesIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseChoicesExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMCChooseChoicesExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseChoicesExit") ;
+    DebugRoutine("SMCChooseChoicesExit");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    ControlFinish() ;
-    MainUIEnd() ;
+    ControlFinish();
+    MainUIEnd();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -869,32 +913,33 @@ T_void SMCChooseChoicesExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCreateEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCreateEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCreateEnter") ;
+    DebugRoutine("SMCChooseCreateEnter");
 //puts("SMCChooseCreateEnter") ;
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_COMPLETE,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_ABORT,
-        FALSE) ;
+        FALSE);
 
-    ControlInitForJustUI() ;
-    StatsCreateCharacterUIStart() ;
+    ControlInitForJustUI();
+    StatsCreateCharacterUIStart();
 
     /* Reset the time of day to 2:00 pm for created characters. */
-    MapSetDayOffset(0x2AAA8) ;
+    MapSetDayOffset(0x2AAA8);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -908,21 +953,22 @@ T_void SMCChooseCreateEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCreateIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCreateIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCreateIdle") ;
+    DebugRoutine("SMCChooseCreateIdle");
 //puts("SMCChooseCreateIdle") ;
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    StatsCreateCharacterUIUpdate() ;
+    StatsCreateCharacterUIUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -937,23 +983,24 @@ T_void SMCChooseCreateIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCreateExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMCChooseCreateExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCreateExit") ;
+    DebugRoutine("SMCChooseCreateExit");
 //puts("SMCChooseCreateExit") ;
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    StatsCreateCharacterUIEnd() ;
-    ControlFinish() ;
+    StatsCreateCharacterUIEnd();
+    ControlFinish();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -967,33 +1014,35 @@ T_void SMCChooseCreateExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseRequestCreateEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseRequestCreateEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
-    E_Boolean doAbort = FALSE ;
+    T_SMCChooseData *p_data;
+    E_Boolean doAbort = FALSE;
 
-    DebugRoutine("SMCChooseRequestCreateEnter") ;
+    DebugRoutine("SMCChooseRequestCreateEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_STATUS_OK,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_STATUS_ERROR,
-        FALSE) ;
+        FALSE);
 
     /* No password on created characters */
-    StatsSetPassword(StatsGetActive(), "") ;
+    StatsSetPassword(StatsGetActive(), "");
 
-    if (doAbort)  {
-        SMCChooseSetFlag(SMCCHOOSE_FLAG_CREATE_ABORT, TRUE) ;
+    if (doAbort)
+    {
+        SMCChooseSetFlag(SMCCHOOSE_FLAG_CREATE_ABORT, TRUE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1007,21 +1056,22 @@ T_void SMCChooseRequestCreateEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseRequestCreateIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseRequestCreateIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseRequestCreateIdle") ;
+    DebugRoutine("SMCChooseRequestCreateIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     StatsSaveCharacter(StatsGetActive());
-    SMCChooseSetFlag(SMCCHOOSE_FLAG_CREATE_STATUS_OK, TRUE) ;
+    SMCChooseSetFlag(SMCCHOOSE_FLAG_CREATE_STATUS_OK, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1035,31 +1085,32 @@ T_void SMCChooseRequestCreateIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseLoadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseLoadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseLoadEnter") ;
+    DebugRoutine("SMCChooseLoadEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_LOAD_STATUS_OK,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_LOAD_STATUS_INCORRECT,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_DOWNLOAD_COMPLETE,
-        FALSE) ;
+        FALSE);
 
     /* Reset the time of day to 6:00 am. */
-    MapSetDayOffset(0) ;
+    MapSetDayOffset(0);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1073,20 +1124,21 @@ T_void SMCChooseLoadEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseLoadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseLoadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseLoadIdle") ;
+    DebugRoutine("SMCChooseLoadIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    SMCChooseSetFlag(SMCCHOOSE_FLAG_LOAD_STATUS_OK, TRUE) ;
+    SMCChooseSetFlag(SMCCHOOSE_FLAG_LOAD_STATUS_OK, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1100,18 +1152,19 @@ T_void SMCChooseLoadIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDownloadCharacterEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDownloadCharacterEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDownloadCharacterEnter") ;
+    DebugRoutine("SMCChooseDownloadCharacterEnter");
 //puts("DownloadEnter") ;
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1125,39 +1178,40 @@ T_void SMCChooseDownloadCharacterEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDisplayStatsEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDisplayStatsEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDisplayStatsEnter") ;
+    DebugRoutine("SMCChooseDisplayStatsEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_BEGIN,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_PASSWORD_ENTERED,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHANGE_PASSWORD,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_EXIT,
-        FALSE) ;
+        FALSE);
 
     /* Record the screen */
-    GrActualScreenPush() ;
+    GrActualScreenPush();
 
     /* Load the character stats for the active character. */
-    StatsLoadCharacter(StatsGetActive()) ;
-    ControlInitForJustUI() ;
-    StatsLoadCharacterUIStart() ;
+    StatsLoadCharacter(StatsGetActive());
+    ControlInitForJustUI();
+    StatsLoadCharacterUIStart();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1171,15 +1225,16 @@ T_void SMCChooseDisplayStatsEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDisplayStatsIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDisplayStatsIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMCChooseDisplayStatsIdle") ;
+    DebugRoutine("SMCChooseDisplayStatsIdle");
 
-    StatsLoadCharacterUIUpdate() ;
+    StatsLoadCharacterUIUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1194,32 +1249,33 @@ T_void SMCChooseDisplayStatsIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDisplayStatsExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMCChooseDisplayStatsExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_SMCChooseData *p_data ;
-    T_TxtboxID passwordID ;
-    T_byte8 *p_password ;
+    T_SMCChooseData *p_data;
+    T_TxtboxID passwordID;
+    T_byte8 *p_password;
 
-    DebugRoutine("SMCChooseDisplayStatsExit") ;
+    DebugRoutine("SMCChooseDisplayStatsExit");
 //puts("SMCChooseDisplayStatsExit") ;
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     passwordID = FormGetObjID(LOAD_CHARACTER_PASSWORD_TEXT);
-    p_password = TxtboxGetData (passwordID);
+    p_password = TxtboxGetData(passwordID);
 //printf("StatsExit: %p (%-10.10s) %p (%-10.10s)\n", p_data->attemptPassword, p_data->attemptPassword, p_password, p_password) ; fflush(stdout) ;  delay(100) ;
-    strcpy(p_data->attemptPassword, p_password) ;
+    strcpy(p_data->attemptPassword, p_password);
 
-    StatsLoadCharacterUIEnd() ;
-    ControlFinish() ;
+    StatsLoadCharacterUIEnd();
+    ControlFinish();
 
-    GrActualScreenPop() ;
+    GrActualScreenPop();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1233,36 +1289,40 @@ T_void SMCChooseDisplayStatsExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCheckPasswordForLoadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCheckPasswordForLoadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
-    T_byte8 password[20] ;
+    T_SMCChooseData *p_data;
+    T_byte8 password[20];
 
-    DebugRoutine("SMCChooseCheckPasswordForLoadEnter") ;
+    DebugRoutine("SMCChooseCheckPasswordForLoadEnter");
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_PASSWORD_OK,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_PASSWORD_NOT_OK,
-        FALSE) ;
+        FALSE);
 
-    ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_UNKNOWN) ;
+    ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_UNKNOWN);
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    StatsGetPassword(StatsGetActive(), password) ;
-    if (strncasecmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)  {
-        ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_OK) ;
-    } else {
-        ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_WRONG) ;
+    StatsGetPassword(StatsGetActive(), password);
+    if (strncasecmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)
+    {
+        ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_OK);
+    }
+    else
+    {
+        ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_WRONG);
     }
 
 //    PromptStatusBarInit("Checking password ...", 100) ;
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1276,35 +1336,39 @@ T_void SMCChooseCheckPasswordForLoadEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCheckPasswordForLoadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCheckPasswordForLoadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    E_checkPasswordStatus passwordStatus ;
+    E_checkPasswordStatus passwordStatus;
 
-    DebugRoutine("SMCChooseCheckPasswordForLoadIdle") ;
+    DebugRoutine("SMCChooseCheckPasswordForLoadIdle");
 
-    passwordStatus = ClientGetCheckPasswordStatus() ;
+    passwordStatus = ClientGetCheckPasswordStatus();
 
-    if (passwordStatus == CHECK_PASSWORD_STATUS_OK)  {
+    if (passwordStatus == CHECK_PASSWORD_STATUS_OK)
+    {
         SMCChooseSetFlag(
             SMCCHOOSE_FLAG_PASSWORD_OK,
-            TRUE) ;
+            TRUE);
 //        PromptStatusBarClose() ;
         /* Fade to black */
-        ColorFadeTo(0,0,0);
+        ColorFadeTo(0, 0, 0);
         /* clear screen */
-        GrDrawRectangle (0,0,319,199,0);
+        GrDrawRectangle(0, 0, 319, 199, 0);
 
-    } else if (passwordStatus == CHECK_PASSWORD_STATUS_WRONG)  {
+    }
+    else if (passwordStatus == CHECK_PASSWORD_STATUS_WRONG)
+    {
         SMCChooseSetFlag(
             SMCCHOOSE_FLAG_PASSWORD_NOT_OK,
-            TRUE) ;
+            TRUE);
 //        PromptStatusBarClose() ;
-        PromptDisplayMessage("Incorrect password.  Try again.") ;
+        PromptDisplayMessage("Incorrect password.  Try again.");
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1318,62 +1382,72 @@ T_void SMCChooseCheckPasswordForLoadIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseChangePasswordEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseChangePasswordEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
-    T_byte8 password[40] ;
-    T_byte8 newPassword[40] ;
-    T_byte8 oldPassword[40] ;
+    T_SMCChooseData *p_data;
+    T_byte8 password[40];
+    T_byte8 newPassword[40];
+    T_byte8 oldPassword[40];
 
-    DebugRoutine("SMCChooseChangePasswordEnter") ;
+    DebugRoutine("SMCChooseChangePasswordEnter");
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHANGE_PASSWORD_COMPLETE,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CHANGE_PASSWORD_ABORT,
-        FALSE) ;
+        FALSE);
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     /* Clear out the password entries first. */
-    password[0] = '\0' ;
-    newPassword[0] = '\0' ;
+    password[0] = '\0';
+    newPassword[0] = '\0';
 
     /* Get the old password. */
-    StatsGetPassword(StatsGetActive(), oldPassword) ;
+    StatsGetPassword(StatsGetActive(), oldPassword);
 
     /* Ask to enter a password and then the new password. */
     /* If at any time, the user selects cancel, abort. */
     /* If both are entered, send up the packet. */
     if ((strlen(oldPassword) == 0) || (PromptForString(
-            "Enter password",
-            MAX_SIZE_PASSWORD,
-            password) == TRUE))  {
-        if (strncasecmp(oldPassword, password, 12) != 0)  {
+        "Enter password",
+        MAX_SIZE_PASSWORD,
+        password) == TRUE))
+    {
+        if (strncasecmp(oldPassword, password, 12) != 0)
+        {
             /* passwords don't match up.  Bad password status */
-            ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_WRONG) ;
-        } else {
+            ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_WRONG);
+        }
+        else
+        {
             /* ok, correct password.  Enter a new one. */
             if (PromptForString(
-                    "Enter new password",
-                    MAX_SIZE_PASSWORD,
-                    newPassword) == TRUE)  {
-                StatsSetPassword(StatsGetActive(), newPassword) ;
-                StatsSaveCharacter(StatsGetActive()) ;
-                ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_OK) ;
-            } else {
-                ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_ABORT) ;
+                "Enter new password",
+                MAX_SIZE_PASSWORD,
+                newPassword) == TRUE)
+            {
+                StatsSetPassword(StatsGetActive(), newPassword);
+                StatsSaveCharacter(StatsGetActive());
+                ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_OK);
+            }
+            else
+            {
+                ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_ABORT);
             }
         }
-    } else {
-        ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_ABORT) ;
+    }
+    else
+    {
+        ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_ABORT);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1387,32 +1461,38 @@ T_void SMCChooseChangePasswordEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseChangePasswordIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseChangePasswordIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    E_changePasswordStatus passwordStatus ;
+    E_changePasswordStatus passwordStatus;
 
-    DebugRoutine("SMCChooseChangePasswordIdle") ;
+    DebugRoutine("SMCChooseChangePasswordIdle");
 
-    passwordStatus = ClientGetChangePasswordStatus() ;
-    if (passwordStatus == CHANGE_PASSWORD_STATUS_OK)  {
-        PromptDisplayMessage("Password changed.") ;
-
-        SMCChooseSetFlag(
-            SMCCHOOSE_FLAG_CHANGE_PASSWORD_COMPLETE,
-            TRUE) ;
-    } else if (passwordStatus == CHANGE_PASSWORD_STATUS_WRONG)  {
-        PromptDisplayMessage("Incorrect password.") ;
+    passwordStatus = ClientGetChangePasswordStatus();
+    if (passwordStatus == CHANGE_PASSWORD_STATUS_OK)
+    {
+        PromptDisplayMessage("Password changed.");
 
         SMCChooseSetFlag(
             SMCCHOOSE_FLAG_CHANGE_PASSWORD_COMPLETE,
-            TRUE) ;
-    } else if (passwordStatus == CHANGE_PASSWORD_STATUS_ABORT)  {
-        SMCChooseSetFlag(SMCCHOOSE_FLAG_CHANGE_PASSWORD_ABORT, TRUE) ;
+            TRUE);
+    }
+    else if (passwordStatus == CHANGE_PASSWORD_STATUS_WRONG)
+    {
+        PromptDisplayMessage("Incorrect password.");
+
+        SMCChooseSetFlag(
+            SMCCHOOSE_FLAG_CHANGE_PASSWORD_COMPLETE,
+            TRUE);
+    }
+    else if (passwordStatus == CHANGE_PASSWORD_STATUS_ABORT)
+    {
+        SMCChooseSetFlag(SMCCHOOSE_FLAG_CHANGE_PASSWORD_ABORT, TRUE);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1426,29 +1506,30 @@ T_void SMCChooseChangePasswordIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseEnableBeginEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseEnableBeginEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseEnableBeginEnter") ;
+    DebugRoutine("SMCChooseEnableBeginEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_ENABLE_COMPLETE,
-        FALSE) ;
+        FALSE);
 
 //    buttonID = FormGetObjID(LOAD_CHARACTER_BEGIN_BUTTON);
 //    ButtonEnable(buttonID);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_ENABLE_COMPLETE,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1462,65 +1543,72 @@ T_void SMCChooseEnableBeginEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDeleteEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDeleteEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
-    T_statsSavedCharacterID* chardata;
-	T_byte8 tempstr[64];
+    T_SMCChooseData *p_data;
+    T_statsSavedCharacterID *chardata;
+    T_byte8 tempstr[64];
     T_byte8 password[14];
-    T_byte8 oldPassword[64] ;
+    T_byte8 oldPassword[64];
 
-    DebugRoutine("SMCChooseDeleteEnter") ;
+    DebugRoutine("SMCChooseDeleteEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_DELETE_PASSWORD_OK,
-        FALSE) ;
+        FALSE);
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_DELETE_PASSWORD_NOT_OK,
-        FALSE) ;
+        FALSE);
 
-    StatsGetPassword(StatsGetActive(), oldPassword) ;
+    StatsGetPassword(StatsGetActive(), oldPassword);
 
     /* get character id structure for selected character */
-    chardata=StatsGetSavedCharacterIDStruct (StatsGetActive());
-    DebugCheck(chardata->status < CHARACTER_STATUS_UNDEFINED) ;
+    chardata = StatsGetSavedCharacterIDStruct(StatsGetActive());
+    DebugCheck(chardata->status < CHARACTER_STATUS_UNDEFINED);
     if (chardata->status < CHARACTER_STATUS_UNDEFINED)
     {
         /* get password */
-        sprintf(tempstr, "^001Enter password to confirm ^021delete") ;
-        strcpy (password,"");
+        sprintf(tempstr, "^001Enter password to confirm ^021delete");
+        strcpy (password, "");
 
-        if ((strlen(oldPassword)==0) ||
-            (PromptForString(tempstr,12,password)==TRUE))  {
+        if ((strlen(oldPassword) == 0) ||
+            (PromptForString(tempstr, 12, password) == TRUE))
+        {
             /* check to see if password is correct */
-            if (stricmp (password, oldPassword)==0)  {
+            if (stricmp(password, oldPassword) == 0)
+            {
                 /* success. character will be deleted */
                 /*         delete code here           */
                 SMCChooseSetFlag(
                     SMCCHOOSE_FLAG_DELETE_PASSWORD_OK,
-                    TRUE) ;
-            } else {
-                strcpy (tempstr,"Improper password. Delete command canceled.");
+                    TRUE);
+            }
+            else
+            {
+                strcpy (tempstr, "Improper password. Delete command canceled.");
                 PromptDisplayMessage(tempstr);
                 /* failure. return to mainui after notification of failure */
 
                 SMCChooseSetFlag(
                     SMCCHOOSE_FLAG_DELETE_PASSWORD_NOT_OK,
-                    TRUE) ;
+                    TRUE);
             }
-        } else {
+        }
+        else
+        {
             /* Go back, user aborted. */
             SMCChooseSetFlag(
                 SMCCHOOSE_FLAG_DELETE_PASSWORD_NOT_OK,
-                TRUE) ;
+                TRUE);
         }
     }
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1535,19 +1623,20 @@ T_void SMCChooseDeleteEnter(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDeleteExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMCChooseDeleteExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDeleteExit") ;
+    DebugRoutine("SMCChooseDeleteExit");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1561,22 +1650,23 @@ T_void SMCChooseDeleteExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDeleteCharacterEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDeleteCharacterEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDeleteCharacterEnter") ;
+    DebugRoutine("SMCChooseDeleteCharacterEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_DELETE_COMPLETE,
-        FALSE) ;
+        FALSE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1590,29 +1680,33 @@ T_void SMCChooseDeleteCharacterEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseDeleteCharacterIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseDeleteCharacterIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseDeleteCharacterIdle") ;
+    DebugRoutine("SMCChooseDeleteCharacterIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     /* OK, we can delete the character. */
-    if (PromptForBoolean("Are you sure you want to delete?", FALSE) == TRUE)  {
+    if (PromptForBoolean("Are you sure you want to delete?", FALSE) == TRUE)
+    {
         StatsDeleteCharacter(StatsGetActive());
 
         /* inform user of deletion */
-        PromptDisplayMessage ("Character deleted.");
-    } else {
-        PromptDisplayMessage ("Character NOT deleted.");
+        PromptDisplayMessage("Character deleted.");
     }
-    SMCChooseSetFlag(SMCCHOOSE_FLAG_DELETE_COMPLETE, TRUE) ;
+    else
+    {
+        PromptDisplayMessage("Character NOT deleted.");
+    }
+    SMCChooseSetFlag(SMCCHOOSE_FLAG_DELETE_COMPLETE, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -1626,20 +1720,21 @@ T_void SMCChooseDeleteCharacterIdle(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChoosePlayGameEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChoosePlayGameEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChoosePlayGameEnter") ;
+    DebugRoutine("SMCChoosePlayGameEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    SMMainSetFlag(SMMAIN_FLAG_BEGIN_GAME, TRUE) ;
+    SMMainSetFlag(SMMAIN_FLAG_BEGIN_GAME, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1652,21 +1747,22 @@ T_void SMCChoosePlayGameEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseExitEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseExitEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseExitEnter") ;
+    DebugRoutine("SMCChooseExitEnter");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
 //puts("ExitEnter") ; fflush(stdout) ;
-    SMMainSetFlag(SMMAIN_FLAG_LEAVE_SERVER, TRUE) ;
+    SMMainSetFlag(SMMAIN_FLAG_LEAVE_SERVER, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1679,47 +1775,49 @@ T_void SMCChooseExitEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCreateUploadEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCreateUploadEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCreateUploadEnter") ;
+    DebugRoutine("SMCChooseCreateUploadEnter");
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_UPLOAD_OK,
-        FALSE) ;
+        FALSE);
 
     /* Send the character. */
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_UPLOAD_OK,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /* Note that a create character upload is complete. */
 /* LES 06/24/96 Created */
-static T_void ICreateUploadComplete(
-                  T_void *p_data,
-                  T_word32 size,
-                  T_word32 extraData)
+static T_void
+ICreateUploadComplete(
+    T_void *p_data,
+    T_word32 size,
+    T_word32 extraData)
 {
-    DebugRoutine("ICreateUploadComplete") ;
+    DebugRoutine("ICreateUploadComplete");
 
     /* Let go of the uploaded character. */
-    MemFree(p_data) ;
+    MemFree(p_data);
 
     /* Note that the upload is complete. */
     SMCChooseSetFlag(
         SMCCHOOSE_FLAG_CREATE_UPLOAD_OK,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1732,18 +1830,19 @@ static T_void ICreateUploadComplete(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMCChooseCreateUploadIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMCChooseCreateUploadIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_SMCChooseData *p_data ;
+    T_SMCChooseData *p_data;
 
-    DebugRoutine("SMCChooseCreateUploadIdle") ;
+    DebugRoutine("SMCChooseCreateUploadIdle");
 
-    p_data = (T_SMCChooseData *)StateMachineGetExtraData(G_smHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_SMCChooseData *) StateMachineGetExtraData(G_smHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

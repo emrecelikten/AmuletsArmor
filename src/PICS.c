@@ -14,8 +14,8 @@
  *<!-----------------------------------------------------------------------*/
 #include "PICS.H"
 
-static T_resourceFile G_pictureResFile ;
-static E_Boolean G_picturesActive = FALSE ;
+static T_resourceFile G_pictureResFile;
+static E_Boolean G_picturesActive = FALSE;
 
 /*-------------------------------------------------------------------------*
  * Routine:  PicturesInitialize
@@ -25,18 +25,19 @@ static E_Boolean G_picturesActive = FALSE ;
  *  all future picture locking and unlocking.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PicturesInitialize(T_void)
+T_void
+PicturesInitialize(T_void)
 {
-    DebugRoutine("PicturesInitialize") ;
-    DebugCheck(G_picturesActive == FALSE) ;
+    DebugRoutine("PicturesInitialize");
+    DebugCheck(G_picturesActive == FALSE);
 
     /* Open up the resource file for future accesses. */
-    G_pictureResFile = ResourceOpen(PICTURE_RESOURCE_FILENAME) ;
+    G_pictureResFile = ResourceOpen(PICTURE_RESOURCE_FILENAME);
 
     /* Note that we are now active. */
-    G_picturesActive = TRUE ;
+    G_picturesActive = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -48,18 +49,19 @@ T_void PicturesInitialize(T_void)
  *  the resource file is closed out.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PicturesFinish(T_void)
+T_void
+PicturesFinish(T_void)
 {
-    DebugRoutine("PicturesFinish") ;
-    DebugCheck(G_picturesActive == TRUE) ;
+    DebugRoutine("PicturesFinish");
+    DebugCheck(G_picturesActive == TRUE);
 
     /* Close the already open resource file. */
-    ResourceClose(G_pictureResFile) ;
+    ResourceClose(G_pictureResFile);
 
     /* Note that we are no longer active. */
-    G_picturesActive = FALSE ;
+    G_picturesActive = FALSE;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -76,52 +78,55 @@ T_void PicturesFinish(T_void)
  *  @return Pointer to picture data.
  *
  *<!-----------------------------------------------------------------------*/
-typedef struct {
-    T_byte8 resID[4] ;         /* Should contain "ReS"+'\0' id */
-    T_byte8 p_resourceName[14] ; /* Case sensitive, 13 characters + '\0' */
-    T_word32 fileOffset ;
-    T_word32 size ;              /* Size in bytes. */
-    T_word16 lockCount ;         /* 0 = unlocked. */
-    T_byte8 resourceType ;
-    T_byte8 *p_data ;
-    T_resourceFile resourceFile ;      /* Resource file this is from. */
-    T_void *ownerDir ;        /* Locked in owner directory (or NULL) */
-} T_resourceEntry ;
-
-T_byte8 *PictureLock(T_byte8 *name, T_resource *res)
+typedef struct
 {
-    T_resource found ;
-    T_byte8 *where = NULL ;
+    T_byte8 resID[4];         /* Should contain "ReS"+'\0' id */
+    T_byte8 p_resourceName[14]; /* Case sensitive, 13 characters + '\0' */
+    T_word32 fileOffset;
+    T_word32 size;              /* Size in bytes. */
+    T_word16 lockCount;         /* 0 = unlocked. */
+    T_byte8 resourceType;
+    T_byte8 *p_data;
+    T_resourceFile resourceFile;      /* Resource file this is from. */
+    T_void *ownerDir;        /* Locked in owner directory (or NULL) */
+} T_resourceEntry;
 
-    DebugRoutine("PictureLock") ;
-    DebugCheck(name != NULL) ;
-    DebugCheck(res != NULL) ;
-    DebugCheck(G_picturesActive == TRUE) ;
+T_byte8 *
+PictureLock(T_byte8 *name, T_resource *res)
+{
+    T_resource found;
+    T_byte8 *where = NULL;
+
+    DebugRoutine("PictureLock");
+    DebugCheck(name != NULL);
+    DebugCheck(res != NULL);
+    DebugCheck(G_picturesActive == TRUE);
 
     /* Look up the picture in the index. */
 //printf("> %s\n", name) ;
-    found = ResourceFind(G_pictureResFile, name) ;
+    found = ResourceFind(G_pictureResFile, name);
 //printf("Locking pic %s (%p) for %s\n", name, found, DebugGetCallerName()) ;
-    if (found == RESOURCE_BAD)  {
+    if (found == RESOURCE_BAD)
+    {
 #ifndef NDEBUG
         printf("Cannot find picture named '%s'\n", name) ;
 #endif
-        found = ResourceFind(G_pictureResFile, "DRK42") ;
+        found = ResourceFind(G_pictureResFile, "DRK42");
     }
 
-DebugCheck(found != RESOURCE_BAD) ;
+    DebugCheck(found != RESOURCE_BAD);
 
     /* If we found it, we need to lock it in memory. */
     if (found != RESOURCE_BAD)
-        where = ResourceLock(found) ;
+        where = ResourceLock(found);
 
     /* Record the resource we got the data from.  Needed for unlocking. */
-    *res = found ;
+    *res = found;
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return a pointer to the data part. */
-    return (where+(2*sizeof(T_word16))) ;
+    return (where + (2 * sizeof(T_word16)));
 }
 
 /*-------------------------------------------------------------------------*
@@ -140,18 +145,19 @@ DebugCheck(found != RESOURCE_BAD) ;
  *  @return Pointer to picture data.
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *PictureLockData(T_byte8 *name, T_resource *res)
+T_byte8 *
+PictureLockData(T_byte8 *name, T_resource *res)
 {
-    T_resource found ;
-    T_byte8 *where = NULL ;
+    T_resource found;
+    T_byte8 *where = NULL;
 
-    DebugRoutine("PictureLockData") ;
-    DebugCheck(name != NULL) ;
-    DebugCheck(res != NULL) ;
-    DebugCheck(G_picturesActive == TRUE) ;
+    DebugRoutine("PictureLockData");
+    DebugCheck(name != NULL);
+    DebugCheck(res != NULL);
+    DebugCheck(G_picturesActive == TRUE);
 
     /* Look up the picture in the index. */
-    found = ResourceFind(G_pictureResFile, name) ;
+    found = ResourceFind(G_pictureResFile, name);
 #ifndef NDEBUG
     if (found == RESOURCE_BAD)  {
         printf("Cannot find picture named '%s'\n", name) ;
@@ -159,18 +165,18 @@ T_byte8 *PictureLockData(T_byte8 *name, T_resource *res)
     }
 #endif
 
-DebugCheck(found != RESOURCE_BAD) ;
+    DebugCheck(found != RESOURCE_BAD);
     /* If we found it, we need to lock it in memory. */
     if (found != RESOURCE_BAD)
-        where = ResourceLock(found) ;
+        where = ResourceLock(found);
 
     /* Record the resource we got the data from.  Needed for unlocking. */
-    *res = found ;
+    *res = found;
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return a pointer to the data part. */
-    return where ;
+    return where;
 }
 
 /*-------------------------------------------------------------------------*
@@ -182,17 +188,18 @@ DebugCheck(found != RESOURCE_BAD) ;
  *  @param res -- Resource to the picture.
  *
  *<!-----------------------------------------------------------------------*/
-T_void PictureUnlock(T_resource res)
+T_void
+PictureUnlock(T_resource res)
 {
-    DebugRoutine("PictureUnlock") ;
-    DebugCheck(res != RESOURCE_BAD) ;
-    DebugCheck(G_picturesActive == TRUE) ;
+    DebugRoutine("PictureUnlock");
+    DebugCheck(res != RESOURCE_BAD);
+    DebugCheck(G_picturesActive == TRUE);
 
 //printf("Unlock %s (%p) by %s\n", ((T_resourceEntry *)res)->p_resourceName, res, DebugGetCallerName()) ;
     /* All we need to do at this point is unlock the resource. */
-    ResourceUnlock(res) ;
+    ResourceUnlock(res);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -207,29 +214,30 @@ T_void PictureUnlock(T_resource res)
  *  @return TRUE = found, FALSE = not found
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean PictureExist(T_byte8 *name)
+E_Boolean
+PictureExist(T_byte8 *name)
 {
-    E_Boolean picExist ;
-    T_resource res ;
+    E_Boolean picExist;
+    T_resource res;
 
-    DebugRoutine("PictureExist") ;
-    DebugCheck(name != NULL) ;
-    DebugCheck(G_picturesActive == TRUE) ;
+    DebugRoutine("PictureExist");
+    DebugCheck(name != NULL);
+    DebugCheck(G_picturesActive == TRUE);
 
     /* Look up the picture in the index. */
-    res = ResourceFind(G_pictureResFile, name) ;
+    res = ResourceFind(G_pictureResFile, name);
 
     /* Check to see if it is a good resource. */
-    picExist = (res == RESOURCE_BAD)?FALSE:TRUE ;
+    picExist = (res == RESOURCE_BAD) ? FALSE : TRUE;
 
     /* Don't hold onto it, just wanted to know if it was there. */
     if (picExist)
-        ResourceUnfind(res) ;
+        ResourceUnfind(res);
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return the boolean telling if the picture exists. */
-    return (picExist) ;
+    return (picExist);
 }
 
 /*-------------------------------------------------------------------------*
@@ -244,23 +252,24 @@ E_Boolean PictureExist(T_byte8 *name)
  *  @param sizeY -- Get the size of the picture in the Y
  *
  *<!-----------------------------------------------------------------------*/
-T_void PictureGetXYSize(T_void *p_picture, T_word16 *sizeX, T_word16 *sizeY)
+T_void
+PictureGetXYSize(T_void *p_picture, T_word16 *sizeX, T_word16 *sizeY)
 {
-    T_word16 *p_data ;
+    T_word16 *p_data;
 
-    DebugRoutine("PictureGetXYSize") ;
-    DebugCheck(p_picture != NULL) ;
-    DebugCheck(sizeX != NULL) ;
-    DebugCheck(sizeY != NULL) ;
+    DebugRoutine("PictureGetXYSize");
+    DebugCheck(p_picture != NULL);
+    DebugCheck(sizeX != NULL);
+    DebugCheck(sizeY != NULL);
 
     /* Convert to 16 bit word pointer. */
-    p_data = (T_word16 *)p_picture ;
+    p_data = (T_word16 *) p_picture;
 
     /* Get data behind this point. */
-    *sizeX = p_data[-2] ;
-    *sizeY = p_data[-1] ;
+    *sizeX = p_data[-2];
+    *sizeY = p_data[-1];
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -276,19 +285,20 @@ T_void PictureGetXYSize(T_void *p_picture, T_word16 *sizeX, T_word16 *sizeY)
  *      RESOURCE_BAD
  *
  *<!-----------------------------------------------------------------------*/
-T_resource PictureFind(T_byte8 *name)
+T_resource
+PictureFind(T_byte8 *name)
 {
-    T_resource res ;
+    T_resource res;
 
-    DebugRoutine("PictureFind") ;
-    DebugCheck(name != NULL) ;
+    DebugRoutine("PictureFind");
+    DebugCheck(name != NULL);
 
     /* Look up the picture in the index. */
-    res = ResourceFind(G_pictureResFile, name) ;
+    res = ResourceFind(G_pictureResFile, name);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return res ;
+    return res;
 }
 
 /*-------------------------------------------------------------------------*
@@ -300,15 +310,16 @@ T_resource PictureFind(T_byte8 *name)
  *  @param res -- Resource to unfind
  *
  *<!-----------------------------------------------------------------------*/
-T_void PictureUnfind(T_resource res)
+T_void
+PictureUnfind(T_resource res)
 {
-    DebugRoutine("PictureUnfind") ;
-    DebugCheck(res != RESOURCE_BAD) ;
+    DebugRoutine("PictureUnfind");
+    DebugCheck(res != RESOURCE_BAD);
 
     /* Get rid of that picture. */
-    ResourceUnfind(res) ;
+    ResourceUnfind(res);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -320,16 +331,17 @@ T_void PictureUnfind(T_resource res)
  *  @param res -- Resource to unlock and unfind
  *
  *<!-----------------------------------------------------------------------*/
-T_void PictureUnlockAndUnfind(T_resource res)
+T_void
+PictureUnlockAndUnfind(T_resource res)
 {
-    DebugRoutine("PictureUnlockAndUnfind") ;
-    DebugCheck(res != RESOURCE_BAD) ;
+    DebugRoutine("PictureUnlockAndUnfind");
+    DebugCheck(res != RESOURCE_BAD);
 
     /* Get rid of that picture. */
-    ResourceUnlock(res) ;
-    ResourceUnfind(res) ;
+    ResourceUnlock(res);
+    ResourceUnfind(res);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -349,21 +361,22 @@ T_void PictureUnlockAndUnfind(T_resource res)
  *  @return Pointer to resource data.
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *PictureLockQuick(T_resource res)
+T_byte8 *
+PictureLockQuick(T_resource res)
 {
-    T_byte8 *p_where ;
+    T_byte8 *p_where;
 
-    DebugRoutine("PictureLockQuick") ;
-    DebugCheck(res != RESOURCE_BAD) ;
+    DebugRoutine("PictureLockQuick");
+    DebugCheck(res != RESOURCE_BAD);
 
     /* If we found it, we need to lock it in memory. */
     if (res != RESOURCE_BAD)
-        p_where = ResourceLock(res) ;
+        p_where = ResourceLock(res);
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return a pointer to the data part. */
-    return (p_where+(2*sizeof(T_word16))) ;
+    return (p_where + (2 * sizeof(T_word16)));
 }
 
 /*-------------------------------------------------------------------------*
@@ -382,18 +395,19 @@ T_byte8 *PictureLockQuick(T_resource res)
  *  @return Pointer to bitmap
  *
  *<!-----------------------------------------------------------------------*/
-T_bitmap *PictureToBitmap(T_byte8 *pic)
+T_bitmap *
+PictureToBitmap(T_byte8 *pic)
 {
-    T_bitmap *p_bitmap ;
+    T_bitmap *p_bitmap;
 
-    DebugRoutine("PictureToBitmap") ;
-    DebugCheck(pic != NULL) ;
+    DebugRoutine("PictureToBitmap");
+    DebugCheck(pic != NULL);
 
-    p_bitmap = (T_bitmap *)pic ;
+    p_bitmap = (T_bitmap *) pic;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return(&p_bitmap[-1]) ;
+    return (&p_bitmap[-1]);
 }
 
 /*-------------------------------------------------------------------------*
@@ -407,23 +421,24 @@ T_bitmap *PictureToBitmap(T_byte8 *pic)
  *  @return picture width
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PictureGetWidth(T_void *p_picture)
+T_word16
+PictureGetWidth(T_void *p_picture)
 {
-    T_word16 width ;
-    T_word16 *p_data ;
+    T_word16 width;
+    T_word16 *p_data;
 
-    DebugRoutine("PictureGetWidth") ;
-    DebugCheck(p_picture != NULL) ;
+    DebugRoutine("PictureGetWidth");
+    DebugCheck(p_picture != NULL);
 
     /* Convert to 16 bit word pointer. */
-    p_data = (T_word16 *)p_picture ;
+    p_data = (T_word16 *) p_picture;
 
     /* Get data behind this point. */
-    width = p_data[-1] ;
+    width = p_data[-1];
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return width ;
+    return width;
 }
 
 
@@ -438,23 +453,24 @@ T_word16 PictureGetWidth(T_void *p_picture)
  *  @return picture height
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 PictureGetHeight(T_void *p_picture)
+T_word16
+PictureGetHeight(T_void *p_picture)
 {
-    T_word16 height ;
-    T_word16 *p_data ;
+    T_word16 height;
+    T_word16 *p_data;
 
-    DebugRoutine("PictureGetHeight") ;
-    DebugCheck(p_picture != NULL) ;
+    DebugRoutine("PictureGetHeight");
+    DebugCheck(p_picture != NULL);
 
     /* Convert to 16 bit word pointer. */
-    p_data = (T_word16 *)p_picture ;
+    p_data = (T_word16 *) p_picture;
 
     /* Get data behind this point. */
-    height = p_data[-2] ;
+    height = p_data[-2];
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return height ;
+    return height;
 }
 
 #ifndef NDEBUG
@@ -536,21 +552,22 @@ T_void PictureCheck(T_void *p_picture)
  *  @return Pointer to resource data.
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *PictureLockDataQuick(T_resource res)
+T_byte8 *
+PictureLockDataQuick(T_resource res)
 {
-    T_byte8 *p_where ;
+    T_byte8 *p_where;
 
-    DebugRoutine("PictureDataLockQuick") ;
-    DebugCheck(res != RESOURCE_BAD) ;
+    DebugRoutine("PictureDataLockQuick");
+    DebugCheck(res != RESOURCE_BAD);
 
     /* If we found it, we need to lock it in memory. */
     if (res != RESOURCE_BAD)
-        p_where = ResourceLock(res) ;
+        p_where = ResourceLock(res);
 
-    DebugEnd() ;
+    DebugEnd();
 
     /* Return a pointer to the data part. */
-    return (p_where) ;
+    return (p_where);
 }
 
 /*-------------------------------------------------------------------------*
@@ -565,20 +582,21 @@ T_byte8 *PictureLockDataQuick(T_resource res)
  *  @return Found name
  *
  *<!-----------------------------------------------------------------------*/
-T_byte8 *PictureGetName(T_void *p_picture)
+T_byte8 *
+PictureGetName(T_void *p_picture)
 {
-    T_byte8 *p_name ;
+    T_byte8 *p_name;
 
-    DebugRoutine("PictureGetName") ;
-    DebugCheck(p_picture != NULL) ;
+    DebugRoutine("PictureGetName");
+    DebugCheck(p_picture != NULL);
 
     /* Convert the picture into its basic data form */
     /* and the resource name. */
-    p_name = ResourceGetName(PictureToBitmap((T_byte8 *)p_picture)) ;
+    p_name = ResourceGetName(PictureToBitmap((T_byte8 *) p_picture));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_name ;
+    return p_name;
 }
 
 /** @} */

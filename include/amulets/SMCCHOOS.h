@@ -57,20 +57,24 @@
 #define SMCCHOOSE_FLAG_UNKNOWN                             26
 #define NUMBER_SMCCHOOSE_FLAGS    SMCCHOOSE_FLAG_UNKNOWN
 
+T_stateMachineHandle
+SMCChooseInitialize(T_void);
 
-T_stateMachineHandle SMCChooseInitialize(T_void) ;
+T_void
+SMCChooseFinish(T_void);
 
-T_void SMCChooseFinish(T_void) ;
+T_void
+SMCChooseUpdate(T_void);
 
-T_void SMCChooseUpdate(T_void) ;
+E_Boolean
+SMCChooseCheckFlag(
+    T_stateMachineHandle handle,
+    T_word32 flag);
 
-E_Boolean SMCChooseCheckFlag(
-              T_stateMachineHandle handle,
-              T_word32 flag) ;
-
-T_void SMCChooseSetFlag(
-           T_word16 flag,
-           E_Boolean state) ;
+T_void
+SMCChooseSetFlag(
+    T_word16 flag,
+    E_Boolean state);
 
 #endif
 

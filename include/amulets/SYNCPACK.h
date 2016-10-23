@@ -5,7 +5,7 @@
 #ifndef _SYNCPACK_H_
 #define _SYNCPACK_H_
 
-typedef T_byte8 T_syncPacketFieldsAvail ;
+typedef T_byte8 T_syncPacketFieldsAvail;
 #define SYNC_PACKET_FIELD_AVAIL_X    0x01      /* ---- ---1 */
 #define SYNC_PACKET_FIELD_AVAIL_Y    0x02      /* ---- --1- */
 #define SYNC_PACKET_FIELD_AVAIL_Z    0x04      /* ---- -1-- */
@@ -13,7 +13,7 @@ typedef T_byte8 T_syncPacketFieldsAvail ;
 #define SYNC_PACKET_FIELD_STANCE     0x10      /* ---1 ---- */
 #define SYNC_PACKET_FIELD_ACTION     0x20      /* --1- ---- */
 
-typedef T_byte8 T_syncPacketStanceAndVis ;
+typedef T_byte8 T_syncPacketStanceAndVis;
 #define SYNC_PACKET_STANCE_AND_VIS_INVISIBLE    0x80
 #define SYNC_PACKET_STANCE_AND_VIS_TRANSLUCENT  0x40
 #define SYNC_PACKET_STANCE_AND_VIS_STEALTHY     0x20
@@ -48,7 +48,7 @@ typedef T_byte8 T_syncPacketStanceAndVis ;
                              previous ID_SELF packets.
 */
 
-typedef T_byte8 T_playerAction ;
+typedef T_byte8 T_playerAction;
 #define PLAYER_ACTION_NONE                  0
 #define PLAYER_ACTION_CHANGE_SELF           1
 #define PLAYER_ACTION_MELEE_ATTACK          2
@@ -72,37 +72,38 @@ typedef T_byte8 T_playerAction ;
 #define PLAYER_ACTION_UNKNOWN               20
 
 /* Fully available SYNC packet.  Only data elements that change are sent. */
-typedef struct {
+typedef struct
+{
     /* 0-255, detects when out of sync.  Always starts at 0. */
-    T_byte8 syncNumber ;
+    T_byte8 syncNumber;
 
     /* Delta time since last update.  Sync clock always starts at 0. */
-    T_byte8 deltaTime ;
+    T_byte8 deltaTime;
 
     /* Tells which of the following data items are available. */
-    T_syncPacketFieldsAvail fieldsAvailable ;
+    T_syncPacketFieldsAvail fieldsAvailable;
 
     /* Object Id of this player. */
-    T_word16 playerObjectId ;
+    T_word16 playerObjectId;
 
     /* Position and angle of this player. */
-    T_sword16 x ;
-    T_sword16 y ;
-    T_sword16 z ;
-    T_word16 angle ;
+    T_sword16 x;
+    T_sword16 y;
+    T_sword16 z;
+    T_word16 angle;
 
     /* Visibility of the player. */
-    T_syncPacketStanceAndVis stanceAndVisibility ;
+    T_syncPacketStanceAndVis stanceAndVisibility;
 
     /* action and data for action. */
-    T_playerAction actionType ;
-    T_word16 actionData[4] ;
+    T_playerAction actionType;
+    T_word16 actionData[4];
 
 #ifndef COMPILE_OPTION_DONT_CHECK_SYNC_OBJECT_IDS
-    T_word16 nextObjectId ;      /* Server Id's must match */
-    T_word16 nextObjectIdWhen ;
+    T_word16 nextObjectId;      /* Server Id's must match */
+    T_word16 nextObjectIdWhen;
 #endif
-} T_syncronizePacket ;
+} T_syncronizePacket;
 
 #endif
 

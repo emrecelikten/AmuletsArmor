@@ -16,25 +16,28 @@
 #define UI_BUTTON_STATE_PRESSED     0x02    /* ------1- */
 #define UI_BUTTON_STATE_UNKNOWN     0xFC    /* 111111-- */
 
-typedef struct {
-    T_resource focusPic ;
-    T_resource notFocusPic ;
-    T_resource pressedPic ;
-    T_byte8 f_buttonState ;
-    T_buttonHandler buttonHandler ;
-    T_word16 x, y ;
-    T_resource lastPic ;
-    T_word32 accessoryData ;
-} T_UIButtonStruct ;
+typedef struct
+{
+    T_resource focusPic;
+    T_resource notFocusPic;
+    T_resource pressedPic;
+    T_byte8 f_buttonState;
+    T_buttonHandler buttonHandler;
+    T_word16 x, y;
+    T_resource lastPic;
+    T_word32 accessoryData;
+} T_UIButtonStruct;
 
 /* Internal routines: */
-static E_Boolean IUIButtonStandardEventHandler(
-              T_UIObject object,
-              E_UIEvent event,
-              T_word16 data1,
-              T_word16 data2) ;
+static E_Boolean
+IUIButtonStandardEventHandler(
+    T_UIObject object,
+    E_UIEvent event,
+    T_word16 data1,
+    T_word16 data2);
 
-static T_void IUIButtonDraw(T_UIButtonStruct *p_button) ;
+static T_void
+IUIButtonDraw(T_UIButtonStruct *p_button);
 
 /*-------------------------------------------------------------------------*
  * Routine:  UIButtonCreate
@@ -69,69 +72,70 @@ static T_void IUIButtonDraw(T_UIButtonStruct *p_button) ;
  *      or else will be UI_BUTTON_BAD
  *
  *<!-----------------------------------------------------------------------*/
-T_UIButton UIButtonCreate(
-               T_UIGroup group,
-               T_resource focusPic,
-               T_resource notFocusPic,
-               T_resource pressedPic,
-               T_word16 x,
-               T_word16 y)
+T_UIButton
+UIButtonCreate(
+    T_UIGroup group,
+    T_resource focusPic,
+    T_resource notFocusPic,
+    T_resource pressedPic,
+    T_word16 x,
+    T_word16 y)
 {
-    T_UIButtonStruct *p_button ;
-    T_UIButton button ;
-    T_bitmap *bitmap ;
+    T_UIButtonStruct *p_button;
+    T_UIButton button;
+    T_bitmap *bitmap;
 
-    DebugRoutine("UIButtonCreate") ;
-    DebugCheck(group != UI_GROUP_BAD) ;
-    DebugCheck(focusPic != RESOURCE_BAD) ;
-    DebugCheck(notFocusPic != RESOURCE_BAD) ;
-    DebugCheck(pressedPic != RESOURCE_BAD) ;
-    DebugCheck(x < SCREEN_SIZE_X) ;
-    DebugCheck(y < SCREEN_SIZE_Y) ;
+    DebugRoutine("UIButtonCreate");
+    DebugCheck(group != UI_GROUP_BAD);
+    DebugCheck(focusPic != RESOURCE_BAD);
+    DebugCheck(notFocusPic != RESOURCE_BAD);
+    DebugCheck(pressedPic != RESOURCE_BAD);
+    DebugCheck(x < SCREEN_SIZE_X);
+    DebugCheck(y < SCREEN_SIZE_Y);
 
     /* Create the button by createing a object with an add on size */
     /* equal to the structure we need to store. */
-    p_button = button = UIObjectCreate(sizeof(T_UIButtonStruct)) ;
+    p_button = button = UIObjectCreate(sizeof(T_UIButtonStruct));
 
     /* Lock in the normally (not focusted) bitmap into memory. */
-    bitmap = ResourceLock(notFocusPic) ;
+    bitmap = ResourceLock(notFocusPic);
 
     /* Set up the area that the button will occupy. */
-    UIObjectSetArea(button, x, y, x+bitmap->sizex-1, y+bitmap->sizey-1) ;
+    UIObjectSetArea(button, x, y, x + bitmap->sizex - 1, y + bitmap->sizey - 1);
 
     /* We are done with the bitmap, unlock it. */
-    ResourceUnlock(notFocusPic) ;
+    ResourceUnlock(notFocusPic);
 
     /* Set up the standard button event handler. */
-    UIObjectSetEventHandler(button, IUIButtonStandardEventHandler) ;
+    UIObjectSetEventHandler(button, IUIButtonStandardEventHandler);
 
     /* Set up the handler for this particular button.  Let's make it */
     /* NULL to signify that none has been set-up. */
-    p_button->buttonHandler = NULL ;
+    p_button->buttonHandler = NULL;
 
     /* Store all the important information. */
-    p_button->focusPic = focusPic ;
-    p_button->notFocusPic = notFocusPic ;
-    p_button->pressedPic = pressedPic ;
+    p_button->focusPic = focusPic;
+    p_button->notFocusPic = notFocusPic;
+    p_button->pressedPic = pressedPic;
 
     /* Make sure the initial state of the button is normal. */
-    p_button->f_buttonState = 0 ;
+    p_button->f_buttonState = 0;
 
     /* Also note that the last picture we used for displaying */
     /* the button is illegal. */
-    p_button->lastPic = RESOURCE_BAD ;
+    p_button->lastPic = RESOURCE_BAD;
 
     /* Record the x & y location for easy access. */
-    p_button->x = x ;
-    p_button->y = y ;
+    p_button->x = x;
+    p_button->y = y;
 
     /* Now that we have the whole button created, let's add it */
     /* to the UI Group. */
-    UIGroupAttachUIObject(group, button) ;
+    UIGroupAttachUIObject(group, button);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return button ;
+    return button;
 }
 
 /*-------------------------------------------------------------------------*
@@ -146,21 +150,22 @@ T_UIButton UIButtonCreate(
  *  @param buttonHandler -- Function to call when button is pressed
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIButtonSetHandler(T_UIButton button, T_buttonHandler buttonHandler)
+T_void
+UIButtonSetHandler(T_UIButton button, T_buttonHandler buttonHandler)
 {
-    T_UIButtonStruct *p_button ;
+    T_UIButtonStruct *p_button;
 
-    DebugRoutine("UIButtonSetHandler") ;
-    DebugCheck(buttonHandler != NULL) ;
-    DebugCheck(button != UI_BUTTON_BAD) ;
+    DebugRoutine("UIButtonSetHandler");
+    DebugCheck(buttonHandler != NULL);
+    DebugCheck(button != UI_BUTTON_BAD);
 
     /* First get the button part of the ui object passed in. */
-    p_button = button ;
+    p_button = button;
 
     /* Change the handler. */
-    p_button->buttonHandler = buttonHandler ;
+    p_button->buttonHandler = buttonHandler;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -181,84 +186,86 @@ T_void UIButtonSetHandler(T_UIButton button, T_buttonHandler buttonHandler)
  *      FALSE = Event ignored
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IUIButtonStandardEventHandler(
-              T_UIObject object,
-              E_UIEvent event,
-              T_word16 data1,
-              T_word16 data2)
+static E_Boolean
+IUIButtonStandardEventHandler(
+    T_UIObject object,
+    E_UIEvent event,
+    T_word16 data1,
+    T_word16 data2)
 {
-    T_UIButtonStruct *p_button ;
-    E_Boolean handled = FALSE ;
+    T_UIButtonStruct *p_button;
+    E_Boolean handled = FALSE;
 
-    DebugRoutine("IUIButtonStandardEventHandler") ;
-    DebugCheck(object != UI_OBJECT_BAD) ;
-    DebugCheck(event < UI_EVENT_UNKNOWN) ;
+    DebugRoutine("IUIButtonStandardEventHandler");
+    DebugCheck(object != UI_OBJECT_BAD);
+    DebugCheck(event < UI_EVENT_UNKNOWN);
 
     /* First get the button part of the ui object passed in. */
-    p_button = object ;
+    p_button = object;
 
     /* OK, what event were we given? */
-    switch(event)  {
+    switch (event)
+    {
         case UI_EVENT_GAINED_FOCUS:
             /* The mouse is over us, change our state. */
-            p_button->f_buttonState |= UI_BUTTON_STATE_FOCUSED ;
+            p_button->f_buttonState |= UI_BUTTON_STATE_FOCUSED;
 
             /* Draw a different picture. */
-            IUIButtonDraw(p_button) ;
+            IUIButtonDraw(p_button);
 
             /* Note that this event was processed. */
-            handled = TRUE ;
-            break ;
+            handled = TRUE;
+            break;
         case UI_EVENT_LOST_FOCUS:
             /* The mouse is no longer over us, change our state. */
-            p_button->f_buttonState &= (~UI_BUTTON_STATE_FOCUSED) ;
+            p_button->f_buttonState &= (~UI_BUTTON_STATE_FOCUSED);
 
             /* Draw a different picture. */
-            IUIButtonDraw(p_button) ;
+            IUIButtonDraw(p_button);
 
             /* Note that this event was processed. */
-            handled = TRUE ;
-            break ;
+            handled = TRUE;
+            break;
         case UI_EVENT_MOUSE_START:
             /* The mouse is pressing down on us, change our state. */
-            p_button->f_buttonState |= UI_BUTTON_STATE_PRESSED ;
+            p_button->f_buttonState |= UI_BUTTON_STATE_PRESSED;
 
             /* Draw a different picture. */
-            IUIButtonDraw(p_button) ;
+            IUIButtonDraw(p_button);
 
             /* Note that this event was processed. */
-            handled = TRUE ;
-            break ;
+            handled = TRUE;
+            break;
         case UI_EVENT_MOUSE_END:
             /* The mouse is no longer pressing down on us, change */
             /* our state. */
-            p_button->f_buttonState &= (~UI_BUTTON_STATE_PRESSED) ;
+            p_button->f_buttonState &= (~UI_BUTTON_STATE_PRESSED);
 
             /* Draw a different picture. */
-            IUIButtonDraw(p_button) ;
+            IUIButtonDraw(p_button);
 
             /* Since the button was fully pressed, let's go ahead */
             /* and tell the handler to process this button press */
             /* (if there is a handler). */
             if (p_button->buttonHandler != NULL)
-                p_button->buttonHandler((T_UIButton)p_button) ;
+                p_button->buttonHandler((T_UIButton) p_button);
 
             /* Note that this event was processed. */
-            handled = TRUE ;
-            break ;
+            handled = TRUE;
+            break;
         case UI_EVENT_DRAW:
             /* Draw a the picture. */
-            IUIButtonDraw(p_button) ;
+            IUIButtonDraw(p_button);
 
             /* Note that this event was processed. */
-            handled = TRUE ;
-            break ;
+            handled = TRUE;
+            break;
     }
 
-    DebugCheck(handled < BOOLEAN_UNKNOWN) ;
-    DebugEnd() ;
+    DebugCheck(handled < BOOLEAN_UNKNOWN);
+    DebugEnd();
 
-    return handled ;
+    return handled;
 }
 
 /*-------------------------------------------------------------------------*
@@ -271,48 +278,51 @@ static E_Boolean IUIButtonStandardEventHandler(
  *  @param p_button -- Pointer to the actual button struct
  *
  *<!-----------------------------------------------------------------------*/
-static T_void IUIButtonDraw(T_UIButtonStruct *p_button)
+static T_void
+IUIButtonDraw(T_UIButtonStruct *p_button)
 {
-    T_bitmap *p_bitmap ;
-    T_resource r_pic ;
+    T_bitmap *p_bitmap;
+    T_resource r_pic;
 
-    DebugRoutine("IUIButtonDraw") ;
-    DebugCheck(p_button != NULL) ;
+    DebugRoutine("IUIButtonDraw");
+    DebugCheck(p_button != NULL);
 
     /* Get the resource based on its current state. */
-    switch(p_button->f_buttonState)  {
+    switch (p_button->f_buttonState)
+    {
         case (0):
-           /* Nothing active, use none-focus pic. */
-            r_pic = p_button->notFocusPic ;
-            break ;
+            /* Nothing active, use none-focus pic. */
+            r_pic = p_button->notFocusPic;
+            break;
 
         case (UI_BUTTON_STATE_FOCUSED):
             /* Mouse is over us, use the focus pic. */
-            r_pic = p_button->focusPic ;
-            break ;
+            r_pic = p_button->focusPic;
+            break;
 
         case (UI_BUTTON_STATE_PRESSED):
         case (UI_BUTTON_STATE_FOCUSED | UI_BUTTON_STATE_PRESSED):
             /* We're being pressed and probably focused, use pressed pic. */
-            r_pic = p_button->pressedPic ;
-            break ;
+            r_pic = p_button->pressedPic;
+            break;
     }
 
     /* Now, is this new picture any different than what we last */
     /* put up? */
-    if (r_pic != p_button->lastPic)  {
+    if (r_pic != p_button->lastPic)
+    {
         /* Yes, it is.  Ok, let's lock in the bitmap and draw it. */
-        p_bitmap = ResourceLock(r_pic) ;
-        DebugCheck(p_bitmap != NULL) ;
+        p_bitmap = ResourceLock(r_pic);
+        DebugCheck(p_bitmap != NULL);
 
-        MouseHide() ;
-        GrDrawBitmapMasked(p_bitmap, p_button->x, p_button->y) ;
-        MouseShow() ;
+        MouseHide();
+        GrDrawBitmapMasked(p_bitmap, p_button->x, p_button->y);
+        MouseShow();
 
-        ResourceUnlock(r_pic) ;
+        ResourceUnlock(r_pic);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -329,20 +339,21 @@ static T_void IUIButtonDraw(T_UIButtonStruct *p_button)
  *  @param data -- Data to store
  *
  *<!-----------------------------------------------------------------------*/
-T_void UIButtonSetAccessoryData(T_UIButton button, T_word32 data)
+T_void
+UIButtonSetAccessoryData(T_UIButton button, T_word32 data)
 {
-    T_UIButtonStruct *p_button ;
+    T_UIButtonStruct *p_button;
 
-    DebugRoutine("UIButtonSetAccessoryData") ;
-    DebugCheck(button != UI_BUTTON_BAD) ;
+    DebugRoutine("UIButtonSetAccessoryData");
+    DebugCheck(button != UI_BUTTON_BAD);
 
     /* First get the button part of the ui object passed in. */
-    p_button = button ;
+    p_button = button;
 
     /* Store the data. */
-    p_button->accessoryData = data ;
+    p_button->accessoryData = data;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -360,23 +371,24 @@ T_void UIButtonSetAccessoryData(T_UIButton button, T_word32 data)
  *  @return Data that was stored
  *
  *<!-----------------------------------------------------------------------*/
-T_word32 UIButtonGetAccessoryData(T_UIButton button)
+T_word32
+UIButtonGetAccessoryData(T_UIButton button)
 {
-    T_UIButtonStruct *p_button ;
-    T_word32 data ;
+    T_UIButtonStruct *p_button;
+    T_word32 data;
 
-    DebugRoutine("UIButtonGetAccessoryData") ;
-    DebugCheck(button != UI_BUTTON_BAD) ;
+    DebugRoutine("UIButtonGetAccessoryData");
+    DebugCheck(button != UI_BUTTON_BAD);
 
     /* First get the button part of the ui object passed in. */
-    p_button = button ;
+    p_button = button;
 
     /* Retrieve the data. */
-    data = p_button->accessoryData ;
+    data = p_button->accessoryData;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return data ;
+    return data;
 }
 
 /** @} */

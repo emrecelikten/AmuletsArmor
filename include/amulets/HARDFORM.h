@@ -15,27 +15,32 @@
 #define HARD_FORM_GUILD                          5
 #define HARD_FORM_UNKNOWN                        120
 
-typedef T_void (*T_hardFormStart)(T_word32 formNum) ;
+typedef T_void (*T_hardFormStart)(T_word32 formNum);
 typedef T_void (*T_hardFormHandleMouse)
-                   (E_mouseEvent event,
-                    T_word16 x,
-                    T_word16 y,
-                    T_buttonClick buttons) ;
-typedef T_void (*T_hardFormUpdate)(T_void) ;
-typedef T_void (*T_hardFormEnd)(T_void) ;
+    (E_mouseEvent event,
+     T_word16 x,
+     T_word16 y,
+     T_buttonClick buttons);
+typedef T_void (*T_hardFormUpdate)(T_void);
+typedef T_void (*T_hardFormEnd)(T_void);
 
-T_void HardFormStart(T_word32 formNum) ;
+T_void
+HardFormStart(T_word32 formNum);
 
-T_void HardFormHandleMouse(
-           E_mouseEvent event,
-           T_word16 x,
-           T_word16 y,
-           T_buttonClick buttons) ;
+T_void
+HardFormHandleMouse(
+    E_mouseEvent event,
+    T_word16 x,
+    T_word16 y,
+    T_buttonClick buttons);
 
-T_void HardFormUpdate(T_void) ;
+T_void
+HardFormUpdate(T_void);
 
-T_void HardFormEnd(T_void) ;
-E_Boolean HardFormIsOpen(T_void);
+T_void
+HardFormEnd(T_void);
+E_Boolean
+HardFormIsOpen(T_void);
 
 
 /****************************************************************************/

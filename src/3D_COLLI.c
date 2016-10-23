@@ -11,12 +11,8 @@
 #include "3D_COLLI.H"
 #include "3D_IO.H"
 #include "3D_TRIG.H"
-#include "3D_VIEW.H"
-#include "GENERAL.H"
 #include "MAP.H"
 #include "OBJECT.H"
-#include "OBJMOVE.H"
-#include "SYNCMEM.H"
 #include "VIEW.H"
 
 /*****************************/
@@ -33,152 +29,162 @@
 
 /* Global variables used by View3dFindLineHits and ICheckLineHitsLine. */
 /* Represents the slope of the line in question. */
-static T_sword32 G_cosLineAngle ;
-static T_sword32 G_sinLineAngle ;
-
+static T_sword32 G_cosLineAngle;
+static T_sword32 G_sinLineAngle;
 
 /* Global data telling how many hits occured, */
-T_word16 G_numHits = 0 ;
+T_word16 G_numHits = 0;
 
 /* where the hit occured, */
-static T_sword32 G_hitAtX, G_hitAtY ;
+static T_sword32 G_hitAtX, G_hitAtY;
 
 /* what distance the hit occured at, */
-static T_sword32 G_hitDistance ;
+static T_sword32 G_hitDistance;
 
 /* and the slopes of the hit points (if there are more than one, the */
 /* arrays are filled. */
-static T_sword32 G_hitSlopeXs[MAX_LINE_HITS], G_hitSlopeYs[MAX_LINE_HITS] ;
-static T_sword32 G_hitSlopeX, G_hitSlopeY ;
-static T_word16 G_hitWho[MAX_LINE_HITS] ;
-static T_word16 G_hitType[MAX_LINE_HITS] ;
+static T_sword32 G_hitSlopeXs[MAX_LINE_HITS], G_hitSlopeYs[MAX_LINE_HITS];
+static T_sword32 G_hitSlopeX, G_hitSlopeY;
+static T_word16 G_hitWho[MAX_LINE_HITS];
+static T_word16 G_hitType[MAX_LINE_HITS];
 
 #define HIT_TYPE_LINE            0
 #define HIT_TYPE_OBJECT          1
 
 /* Height of the object that is being check for collisional movement. */
-static T_sword16 G_currentHeight = 0 ;
+static T_sword16 G_currentHeight = 0;
 
 
 /* As edges/lines are collided with, keep track of the lowest ceiling */
 /* and tallest floor and what sector this is associated with. */
-static T_sword16 G_shortestCeiling ;
-static T_sword16 G_tallestFloor ;
-static T_word16  G_floorAbove ;
-static T_word16  G_ceilingBelow ;
+static T_sword16 G_shortestCeiling;
+static T_sword16 G_tallestFloor;
+static T_word16 G_floorAbove;
+static T_word16 G_ceilingBelow;
 
 
 /* As sectors are found to be under the object that moved, keep track */
 /* of the number of sectors and what sectors these are.  This is useful */
 /* when a lift goes up and an object is on top of it. */
-static T_word16 G_numSurroundingSectors ;
-static T_word16 G_surroundingSectors[20] ;
+static T_word16 G_numSurroundingSectors;
+static T_word16 G_surroundingSectors[20];
 
 
 /* In many cases, we don't want to collide with ourself.  This is */
 /* the object/object move structure that we to exclude. */
-static T_objMoveStruct *G_exceptObjMove = NULL ;
+static T_objMoveStruct *G_exceptObjMove = NULL;
 
 
 /* Flag to determine if dipping is allowed in the next collision */
 /* detection. */
 /* WARNING! Not being used? */
-static E_Boolean G_allowDip = TRUE ;
+static E_Boolean G_allowDip = TRUE;
 
 /* Standard definition of a wall. */
-static T_word16 G_wallDefinition = LINE_IS_IMPASSIBLE ;
+static T_word16 G_wallDefinition = LINE_IS_IMPASSIBLE;
 
 /*****************************/
 /*    INTERNAL PROTOTYPES    */
 /*****************************/
 
-E_Boolean IIsFloorAndCeilingOk(T_word16 lineNum, E_Boolean f_add, T_3dObject *p_obj) ;
+E_Boolean
+IIsFloorAndCeilingOk(T_word16 lineNum, E_Boolean f_add, T_3dObject *p_obj);
 
-T_void IUpdateSectorHeights(T_3dObject *p_obj, T_word16 sector);
+T_void
+IUpdateSectorHeights(T_3dObject *p_obj, T_word16 sector);
 
-E_Boolean MoveToFast(
-         T_sword32 *oldX,
-         T_sword32 *oldY,
-         T_sword32 newX,
-         T_sword32 newY,
-         T_sword32 distance,
-         T_sword32 radius,
-         T_sword32 foot,
-         T_sword32 head,
-         T_sword16 height,
-         T_3dObject *p_obj) ;
+E_Boolean
+MoveToFast(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 distance,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj);
 
-T_sword16 ICheckLineHitsLine(
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2,
-              T_word16 lineNum) ;
+T_sword16
+ICheckLineHitsLine(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_word16 lineNum);
 
-T_sword16 IMoveToXYWithStep(
-              T_sword32 *oldX,
-              T_sword32 *oldY,
-              T_sword32 newx,
-              T_sword32 newy,
-              T_sword32 radius,
-              T_sword32 step,
-              T_sword32 foot,
-              T_sword32 head,
-              T_sword16 height,
-              T_3dObject *p_obj) ;
+T_sword16
+IMoveToXYWithStep(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newx,
+    T_sword32 newy,
+    T_sword32 radius,
+    T_sword32 step,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj);
 
-static E_Boolean IIsOnLeftOfLine(
-                     T_sword32 pointX,
-                     T_sword32 pointY,
-                     T_sword32 lineX1,
-                     T_sword32 lineY1,
-                     T_sword32 lineX2,
-                     T_sword32 lineY2) ;
+static E_Boolean
+IIsOnLeftOfLine(
+    T_sword32 pointX,
+    T_sword32 pointY,
+    T_sword32 lineX1,
+    T_sword32 lineY1,
+    T_sword32 lineX2,
+    T_sword32 lineY2);
 
-E_Boolean MoveTo(
-              T_sword32 oldX,
-              T_sword32 oldY,
-              T_sword32 newX,
-              T_sword32 newY,
-              T_sword32 distance,
-              T_3dObject *p_obj) ;
+E_Boolean
+MoveTo(
+    T_sword32 oldX,
+    T_sword32 oldY,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 distance,
+    T_3dObject *p_obj);
 
-T_sword32 Mult32x32AndCompare(
-              T_sword32 a,
-              T_sword32 b,
-              T_sword32 c,
-              T_sword32 d) ;
+T_sword32
+Mult32x32AndCompare(
+    T_sword32 a,
+    T_sword32 b,
+    T_sword32 c,
+    T_sword32 d);
 
-T_sword32 Mult32By32AndDiv32(
-              T_sword32 a,
-              T_sword32 b,
-              T_sword32 c) ;
+T_sword32
+Mult32By32AndDiv32(
+    T_sword32 a,
+    T_sword32 b,
+    T_sword32 c);
 
+static E_Boolean
+IWallTouchInBlock(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_sword32 block,
+    T_word16 maxWalls,
+    T_word16 *p_numWalls,
+    T_word16 *p_walls);
 
-static E_Boolean IWallTouchInBlock(
-                    T_sword16 x1,
-                    T_sword16 y1,
-                    T_sword16 x2,
-                    T_sword16 y2,
-                    T_sword32 block,
-                    T_word16 maxWalls,
-                    T_word16 *p_numWalls,
-                    T_word16 *p_walls) ;
+static E_Boolean
+ICanSqueezeThrough(
+    T_3dObject *p_obj,
+    T_sword16 zPos,
+    T_sword16 height,
+    T_word16 numSectors,
+    T_word16 *p_sectorList);
 
-static E_Boolean ICanSqueezeThrough(
-        T_3dObject *p_obj,
-		T_sword16 zPos,
-		T_sword16 height,
-		T_word16 numSectors,
-		T_word16 *p_sectorList);
-
-static E_Boolean ICanSqueezeThroughWithClimb(
-        T_3dObject *p_obj,
-        T_sword16 *zPos,
-        T_sword16 climbHeight,
-        T_sword16 height,
-        T_word16 numSectors,
-        T_word16 *p_sectorList);
+static E_Boolean
+ICanSqueezeThroughWithClimb(
+    T_3dObject *p_obj,
+    T_sword16 *zPos,
+    T_sword16 climbHeight,
+    T_sword16 height,
+    T_word16 numSectors,
+    T_word16 *p_sectorList);
 
 /*****************************/
 /*    ASSEMBLY DEFINES       */
@@ -186,7 +192,7 @@ static E_Boolean ICanSqueezeThroughWithClimb(
 
 #ifndef SERVER_ONLY
 #ifndef NO_ASSEMBLY
-#pragma aux Mult32x32AndCompare = \
+                                                                                                                        #pragma aux Mult32x32AndCompare = \
             "       imul ebx" \
             "       xchg eax, esi" \
             "       xchg edx, edi" \
@@ -213,7 +219,7 @@ static E_Boolean ICanSqueezeThroughWithClimb(
 #endif
 
 #ifndef NO_ASSEMBLY
-#ifdef TARGET_NT
+                                                                                                                        #ifdef TARGET_NT
 /** Windows NT **/
 
 /***************************************************************/
@@ -331,27 +337,28 @@ T_sword32 Mult32By32AndDiv32 (T_sword32 _eax, T_sword32 _ebx,
  *  @param sector -- Sector to add
  *
  *<!-----------------------------------------------------------------------*/
-T_void IAddSurroundingSector(T_word16 sector)
+T_void
+IAddSurroundingSector(T_word16 sector)
 {
-    T_word16 i ;
+    T_word16 i;
 
 #ifndef NDEBUG
-if (sector >= G_Num3dSectors)  {
-  printf("Illegal sector: %d\n", sector) ;
-  fflush(stdout) ;
+    if (sector >= G_Num3dSectors)  {
+printf("Illegal sector: %d\n", sector) ;
+fflush(stdout) ;
 }
 DebugCheck((sector < G_Num3dSectors)) ;
 #endif
 
     if (G_numSurroundingSectors == 10)
-        return ;
+        return;
 
-    for (i=0; i<G_numSurroundingSectors; i++)
+    for (i = 0; i < G_numSurroundingSectors; i++)
         if (sector == G_surroundingSectors[i])
-            return ;
+            return;
 
-    G_surroundingSectors[i] = sector ;
-    G_numSurroundingSectors++ ;
+    G_surroundingSectors[i] = sector;
+    G_numSurroundingSectors++;
 }
 
 /*-------------------------------------------------------------------------*
@@ -370,118 +377,124 @@ DebugCheck((sector < G_Num3dSectors)) ;
  *  @return FALSE = colliding with an edge.
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean IIsFloorAndCeilingOk(
-              T_word16 lineNum,
-              E_Boolean f_add,
-              T_3dObject *p_obj)
+E_Boolean
+IIsFloorAndCeilingOk(
+    T_word16 lineNum,
+    E_Boolean f_add,
+    T_3dObject *p_obj)
 {
-    T_sword16 floorHeight1 = -0x7FFE ;
-    T_sword16 ceilingHeight1 = 0x7FFE ;
-    T_sword16 floorHeight2 = -0x7FFE ;
-    T_sword16 ceilingHeight2 = 0x7FFE ;
-    T_word16 sector1, sector2 ;
-    T_sword16 side1, side2 ;
-    T_sword16 height, climb ;
+    T_sword16 floorHeight1 = -0x7FFE;
+    T_sword16 ceilingHeight1 = 0x7FFE;
+    T_sword16 floorHeight2 = -0x7FFE;
+    T_sword16 ceilingHeight2 = 0x7FFE;
+    T_word16 sector1, sector2;
+    T_sword16 side1, side2;
+    T_sword16 height, climb;
 
     if (G_3dLineArray[lineNum].flags & LINE_IS_IMPASSIBLE)
-        return FALSE ;
+        return FALSE;
 
-    side1 = G_3dLineArray[lineNum].side[0] ;
+    side1 = G_3dLineArray[lineNum].side[0];
     if (side1 != -1)
-        sector1 = G_3dSideArray[side1].sector ;
+        sector1 = G_3dSideArray[side1].sector;
     else
-        sector1 = 0xFFFF ;
+        sector1 = 0xFFFF;
 
-    side2 = G_3dLineArray[lineNum].side[1] ;
+    side2 = G_3dLineArray[lineNum].side[1];
     if (side2 != -1)
-        sector2 = G_3dSideArray[side2].sector ;
+        sector2 = G_3dSideArray[side2].sector;
     else
-        sector2 = 0xFFFF ;
+        sector2 = 0xFFFF;
 
     /* If either side of this line is NOT connected to a sector, then */
     /* this is an impassable wall that should NOT be considered OK. */
     if ((sector1 == 0xFFFF) || (sector2 == 0xFFFF))
-        return FALSE ;
+        return FALSE;
 
     /* Find the floor and ceiling heights of both sides of */
     /* a line. */
-    if (side1 != -1)  {
-        floorHeight1 = MapGetWalkingFloorHeight(&p_obj->objMove, sector1) ;
-        ceilingHeight1 = G_3dSectorArray[sector1].ceilingHt ;
+    if (side1 != -1)
+    {
+        floorHeight1 = MapGetWalkingFloorHeight(&p_obj->objMove, sector1);
+        ceilingHeight1 = G_3dSectorArray[sector1].ceilingHt;
         if (G_3dSectorInfoArray[sector1].ceilingLimit < ceilingHeight1)
-            ceilingHeight1 = G_3dSectorInfoArray[sector1].ceilingLimit ;
+            ceilingHeight1 = G_3dSectorInfoArray[sector1].ceilingLimit;
     }
 
-    if (side2 != -1)  {
-        floorHeight2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector2) ;
-        ceilingHeight2 = G_3dSectorArray[sector2].ceilingHt ;
+    if (side2 != -1)
+    {
+        floorHeight2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector2);
+        ceilingHeight2 = G_3dSectorArray[sector2].ceilingHt;
         if (G_3dSectorInfoArray[sector2].ceilingLimit < ceilingHeight2)
-            ceilingHeight2 = G_3dSectorInfoArray[sector2].ceilingLimit ;
+            ceilingHeight2 = G_3dSectorInfoArray[sector2].ceilingLimit;
     }
 
-    if (f_add == TRUE)  {
-        if (side1 != -1)  {
-            IAddSurroundingSector(sector1) ;
+    if (f_add == TRUE)
+    {
+        if (side1 != -1)
+        {
+            IAddSurroundingSector(sector1);
 //            if ((floorHeight1 <= G_currentHeight) &&
 //                (G_currentHeight < ceilingHeight1)) {
 #ifndef NDEBUG
-                if (sector1 >= G_Num3dSectors)  {
-                    printf("line error: %d\n", lineNum) ;
-                    fflush(stdout) ;
-                }
+            if (sector1 >= G_Num3dSectors)  {
+printf("line error: %d\n", lineNum) ;
+fflush(stdout) ;
+}
 #endif
-                IUpdateSectorHeights(p_obj, sector1) ;
+            IUpdateSectorHeights(p_obj, sector1);
 //            }
         }
 
-        if (side2 != -1)  {
-            IAddSurroundingSector(sector2) ;
+        if (side2 != -1)
+        {
+            IAddSurroundingSector(sector2);
 //            if ((floorHeight2 <= G_currentHeight) &&
 //                (G_currentHeight < ceilingHeight2)) {
 #ifndef NDEBUG
-                if (sector2 >= G_Num3dSectors)  {
-                    printf("line error: %d\n", lineNum) ;
-                    fflush(stdout) ;
-                }
+            if (sector2 >= G_Num3dSectors)  {
+printf("line error: %d\n", lineNum) ;
+fflush(stdout) ;
+}
 #endif
-                IUpdateSectorHeights(p_obj, sector2) ;
+            IUpdateSectorHeights(p_obj, sector2);
 //            }
         }
     }
 
     /* Take the higher floor. */
     if (floorHeight2 > floorHeight1)
-        floorHeight1 = floorHeight2 ;
+        floorHeight1 = floorHeight2;
 
     /* Take the lower ceiling. */
     if (ceilingHeight2 < ceilingHeight1)
-        ceilingHeight1 = ceilingHeight2 ;
+        ceilingHeight1 = ceilingHeight2;
 
-    height = ObjectGetHeight(p_obj) ;
-    climb = ObjectGetClimbHeight(p_obj) ;
+    height = ObjectGetHeight(p_obj);
+    climb = ObjectGetClimbHeight(p_obj);
 
     /* Is the difference between the two too small? */
     if (floorHeight1 + height > ceilingHeight1)
-        return FALSE ;
+        return FALSE;
 
     /* See if stepping up helps. */
     if ((G_currentHeight + climb) < floorHeight1)
-        return FALSE ;
+        return FALSE;
 
     /* Is the floor too high? */
 //    if (floorHeight1 > G_currentHeight)
 //        return FALSE ;
 
     /* Is the ceiling too low? */
-    if ((G_currentHeight+height) > ceilingHeight1)
-        return FALSE ;
+    if ((G_currentHeight + height) > ceilingHeight1)
+        return FALSE;
 
     /* Everything checks out OK, must be ok. */
-    return TRUE ;
+    return TRUE;
 }
 
 #if 0
-/*-------------------------------------------------------------------------*
+                                                                                                                        /*-------------------------------------------------------------------------*
  * Routine:  ICheckSegmentHitBox
  *-------------------------------------------------------------------------*/
 /**
@@ -617,92 +630,103 @@ T_sword16 ICheckSegmentHitBox(
  *  @return TRUE=collision, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 Collide3dCheckSegmentHitBox(
-              T_word16 lineNum,
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2)
+T_sword16
+Collide3dCheckSegmentHitBox(
+    T_word16 lineNum,
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2)
 {
-    T_sword16 segX1, segX2, segY1, segY2 ;
-    T_sword32 lesserX, greaterX, lesserY, greaterY ;
-    T_sword32 interX, interY ;
-    T_sword32 deltaX, deltaY ;
+    T_sword16 segX1, segX2, segY1, segY2;
+    T_sword32 lesserX, greaterX, lesserY, greaterY;
+    T_sword32 interX, interY;
+    T_sword32 deltaX, deltaY;
 
     /* Get the coordinates of the line. */
 
-    segX1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x ;
-    segY1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y ;
-    segX2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x ;
-    segY2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y ;
+    segX1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x;
+    segY1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y;
+    segX2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x;
+    segY2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y;
 
     /* Figure out who is greater than who. */
-    if (segX1 < segX2)  {
-        lesserX = segX1 ;
-        greaterX = segX2 ;
-    } else {
-        lesserX = segX2 ;
-        greaterX = segX1 ;
+    if (segX1 < segX2)
+    {
+        lesserX = segX1;
+        greaterX = segX2;
+    }
+    else
+    {
+        lesserX = segX2;
+        greaterX = segX1;
     }
 
-    if (segY1 < segY2)  {
-        lesserY = segY1 ;
-        greaterY = segY2 ;
-    } else {
-        lesserY = segY2 ;
-        greaterY = segY1 ;
+    if (segY1 < segY2)
+    {
+        lesserY = segY1;
+        greaterY = segY2;
+    }
+    else
+    {
+        lesserY = segY2;
+        greaterY = segY1;
     }
 
     /* Check if the boxes touch (draw a box around the line) */
     /* It is assumed that x1 is on the left of x2 and y1 is */
     /* less than y2. */
     if (greaterX < x1)
-        return FALSE ;
+        return FALSE;
     if (greaterY < y1)
-        return FALSE ;
+        return FALSE;
     if (lesserX > x2)
-        return FALSE ;
+        return FALSE;
     if (lesserY > y2)
-        return FALSE ;
+        return FALSE;
 
     /* OK, we must be near each other.  We must now take each side */
     /* and look for a collision point. */
 
     /* Start by getting some deltas. */
-    deltaX = segX2 - segX1 ;
-    deltaY = segY2 - segY1 ;
+    deltaX = segX2 - segX1;
+    deltaY = segY2 - segY1;
 
     /* If a "flat box" (horizontal or vertical line), drop out */
     /* and hit. */
     if ((deltaX == 0) || (deltaY == 0))
-        return TRUE ;
+        return TRUE;
 
     /* Calculate the left intersection point. */
-        interY = segY1 + ((deltaY * (x1 - segX1)) / deltaX) ;
-        if ((interY >= y1) && (interY <= y2))  {
-            return TRUE ;
-        }
+    interY = segY1 + ((deltaY * (x1 - segX1)) / deltaX);
+    if ((interY >= y1) && (interY <= y2))
+    {
+        return TRUE;
+    }
 
     /* Calculate the right intersection point. */
-    interY = segY1 + ((deltaY * (x2 - segX1)) / deltaX) ;
-    if ((interY >= y1) && (interY <= y2))  {
-        return TRUE ;
+    interY = segY1 + ((deltaY * (x2 - segX1)) / deltaX);
+    if ((interY >= y1) && (interY <= y2))
+    {
+        return TRUE;
     }
 
     /* Calculate the top intersection point. */
-    interX = segX1 + ((deltaX * (y1 - segY1)) / deltaY) ;
-    if ((interX >= x1) && (interX <= x2))  {
-        return TRUE ;
+    interX = segX1 + ((deltaX * (y1 - segY1)) / deltaY);
+    if ((interX >= x1) && (interX <= x2))
+    {
+        return TRUE;
     }
 
     /* Calculate the bottom intersection point. */
-    interX = segX1 + ((deltaX * (y2 - segY1)) / deltaY) ;
-    if ((interX >= x1) && (interX <= x2))  {
-        return TRUE ;
+    interX = segX1 + ((deltaX * (y2 - segY1)) / deltaY);
+    if ((interX >= x1) && (interX <= x2))
+    {
+        return TRUE;
     }
 
     /* None of them intersected, return a FALSE. */
-    return FALSE ;
+    return FALSE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -714,7 +738,7 @@ T_sword16 Collide3dCheckSegmentHitBox(
  *  a given line through the origin (the slope).  The new point is returned
  *  by reference.
  *
- *  NOTE: 
+ *  NOTE:
  *  Large values can cause overflow.  Always be careful.
  *
  *  @param pointX -- X Point to project
@@ -723,78 +747,85 @@ T_sword16 Collide3dCheckSegmentHitBox(
  *  @param slopeY -- Y Slope to project along
  *
  *<!-----------------------------------------------------------------------*/
-T_void ProjectXYOntoLine(
-           T_sword32 *pointX,
-           T_sword32 *pointY,
-           T_sword32 slopeX,
-           T_sword32 slopeY)
+T_void
+ProjectXYOntoLine(
+    T_sword32 *pointX,
+    T_sword32 *pointY,
+    T_sword32 slopeX,
+    T_sword32 slopeY)
 {
     /* Assumes from point is the origin. */
-    T_sword32 x, y ;
-    T_sword32 topCalc, bottomCalc ;
-    T_sword32 aslopeX, aslopeY ;
+    T_sword32 x, y;
+    T_sword32 topCalc, bottomCalc;
+    T_sword32 aslopeX, aslopeY;
 
-    if (slopeX == 0)  {
-        *pointX = 0 ;
+    if (slopeX == 0)
+    {
+        *pointX = 0;
     }
-    if (slopeY == 0)  {
-        *pointY = 0 ;
+    if (slopeY == 0)
+    {
+        *pointY = 0;
     }
 
-    if ((slopeX==0) || (slopeY==0))
-        return ;
+    if ((slopeX == 0) || (slopeY == 0))
+        return;
 
     if (slopeX < 0)
-        aslopeX = -slopeX ;
+        aslopeX = -slopeX;
     else
-        aslopeX = slopeX ;
+        aslopeX = slopeX;
 
     if (slopeY < 0)
-        aslopeY = -slopeY ;
+        aslopeY = -slopeY;
     else
-        aslopeY = slopeY ;
+        aslopeY = slopeY;
 
     /* Check if a 45 degree slope. */
-    if (aslopeX == aslopeY)  {
+    if (aslopeX == aslopeY)
+    {
         if (slopeX < 0)
-            slopeX = -1 ;
+            slopeX = -1;
         else if (slopeX > 0)
-            slopeX = 1 ;
+            slopeX = 1;
         else
-            slopeX = 0 ;
+            slopeX = 0;
 
         if (slopeY < 0)
-            slopeY = -1 ;
+            slopeY = -1;
         else if (slopeY > 0)
-            slopeY = 1 ;
+            slopeY = 1;
         else
-            slopeY = 0 ;
+            slopeY = 0;
     }
 
     /* Get the 32 bit version of these 16 bit values. */
-    x = *pointX ;
-    y = *pointY ;
+    x = *pointX;
+    y = *pointY;
 
     /* Find the proportional fraction along the line we are */
     /* projecting onto. */
-    topCalc = (slopeX * x) + (slopeY * y) ;
-    bottomCalc = (slopeX * slopeX) + (slopeY * slopeY) ;
+    topCalc = (slopeX * x) + (slopeY * y);
+    bottomCalc = (slopeX * slopeX) + (slopeY * slopeY);
 
     /* Make sure we are not dividing by zero. */
-    if (bottomCalc == 0)  {
+    if (bottomCalc == 0)
+    {
         /* If we are dividing by zero, we have an effect projection */
         /* of zero. */
-        *pointX = 0 ;
-        *pointY = 0 ;
-    } else {
+        *pointX = 0;
+        *pointY = 0;
+    }
+    else
+    {
         /* Calculate the real projection. */
-        *pointX = Mult32By32AndDiv32(topCalc, slopeX, bottomCalc) ;
-        *pointY = Mult32By32AndDiv32(topCalc, slopeY, bottomCalc) ;
+        *pointX = Mult32By32AndDiv32(topCalc, slopeX, bottomCalc);
+        *pointY = Mult32By32AndDiv32(topCalc, slopeY, bottomCalc);
     }
 }
 
 #if 0
-/*-------------------------------------------------------------------------*
+                                                                                                                        /*-------------------------------------------------------------------------*
  * Routine:  CheckVertexHit
  *-------------------------------------------------------------------------*/
 /**
@@ -803,7 +834,7 @@ T_void ProjectXYOntoLine(
  *  is given to better determine the angle of approach and what the rebound
  *  slope should be.
  *
- *  NOTE: 
+ *  NOTE:
  *  This routine is not currently being used and might be removed soon.
  *
  *  @param oldY -- Where box has moved from
@@ -945,31 +976,32 @@ E_Boolean CheckVertexHit(
  *      if point is out of bounds.
  *
  *<!-----------------------------------------------------------------------*/
-static T_sword32 IGetBlock(T_sword16 x, T_sword16 y)
+static T_sword32
+IGetBlock(T_sword16 x, T_sword16 y)
 {
-    T_sword16 row, column ;
-    T_sword32 index ;
+    T_sword16 row, column;
+    T_sword32 index;
 
     /* First, find the block map block that this point is located within. */
-    column = (x - G_3dBlockMapHeader->xOrigin) >> 7 ;
+    column = (x - G_3dBlockMapHeader->xOrigin) >> 7;
 
     if ((column < 0) || (column > G_3dBlockMapHeader->columns))
         /* Out of bounds, return a bad one. */
-        return -1 ;
+        return -1;
 
-    row = (y - G_3dBlockMapHeader->yOrigin) >> 7 ;
+    row = (y - G_3dBlockMapHeader->yOrigin) >> 7;
 
     if ((row < 0) || (row > G_3dBlockMapHeader->rows))
         /* Out of bounds, return a bad one. */
-        return -1 ;
+        return -1;
 
     /* Inbounds, find the index. */
-    index = (row * G_3dBlockMapHeader->columns) + column ;
+    index = (row * G_3dBlockMapHeader->columns) + column;
 
     /* Now translate the index into a position in the list of lines. */
-    index = 1+G_3dBlockMapHeader->blockIndexes[index] ;
+    index = 1 + G_3dBlockMapHeader->blockIndexes[index];
 
-    return index ;
+    return index;
 }
 
 /*-------------------------------------------------------------------------*
@@ -984,28 +1016,31 @@ static T_sword32 IGetBlock(T_sword16 x, T_sword16 y)
  *  @param sector -- sector to update
  *
  *<!-----------------------------------------------------------------------*/
-T_void IUpdateSectorHeights(T_3dObject *p_obj, T_word16 sector)
+T_void
+IUpdateSectorHeights(T_3dObject *p_obj, T_word16 sector)
 {
-    T_sword16 floor, ceiling, limit ;
+    T_sword16 floor, ceiling, limit;
 
-    floor = MapGetWalkingFloorHeight(&p_obj->objMove, sector) ;
+    floor = MapGetWalkingFloorHeight(&p_obj->objMove, sector);
 //    floor = G_3dSectorArray[sector].floorHt ;
 //    if ((G_allowDip) &&
 //        (G_3dSectorArray[sector].trigger & SECTOR_DIP_FLAG))
 //        floor -= VIEW_WATER_DIP_LEVEL ;
 
-    ceiling = G_3dSectorArray[sector].ceilingHt ;
-    limit = G_3dSectorInfoArray[sector].ceilingLimit ;
+    ceiling = G_3dSectorArray[sector].ceilingHt;
+    limit = G_3dSectorInfoArray[sector].ceilingLimit;
     if (limit < ceiling)
-        ceiling = limit ;
+        ceiling = limit;
 
-    if (floor > G_tallestFloor)  {
-        G_tallestFloor = floor ;
-        G_floorAbove = sector ;
+    if (floor > G_tallestFloor)
+    {
+        G_tallestFloor = floor;
+        G_floorAbove = sector;
     }
-    if (ceiling < G_shortestCeiling)  {
-        G_shortestCeiling = ceiling ;
-        G_ceilingBelow = sector ;
+    if (ceiling < G_shortestCeiling)
+    {
+        G_shortestCeiling = ceiling;
+        G_ceilingBelow = sector;
     }
 }
 
@@ -1029,102 +1064,120 @@ T_void IUpdateSectorHeights(T_3dObject *p_obj, T_word16 sector)
  *  @param p_obj -- Source object being checked
  *
  *<!-----------------------------------------------------------------------*/
-T_void ILineHitInBlock(
-              T_sword16 lastX,
-              T_sword16 lastY,
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2,
-              T_sword32 index,
-              T_sword16 radius,
-              T_3dObject *p_obj)
+T_void
+ILineHitInBlock(
+    T_sword16 lastX,
+    T_sword16 lastY,
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_sword32 index,
+    T_sword16 radius,
+    T_3dObject *p_obj)
 {
-    T_word16 i ;
-    T_sword32 segX1, segX2, segY1, segY2 ;
-    T_sword32 dx, dy ;
-    T_sword32 swap ;
+    T_word16 i;
+    T_sword32 segX1, segX2, segY1, segY2;
+    T_sword32 dx, dy;
+    T_sword32 swap;
 
     if (index == -1)
-        return ;
+        return;
 
-    while ((i=G_3dBlockMapArray[index]) != 0xFFFF /* -1 */)  {
+    while ((i = G_3dBlockMapArray[index]) != 0xFFFF /* -1 */)
+    {
         if (G_numHits == MAX_LINE_HITS)
-            break ;
+            break;
         if (Collide3dCheckSegmentHitBox(
-               i,
-               x1,
-               y1,
-               x2,
-               y2) != 0)  {
+            i,
+            x1,
+            y1,
+            x2,
+            y2) != 0)
+        {
             if ((G_3dLineArray[i].flags & 0x01) ||
-                (IIsFloorAndCeilingOk(i, TRUE, p_obj) == FALSE))  {
-                segX1 = G_3dVertexArray[G_3dLineArray[i].from].x ;
-                segY1 = G_3dVertexArray[G_3dLineArray[i].from].y ;
-                segX2 = G_3dVertexArray[G_3dLineArray[i].to].x ;
-                segY2 = G_3dVertexArray[G_3dLineArray[i].to].y ;
+                (IIsFloorAndCeilingOk(i, TRUE, p_obj) == FALSE))
+            {
+                segX1 = G_3dVertexArray[G_3dLineArray[i].from].x;
+                segY1 = G_3dVertexArray[G_3dLineArray[i].from].y;
+                segX2 = G_3dVertexArray[G_3dLineArray[i].to].x;
+                segY2 = G_3dVertexArray[G_3dLineArray[i].to].y;
 
 //                if ((G_3dLineArray[i].flags & LINE_IS_TWO_SIDED) ||
 //                    (Collide3dPointOnRight(segX1, segY1, segX2, segY2, lastX, lastY)!=0))  {
-                    dx = segX2 - segX1 ;
-                    dy = segY2 - segY1 ;
+                dx = segX2 - segX1;
+                dy = segY2 - segY1;
 
-                    if (dx == 0)  {
-                        /* This is a vertical bar. */
-                        /* Make point 1 be on the bottom and 2 on top, if */
-                        /* not already. */
-                        if (dy < 0)  {
-                            swap = segX1 ;
-                            segX1 = segX2 ;
-                            segX2 = swap ;
+                if (dx == 0)
+                {
+                    /* This is a vertical bar. */
+                    /* Make point 1 be on the bottom and 2 on top, if */
+                    /* not already. */
+                    if (dy < 0)
+                    {
+                        swap = segX1;
+                        segX1 = segX2;
+                        segX2 = swap;
 
-                            swap = segY1 ;
-                            segY1 = segY2 ;
-                            segY2 = swap ;
-                        }
-                        if ((lastY >= (segY1-radius)) && (lastY <= (segY2+radius)))  {
-                            dx = 0 ;
-                            dy = 1 ;
-                        } else {
-                            dx = 1 ;
-                            dy = 0 ;
-                        }
-                    } else if (dy == 0)  {
-                        /* The line is a horizontal bar along the x. */
-                        /* Put point 1 on left of point 2. */
-                        if (dx < 0)  {
-                            swap = segX1 ;
-                            segX1 = segX2 ;
-                            segX2 = swap ;
-                        }
-                        if ((lastX >= (segX1-radius)) && (lastX <= (segX2+radius)))  {
-                            dx = 1 ;
-                            dy = 0 ;
-                        } else {
-                            dx = 0 ;
-                            dy = 1 ;
-                        }
-                    } else if (dy < 0)  {
-
-                        /* TEMP */
-                        dx = segX2 - segX1 ;
-                        dy = segY2 - segY1 ;
-                    } else /* dy > 0 */  {
-                        /* TEMP */
-                        dx = segX2 - segX1 ;
-                        dy = segY2 - segY1 ;
+                        swap = segY1;
+                        segY1 = segY2;
+                        segY2 = swap;
                     }
+                    if ((lastY >= (segY1 - radius)) && (lastY <= (segY2 + radius)))
+                    {
+                        dx = 0;
+                        dy = 1;
+                    }
+                    else
+                    {
+                        dx = 1;
+                        dy = 0;
+                    }
+                }
+                else if (dy == 0)
+                {
+                    /* The line is a horizontal bar along the x. */
+                    /* Put point 1 on left of point 2. */
+                    if (dx < 0)
+                    {
+                        swap = segX1;
+                        segX1 = segX2;
+                        segX2 = swap;
+                    }
+                    if ((lastX >= (segX1 - radius)) && (lastX <= (segX2 + radius)))
+                    {
+                        dx = 1;
+                        dy = 0;
+                    }
+                    else
+                    {
+                        dx = 0;
+                        dy = 1;
+                    }
+                }
+                else if (dy < 0)
+                {
 
-                    G_hitSlopeXs[G_numHits] = dx ;
-                    G_hitSlopeYs[G_numHits] = dy ;
-                    G_hitType[G_numHits] = HIT_TYPE_LINE ;
-                    G_hitWho[G_numHits] = i ;
+                    /* TEMP */
+                    dx = segX2 - segX1;
+                    dy = segY2 - segY1;
+                }
+                else /* dy > 0 */  {
+                    /* TEMP */
+                    dx = segX2 - segX1;
+                    dy = segY2 - segY1;
+                }
 
-                    G_numHits++ ;
+                G_hitSlopeXs[G_numHits] = dx;
+                G_hitSlopeYs[G_numHits] = dy;
+                G_hitType[G_numHits] = HIT_TYPE_LINE;
+                G_hitWho[G_numHits] = i;
+
+                G_numHits++;
 //                }
             }
         }
-        index++ ;
+        index++;
     }
 }
 
@@ -1135,7 +1188,7 @@ T_void ILineHitInBlock(
  *  LineHit is used to determine if any line collides with the given box.
  *  It also works to determine the sectors, their heights, etc. in the area.
  *
- *  NOTE: 
+ *  NOTE:
  *  Due to the way this routine works (find the four corners) and the
  *  size of the map blocks, do NOT call this routine with a box bigger than
  *  256x256.
@@ -1152,56 +1205,58 @@ T_void ILineHitInBlock(
  *  @return TRUE=collision, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean LineHit(
-              T_sword16 lastX,
-              T_sword16 lastY,
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2,
-              T_sword16 radius,
-              T_3dObject *p_obj)
+E_Boolean
+LineHit(
+    T_sword16 lastX,
+    T_sword16 lastY,
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_sword16 radius,
+    T_3dObject *p_obj)
 {
-    T_sword32 block1, block2, block3, block4 ;
+    T_sword32 block1, block2, block3, block4;
 
     /* Reset the global data necessary for processing wall collisions. */
-    G_numHits = 0 ;
-    G_numSurroundingSectors = 0 ;
-    G_shortestCeiling = 0x7FFE ;
-    G_tallestFloor = -0x7FFE ;
+    G_numHits = 0;
+    G_numSurroundingSectors = 0;
+    G_shortestCeiling = 0x7FFE;
+    G_tallestFloor = -0x7FFE;
 
     /* Determine the blocks at the four corners. */
-    block1 = IGetBlock(x1, y1) ;
-    block2 = IGetBlock(x1, y2) ;
-    block3 = IGetBlock(x2, y2) ;
-    block4 = IGetBlock(x2, y1) ;
+    block1 = IGetBlock(x1, y1);
+    block2 = IGetBlock(x1, y2);
+    block3 = IGetBlock(x2, y2);
+    block4 = IGetBlock(x2, y1);
 
     /* Check each corner for lines that are hit, but don't */
     /* repeat any blocks that we have already checked. */
     if (block1 != -1)
-        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block1, radius, p_obj) ;
+        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block1, radius, p_obj);
     if ((block2 != -1) && (block2 != block1))
-        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block2, radius, p_obj) ;
+        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block2, radius, p_obj);
     if ((block3 != -1) && (block3 != block1) && (block3 != block2))
-        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block3, radius, p_obj) ;
+        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block3, radius, p_obj);
     if ((block4 != -1) &&
         (block4 != block1) &&
         (block4 != block2) &&
         (block4 != block3))
-        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block4, radius, p_obj) ;
+        ILineHitInBlock(lastX, lastY, x1, y1, x2, y2, block4, radius, p_obj);
 
     /* Did we hit anything? */
-    if (G_numHits != 0)  {
-        G_hitSlopeX = G_hitSlopeXs[0] ;
-        G_hitSlopeY = G_hitSlopeYs[0] ;
-        return TRUE ;
+    if (G_numHits != 0)
+    {
+        G_hitSlopeX = G_hitSlopeXs[0];
+        G_hitSlopeY = G_hitSlopeYs[0];
+        return TRUE;
     }
 
-    return FALSE ;
+    return FALSE;
 }
 
 #if 0
-/*-------------------------------------------------------------------------*
+                                                                                                                        /*-------------------------------------------------------------------------*
  * Routine:  View3dObjectHit
  *-------------------------------------------------------------------------*/
 /**
@@ -1285,31 +1340,32 @@ E_Boolean View3dObjectHit(T_sword16 x, T_sword16 y, T_word16 radius)
  *  @return TRUE=object found, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean View3dObjectHitFast(
-              T_sword16 x,
-              T_sword16 y,
-              T_word16 radius,
-              T_sword16 lastX,
-              T_sword16 lastY,
-              T_sword16 zBottom,
-              T_sword16 zTop,
-              T_sword16 height,
-              T_3dObject *p_movingObject)
+E_Boolean
+View3dObjectHitFast(
+    T_sword16 x,
+    T_sword16 y,
+    T_word16 radius,
+    T_sword16 lastX,
+    T_sword16 lastY,
+    T_sword16 zBottom,
+    T_sword16 zTop,
+    T_sword16 height,
+    T_3dObject *p_movingObject)
 {
-    T_word16 halfwidth ;
-    T_3dObject *p_obj ;
-    T_sword16 objX, objY ;
-    T_sword16 dx, dy ;
-    T_sword16 objBottom, objTop ;
-    T_sword16 ceiling ;
-    T_word16 ceilingSector ;
-    T_doubleLinkListElement element ;
-    T_sword16 hashX, hashY ;
-    T_sword16 startHashX, startHashY ;
-    T_word16 group ;
-    T_word16 groupWidth ;
+    T_word16 halfwidth;
+    T_3dObject *p_obj;
+    T_sword16 objX, objY;
+    T_sword16 dx, dy;
+    T_sword16 objBottom, objTop;
+    T_sword16 ceiling;
+    T_word16 ceilingSector;
+    T_doubleLinkListElement element;
+    T_sword16 hashX, hashY;
+    T_sword16 startHashX, startHashY;
+    T_word16 group;
+    T_word16 groupWidth;
 
-    DebugRoutine("View3dObjectHitFast") ;
+    DebugRoutine("View3dObjectHitFast");
 //if (ObjectIsCreature(p_movingObject))  {
 // if (ObjectGetServerId(p_movingObject) != 0)  {
 //  printf("VOHF: %d %s\n", ObjectGetServerId(p_movingObject), DebugGetCallerName()) ;
@@ -1328,170 +1384,190 @@ E_Boolean View3dObjectHitFast(
 //}
 //printf("%d) zBottom = %d, zTop = %d, c=%s (%d)\n", ObjectGetServerId(p_movingObject), zBottom, zTop, DebugGetCallerName(), ObjectGetServerId(PlayerGetObject())) ;
 //fflush(stdout) ;
-    DebugCheck(zBottom <= zTop) ;
+    DebugCheck(zBottom <= zTop);
 
-    if (!ObjectIsFullyPassable(p_movingObject))  {
-        groupWidth = 2+(ObjectGetRadius(p_movingObject) >> 5) ;
+    if (!ObjectIsFullyPassable(p_movingObject))
+    {
+        groupWidth = 2 + (ObjectGetRadius(p_movingObject) >> 5);
         startHashX = ((ObjectGetX16(p_movingObject) -
-                      G_3dBlockMapHeader->xOrigin) >> 6) ;
+            G_3dBlockMapHeader->xOrigin) >> 6);
         startHashY = ((ObjectGetY16(p_movingObject) -
-                      G_3dBlockMapHeader->yOrigin) >> 6) ;
-        for (hashY=-groupWidth; hashY<=groupWidth; hashY++)  {
+            G_3dBlockMapHeader->yOrigin) >> 6);
+        for (hashY = -groupWidth; hashY <= groupWidth; hashY++)
+        {
             /* Don't do ones that are out of bounds. */
             if ((startHashY + hashY) < 0)
-                continue ;
+                continue;
             if ((startHashY + hashY) >= G_objCollisionNumY)
-                continue ;
-            for (hashX=-groupWidth; hashX<=groupWidth; hashX++)  {
+                continue;
+            for (hashX = -groupWidth; hashX <= groupWidth; hashX++)
+            {
                 /* Don't do ones that are out of bounds. */
                 if ((startHashX + hashX) < 0)
-                    continue ;
+                    continue;
                 if ((startHashX + hashX) >= G_objCollisionNumX)
-                    continue ;
+                    continue;
 
                 /* Calculate the group we need to check. */
-                group =  (startHashY + hashY) * G_objCollisionNumX +
-                             (startHashX + hashX) ;
-                element = DoubleLinkListGetFirst(G_3dObjCollisionLists[group]) ;
-                while (element != DOUBLE_LINK_LIST_ELEMENT_BAD)  {
-                    p_obj = (T_3dObject *)DoubleLinkListElementGetData(element) ;
-                    element = DoubleLinkListElementGetNext(element) ;
+                group = (startHashY + hashY) * G_objCollisionNumX +
+                    (startHashX + hashX);
+                element = DoubleLinkListGetFirst(G_3dObjCollisionLists[group]);
+                while (element != DOUBLE_LINK_LIST_ELEMENT_BAD)
+                {
+                    p_obj = (T_3dObject *) DoubleLinkListElementGetData(element);
+                    element = DoubleLinkListElementGetNext(element);
 
-        /* moved from here. */
+                    /* moved from here. */
                     /* Determine "square" distance to be in */
-                    halfwidth = ObjectGetRadius(p_obj) + radius ;
-                    objX = ObjectGetX16(p_obj) ;
-                    objY = ObjectGetY16(p_obj) ;
+                    halfwidth = ObjectGetRadius(p_obj) + radius;
+                    objX = ObjectGetX16(p_obj);
+                    objY = ObjectGetY16(p_obj);
 
-                    if ((x <= objX+halfwidth) &&
-                        (x >= objX-halfwidth) &&
-                        (y <= objY+halfwidth) &&
-                        (y >= objY-halfwidth))  {
-        /*
-        printf("id: %d, x: %d, y: %d, objX: %d, objY: %d, halfwidth: %d\n",
-            ObjectGetServerId(p_obj),
-            x,
-            y,
-            objX,
-            objY,
-            halfwidth) ;
-        */
-        /* moved */
-                    if (p_obj == p_movingObject)  {
-        //puts("moving obj") ;
-                        continue ;
-                    }
+                    if ((x <= objX + halfwidth) &&
+                        (x >= objX - halfwidth) &&
+                        (y <= objY + halfwidth) &&
+                        (y >= objY - halfwidth))
+                    {
+                        /*
+          printf("id: %d, x: %d, y: %d, objX: %d, objY: %d, halfwidth: %d\n",
+              ObjectGetServerId(p_obj),
+              x,
+              y,
+              objX,
+              objY,
+              halfwidth) ;
+          */
+                        /* moved */
+                        if (p_obj == p_movingObject)
+                        {
+                            //puts("moving obj") ;
+                            continue;
+                        }
 
-                    if ((&(p_obj->objMove)) == G_exceptObjMove)  {
-        //puts("except object") ;
-                        continue ;
-                    }
+                        if ((&(p_obj->objMove)) == G_exceptObjMove)
+                        {
+                            //puts("except object") ;
+                            continue;
+                        }
 
-                    if (ObjectGetAttributes(p_obj) & OBJECT_ATTR_PASSABLE)  {
-        //puts("passable") ;
-                        continue ;
-                    }
-        /* moved */
+                        if (ObjectGetAttributes(p_obj) & OBJECT_ATTR_PASSABLE)
+                        {
+                            //puts("passable") ;
+                            continue;
+                        }
+                        /* moved */
 
 
-        //if (ObjectIsCreature(p_movingObject))
-        // printf("  3dobjhit %d (%d)\n", ObjectGetServerId(p_obj), ObjectGetType(p_obj)) ;
-                        objBottom = ObjectGetZ16(p_obj) ;
+                        //if (ObjectIsCreature(p_movingObject))
+                        // printf("  3dobjhit %d (%d)\n", ObjectGetServerId(p_obj), ObjectGetType(p_obj)) ;
+                        objBottom = ObjectGetZ16(p_obj);
                         objTop = objBottom + ObjectGetHeight(p_obj) - 1;
-        //printf("objBottom: %d  objTop: %d\n", objBottom, objTop) ;
-                        ceilingSector = ObjectGetAreaCeilingSector(p_obj) ;
+                        //printf("objBottom: %d  objTop: %d\n", objBottom, objTop) ;
+                        ceilingSector = ObjectGetAreaCeilingSector(p_obj);
                         if (ceilingSector > G_Num3dSectors)
-                            ceilingSector = View3dFindSectorNum(x, y) ;
-                        ceiling = MapGetCeilingHeight(ceilingSector) ;
-        //printf("ceilingSector %d, ceiling %d\n", ceilingSector, ceiling) ;
+                            ceilingSector = View3dFindSectorNum(x, y);
+                        ceiling = MapGetCeilingHeight(ceilingSector);
+                        //printf("ceilingSector %d, ceiling %d\n", ceilingSector, ceiling) ;
 
-                        if (objBottom >= zTop)  {
-        //if (ObjectIsCreature(p_movingObject))
-        //    printf("  objBottom > zTop\n") ;
-                            continue ;
+                        if (objBottom >= zTop)
+                        {
+                            //if (ObjectIsCreature(p_movingObject))
+                            //    printf("  objBottom > zTop\n") ;
+                            continue;
                         }
 
                         /* If we are over the top, continue.  Unless, we are */
                         /* going to go through the roof. */
-                        if (objTop < zBottom)  {
-                            if (!p_movingObject)  {
-        //if (ObjectIsCreature(p_movingObject))
-        //    printf("  !p_movingObject\n") ;
-                                continue ;
-                             }
+                        if (objTop < zBottom)
+                        {
+                            if (!p_movingObject)
+                            {
+                                //if (ObjectIsCreature(p_movingObject))
+                                //    printf("  !p_movingObject\n") ;
+                                continue;
+                            }
 
-                            if ((objTop + height) < (ObjectGetHighestPoint(p_movingObject)>>16))  {
-        //if (ObjectIsCreature(p_movingObject))
-        //    printf("  o+h\n") ;
-                                continue ;
+                            if ((objTop + height)
+                                < (ObjectGetHighestPoint(p_movingObject) >> 16))
+                            {
+                                //if (ObjectIsCreature(p_movingObject))
+                                //    printf("  o+h\n") ;
+                                continue;
                             }
                         }
 
                         /* Hit! */
-        //printf("G_numHits = %d\n", G_numHits) ;
-                        if (G_numHits < MAX_LINE_HITS)  {
-        /*
-        if ((ObjectGetServerId(p_movingObject) / 100) != 91)
-          if ((ObjectGetServerId(p_movingObject) / 100) != 90)
-            printf("View3dObjectHitFast: %d hits %d\n", ObjectGetServerId(p_movingObject), ObjectGetServerId(p_obj)) ;
-        */
-        //    printf("  hit!\n") ;
-        //ObjectPrint(stdout, p_movingObject) ;
-        //ObjectPrint(stdout, p_obj) ;
-                            dy = lastY - objY ;
-                            dx = lastX - objX ;
-        //if (ObjectIsCreature(p_movingObject))
-        // printf("dx: %d, dy: %d\n", dx, dy) ;
+                        //printf("G_numHits = %d\n", G_numHits) ;
+                        if (G_numHits < MAX_LINE_HITS)
+                        {
+                            /*
+          if ((ObjectGetServerId(p_movingObject) / 100) != 91)
+            if ((ObjectGetServerId(p_movingObject) / 100) != 90)
+              printf("View3dObjectHitFast: %d hits %d\n", ObjectGetServerId(p_movingObject), ObjectGetServerId(p_obj)) ;
+          */
+                            //    printf("  hit!\n") ;
+                            //ObjectPrint(stdout, p_movingObject) ;
+                            //ObjectPrint(stdout, p_obj) ;
+                            dy = lastY - objY;
+                            dx = lastX - objX;
+                            //if (ObjectIsCreature(p_movingObject))
+                            // printf("dx: %d, dy: %d\n", dx, dy) ;
                             if (((dx > dy) && (dx < -dy)) ||
-                                ((dx > -dy) && (dx < dy)))  {
-                                G_hitSlopeYs[G_numHits] = 0 ;
-                                G_hitSlopeXs[G_numHits] = 1 ;
-                            } else {
-                                G_hitSlopeYs[G_numHits] = 1 ;
-                                G_hitSlopeXs[G_numHits] = 0 ;
+                                ((dx > -dy) && (dx < dy)))
+                            {
+                                G_hitSlopeYs[G_numHits] = 0;
+                                G_hitSlopeXs[G_numHits] = 1;
                             }
-                            G_hitWho[G_numHits] = ObjectGetServerId(p_obj) ;
-                            G_hitType[G_numHits] = HIT_TYPE_OBJECT ;  /* object */
+                            else
+                            {
+                                G_hitSlopeYs[G_numHits] = 1;
+                                G_hitSlopeXs[G_numHits] = 0;
+                            }
+                            G_hitWho[G_numHits] = ObjectGetServerId(p_obj);
+                            G_hitType[G_numHits] = HIT_TYPE_OBJECT;  /* object */
 
-                            if (G_numHits == 0)  {
-                                G_hitSlopeX = G_hitSlopeXs[0] ;
-                                G_hitSlopeY = G_hitSlopeYs[0] ;
+                            if (G_numHits == 0)
+                            {
+                                G_hitSlopeX = G_hitSlopeXs[0];
+                                G_hitSlopeY = G_hitSlopeYs[0];
                             }
 
 #ifndef NDEBUG
                             if ((ObjectGetServerId(p_movingObject)/100) != 91)  {
-                                if (ObjectGetServerId(p_movingObject) != 0)  {
-                                    SyncMemAdd("Collision between %d and %d\n",
-                                        ObjectGetServerId(p_movingObject),
-                                        ObjectGetServerId(p_obj),
-                                        0) ;
-                                }
-                            }
+if (ObjectGetServerId(p_movingObject) != 0)  {
+SyncMemAdd("Collision between %d and %d\n",
+ObjectGetServerId(p_movingObject),
+ObjectGetServerId(p_obj),
+0) ;
+}
+}
 #endif
 #if 0
-printf("Collision between objects %d and %d\n", ObjectGetServerId(p_movingObject), ObjectGetServerId(p_obj)) ;
+                            printf("Collision between objects %d and %d\n", ObjectGetServerId(p_movingObject), ObjectGetServerId(p_obj)) ;
 printf("  x=%04X, y=%04X, zBot=%04X, zTop=%04X, height=%d, lastX=%04X, lastY=%04X\n", x, y, zBottom, zTop, height, lastX, lastY) ;
 printf("  mov x: %08lX, y: %08lX, z: %08lX, h:%d\n", ObjectGetX(p_movingObject), ObjectGetY(p_movingObject), ObjectGetZ(p_movingObject), ObjectGetHeight(p_movingObject)) ;
 printf("  obj x: %08lX, y: %08lX, z: %08lX, h:%d\n", ObjectGetX(p_obj), ObjectGetY(p_obj), ObjectGetZ(p_obj), ObjectGetHeight(p_obj)) ;
 #endif
-                            G_numHits++ ;
-                            DebugEnd() ;
-                            return TRUE ;
-                        } else {
-        #ifndef NDEBUG
+                            G_numHits++;
+                            DebugEnd();
+                            return TRUE;
+                        }
+                        else
+                        {
+#ifndef NDEBUG
                             printf("View3dObjectHitFast: Overflow: %d (%p)\n",
-                                ObjectGetServerId(p_movingObject),
-                                p_movingObject) ;
-        #endif
-                            DebugCheck(FALSE) ;
+ObjectGetServerId(p_movingObject),
+p_movingObject) ;
+#endif
+                            DebugCheck(FALSE);
                         }
                     }
                 }
             }
         }
     }
-    DebugEnd() ;
-    return FALSE ;
+    DebugEnd();
+    return FALSE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1514,46 +1590,47 @@ printf("  obj x: %08lX, y: %08lX, z: %08lX, h:%d\n", ObjectGetX(p_obj), ObjectGe
  *  @param p_obj -- Object moving
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 View3dMoveToXY(
-              T_sword32 *oldX,
-              T_sword32 *oldY,
-              T_sword32 newx,
-              T_sword32 newy,
-              T_sword32 radius,
-              T_sword32 foot,
-              T_sword32 head,
-              T_sword16 height,
-              T_3dObject *p_obj)
+T_sword16
+View3dMoveToXY(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newx,
+    T_sword32 newy,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj)
 {
-    T_sword16 status ;
-    T_sword16 step ;
+    T_sword16 status;
+    T_sword16 step;
 
-    DebugRoutine("View3dMoveToXY") ;
+    DebugRoutine("View3dMoveToXY");
 
-    G_currentHeight = foot>>16 ;
+    G_currentHeight = foot >> 16;
 
-    step = 1+CalculateDistance(
-               (*oldX) >> 16,
-               (*oldY) >> 16,
-               newx >> 16,
-               newy >> 16) ;
+    step = 1 + CalculateDistance(
+        (*oldX) >> 16,
+        (*oldY) >> 16,
+        newx >> 16,
+        newy >> 16);
 
 //printf("foot=%d, head=%d, newx=%d, newy=%d, %d\n", foot>>16, head>>16, newx>>16, newy>>16, ObjectGetServerId(p_obj)) ;
     status = IMoveToXYWithStep(
-               oldX,
-               oldY,
-               newx,
-               newy,
-               radius,
-               step,
-               foot,
-               head,
-               height,
-               p_obj) ;
+        oldX,
+        oldY,
+        newx,
+        newy,
+        radius,
+        step,
+        foot,
+        head,
+        height,
+        p_obj);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return status ;
+    return status;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1576,40 +1653,41 @@ T_sword16 View3dMoveToXY(
  *  @param p_obj -- Object moving
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 View3dMoveToXYFast(
-              T_sword32 *oldX,
-              T_sword32 *oldY,
-              T_sword32 newx,
-              T_sword32 newy,
-              T_sword32 radius,
-              T_sword32 foot,
-              T_sword32 head,
-              T_sword16 height,
-              T_3dObject *p_obj)
+T_sword16
+View3dMoveToXYFast(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newx,
+    T_sword32 newy,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj)
 {
-    T_sword16 step ;
-    T_word16 sector ;
-    E_Boolean hit ;
+    T_sword16 step;
+    T_word16 sector;
+    E_Boolean hit;
 
     sector = View3dFindSectorNum(
-                 (T_sword16)(newx>>16),
-                 (T_sword16)(newy>>16)) ;
+        (T_sword16) (newx >> 16),
+        (T_sword16) (newy >> 16));
     if (sector == 0xFFFF)
-        return TRUE ;
+        return TRUE;
 
-    G_currentHeight = foot>>16 ;
+    G_currentHeight = foot >> 16;
 
-    step = 1+CalculateDistance(
-               (*oldX) >> 16,
-               (*oldY) >> 16,
-               newx >> 16,
-               newy >> 16) ;
+    step = 1 + CalculateDistance(
+        (*oldX) >> 16,
+        (*oldY) >> 16,
+        newx >> 16,
+        newy >> 16);
 
-    G_numSurroundingSectors = 0 ;
+    G_numSurroundingSectors = 0;
 
-    hit = MoveToFast(oldX, oldY, newx, newy, step, radius, foot, head, height, p_obj) ;
+    hit = MoveToFast(oldX, oldY, newx, newy, step, radius, foot, head, height, p_obj);
 
-    return hit ;
+    return hit;
 }
 
 /*-------------------------------------------------------------------------*
@@ -1632,113 +1710,128 @@ T_sword16 View3dMoveToXYFast(
  *  @param p_obj -- Pointer to object moving
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 View3dMoveTo(
-         T_sword32 *oldX,
-         T_sword32 *oldY,
-         T_word16 angle,
-         T_sword32 step,
-         T_sword32 radius,
-         T_sword32 foot,
-         T_sword32 head,
-         T_sword16 height,
-         T_3dObject *p_obj)
+T_sword16
+View3dMoveTo(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_word16 angle,
+    T_sword32 step,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj)
 {
-    T_sword32 newX, newY ;
+    T_sword32 newX, newY;
 
-    G_currentHeight = foot>>16 ;
+    G_currentHeight = foot >> 16;
 
-    newX = *oldX + step * MathCosineLookup(angle) ;
-    newY = *oldY + step * MathSineLookup(angle) ;
+    newX = *oldX + step * MathCosineLookup(angle);
+    newY = *oldY + step * MathSineLookup(angle);
 
-    step = easyabs(step) ;
+    step = easyabs(step);
 
     return IMoveToXYWithStep(
-               oldX,
-               oldY,
-               newX,
-               newY,
-               radius,
-               (T_sword16)step,
-               foot,
-               head,
-               height,
-               p_obj) ;
+        oldX,
+        oldY,
+        newX,
+        newY,
+        radius,
+        (T_sword16) step,
+        foot,
+        head,
+        height,
+        p_obj);
 }
 
-E_Boolean CheckLineCanStepThrough(T_word16 i, T_3dObject *p_obj)
+E_Boolean
+CheckLineCanStepThrough(T_word16 i, T_3dObject *p_obj)
 {
-    E_Boolean canStep = FALSE ;
-    T_3dLine *p_line ;
-    T_3dSector *p_sector1, *p_sector2 ;
-    T_sword16 floor1, ceiling1, floor2, ceiling2 ;
-    T_sword16 z ;
-    T_sword16 top ;
-    T_sword16 climb ;
+    E_Boolean canStep = FALSE;
+    T_3dLine *p_line;
+    T_3dSector *p_sector1, *p_sector2;
+    T_sword16 floor1, ceiling1, floor2, ceiling2;
+    T_sword16 z;
+    T_sword16 top;
+    T_sword16 climb;
 
-    DebugRoutine("CheckLineCanStepThrough") ;
-    DebugCheck(p_obj != NULL) ;
-    DebugCheck(i < G_Num3dLines) ;
+    DebugRoutine("CheckLineCanStepThrough");
+    DebugCheck(p_obj != NULL);
+    DebugCheck(i < G_Num3dLines);
 
-    p_line = G_3dLineArray + i ;
+    p_line = G_3dLineArray + i;
 
     /* Only 2 sided lines need consideration that are not impassible*/
     if ((p_line->flags & LINE_IS_TWO_SIDED) &&
-        (!(p_line->flags & LINE_IS_IMPASSIBLE)))  {
+        (!(p_line->flags & LINE_IS_IMPASSIBLE)))
+    {
         /* Get the floor and ceiling heights of the two sides */
-        p_sector1 = G_3dSectorArray + G_3dSideArray[p_line->side[0]].sector ;
-        floor1 = p_sector1->floorHt ;
-        ceiling1 = p_sector1->ceilingHt ;
-        p_sector2 = G_3dSectorArray + G_3dSideArray[p_line->side[1]].sector ;
-        floor2 = p_sector2->floorHt ;
-        ceiling2 = p_sector2->ceilingHt ;
+        p_sector1 = G_3dSectorArray + G_3dSideArray[p_line->side[0]].sector;
+        floor1 = p_sector1->floorHt;
+        ceiling1 = p_sector1->ceilingHt;
+        p_sector2 = G_3dSectorArray + G_3dSideArray[p_line->side[1]].sector;
+        floor2 = p_sector2->floorHt;
+        ceiling2 = p_sector2->ceilingHt;
 
 //printf("    (%d, %d) - (%d, %d)\n", floor1, ceiling1, floor2, ceiling2) ;
         /* Determine the higher of the 2 floors. */
         if (floor2 > floor1)
-            floor1 = floor2 ;
+            floor1 = floor2;
 
         /* Determine the lower of the 2 ceilings. */
         if (ceiling2 < ceiling1)
-            ceiling1 = ceiling2 ;
+            ceiling1 = ceiling2;
 
         /* Get the top and bottom of the object in question. */
-        z = ObjectGetZ16(p_obj) ;
-        top = z + ObjectGetHeight(p_obj) ;
+        z = ObjectGetZ16(p_obj);
+        top = z + ObjectGetHeight(p_obj);
 //printf("    z = %d, top = %d\n", z, top) ;
 //printf("    f:%d, c:%d\n", floor1, ceiling1) ;
         /* If we can squeeze through, alright! */
-        if ((z >= floor1) && (top < ceiling1))  {
-            canStep = TRUE ;
+        if ((z >= floor1) && (top < ceiling1))
+        {
+            canStep = TRUE;
 //puts("  can step up without climb") ;
-        } else {
-            if (z < floor1)  {
+        }
+        else
+        {
+            if (z < floor1)
+            {
                 /* If not, try stepping up and squeezing through. */
-                climb = ObjectGetClimbHeight(p_obj) ;
+                climb = ObjectGetClimbHeight(p_obj);
                 if ((z + climb) > floor1)
-                    z = floor1 ;
-                top = z + ObjectGetHeight(p_obj) ;
+                    z = floor1;
+                top = z + ObjectGetHeight(p_obj);
 //printf("    zstep = %d, topstep = %d\n", z, top) ;
 
-                if ((z >= floor1) && (top < ceiling1))  {
-                    canStep = TRUE ;
+                if ((z >= floor1) && (top < ceiling1))
+                {
+                    canStep = TRUE;
 //puts("  can step up with climb") ;
-                } else {
+                }
+                else
+                {
 //puts("  cannot step up with climb") ;
                 }
-            } else {
+            }
+            else
+            {
 //puts("  ceiling too low") ;
             }
         }
-    } else {
+    }
+    else
+    {
 //puts("  impassible") ;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return canStep ;
+    return canStep;
 }
 
-extern T_byte8 IOnRightOfLine(T_sword16 x, T_sword16 y, T_word16 line) ;
+extern T_byte8
+IOnRightOfLine(T_sword16 x, T_sword16 y, T_word16 line);
 
 /*-------------------------------------------------------------------------*
  * Routine:  IMoveToXYWithStep
@@ -1747,7 +1840,7 @@ extern T_byte8 IOnRightOfLine(T_sword16 x, T_sword16 y, T_word16 line) ;
  *  IMoveToXYWithStep moves the player to given new location and must
  *  also be given the amount of distance is being traveled.
  *
- *  NOTE: 
+ *  NOTE:
  *  G_currentHeight MUST be set in order for this routine to work
  *  correctly.
  *
@@ -1765,70 +1858,76 @@ extern T_byte8 IOnRightOfLine(T_sword16 x, T_sword16 y, T_word16 line) ;
  *  @param p_obj -- Object doing the movement
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 IMoveToXYWithStep(
-              T_sword32 *oldX,
-              T_sword32 *oldY,
-              T_sword32 newX,
-              T_sword32 newY,
-              T_sword32 radius,
-              T_sword32 step,
-              T_sword32 foot,
-              T_sword32 head,
-              T_sword16 height,
-              T_3dObject *p_obj)
+T_sword16
+IMoveToXYWithStep(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 radius,
+    T_sword32 step,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_obj)
 {
-    T_sword16 code = 0 ;
-    T_sword32 offX, offY ;
-    T_word16 i ;
-    T_word16 j ;
-    T_word16 count = 0 ;
-    T_word16 angle, angle2 ;
-    T_sword32 mag ;
-    T_sword32 velX, velY ;
-    T_sword32 leftX, rightX, topY, bottomY ;
-    T_word16 vertexNum ;
-    T_sword16 vertexX, vertexY ;
-    T_word16 otherI, otherJ ;
-    T_word16 angleI, angleJ, angleF, angleDistI, angleDistJ ;
-    T_sword32 lastX, lastY ;
-    T_sword16 origX, origY ;
-    E_Boolean hitStepThrough[MAX_LINE_HITS] ;
-    E_Boolean anyNonStep ;
+    T_sword16 code = 0;
+    T_sword32 offX, offY;
+    T_word16 i;
+    T_word16 j;
+    T_word16 count = 0;
+    T_word16 angle, angle2;
+    T_sword32 mag;
+    T_sword32 velX, velY;
+    T_sword32 leftX, rightX, topY, bottomY;
+    T_word16 vertexNum;
+    T_sword16 vertexX, vertexY;
+    T_word16 otherI, otherJ;
+    T_word16 angleI, angleJ, angleF, angleDistI, angleDistJ;
+    T_sword32 lastX, lastY;
+    T_sword16 origX, origY;
+    E_Boolean hitStepThrough[MAX_LINE_HITS];
+    E_Boolean anyNonStep;
 
-    origX = (*oldX>>16) ;
-    origY = (*oldY>>16) ;
+    origX = (*oldX >> 16);
+    origY = (*oldY >> 16);
 
-    G_hitDistance = 0 ;
-    G_hitSlopeX = G_hitSlopeY = 0 ;
+    G_hitDistance = 0;
+    G_hitSlopeX = G_hitSlopeY = 0;
 
 //    G_numSurroundingSectors = 0 ;
 
 //printf("xy: f: %d h: %d\n", foot>>16, head>>16) ;
 //    while (/* (count < 3) && */ (MoveTo(*oldX, *oldY, newX, newY, step, radius, foot, head, height, p_obj) == TRUE))  {
-    while (/* (count < 3) && */ (MoveTo(*oldX, *oldY, newX, newY, step, p_obj) == TRUE))  {
+    while (/* (count < 3) && */ (MoveTo(*oldX, *oldY, newX, newY, step, p_obj) == TRUE))
+    {
 //printf("--xy: f: %d h: %d\n", foot>>16, head>>16) ;
 //printf("***************** count = %d\n", count) ;
         /* Compute the radial box around the origin. */
-        leftX = rightX = (newX)>>16 ;
-        leftX -= radius ;
-        rightX += radius ;
-        topY = bottomY = (newY)>>16 ;
-        topY -= radius ;
-        bottomY += radius ;
-        lastX = *oldX ;
-        lastY = *oldY ;
+        leftX = rightX = (newX) >> 16;
+        leftX -= radius;
+        rightX += radius;
+        topY = bottomY = (newY) >> 16;
+        topY -= radius;
+        bottomY += radius;
+        lastX = *oldX;
+        lastY = *oldY;
 
 //puts("PREP:") ;
         /* Determine all the lines that are TRULY blocking the */
         /* object. */
-        anyNonStep = FALSE ;
-        for (i=0; i<G_numHits; i++)  {
-            if (G_hitType[i] == HIT_TYPE_LINE)  {
+        anyNonStep = FALSE;
+        for (i = 0; i < G_numHits; i++)
+        {
+            if (G_hitType[i] == HIT_TYPE_LINE)
+            {
 //printf("  line %d check\n", G_hitWho[i]) ;
                 if ((hitStepThrough[i] = CheckLineCanStepThrough(G_hitWho[i], p_obj)) == FALSE)
-                    anyNonStep = TRUE ;
-            } else {
-                anyNonStep = TRUE ;
+                    anyNonStep = TRUE;
+            }
+            else
+            {
+                anyNonStep = TRUE;
             }
         }
 
@@ -1836,105 +1935,125 @@ T_sword16 IMoveToXYWithStep(
 #if 0
         if (anyNonStep == FALSE)  {
 //puts("quick leave") ;
-            *oldX = newX ;
-            *oldY = newY ;
+*oldX = newX ;
+*oldY = newY ;
 //            *oldX = G_hitAtX ;
 //            *oldY = G_hitAtY ;
-            return code ;
-        }
+return code ;
+}
 #endif
 
         /* Mark this thing as colliding with something */
-        *oldX = G_hitAtX ;
-        *oldY = G_hitAtY ;
-        offX = (newX - G_hitAtX) ;
-        offY = (newY - G_hitAtY) ;
-        code |= 1 ;
+        *oldX = G_hitAtX;
+        *oldY = G_hitAtY;
+        offX = (newX - G_hitAtX);
+        offY = (newY - G_hitAtY);
+        code |= 1;
 
 #if 0
         /* Lower the scale of the slopes to ensure that */
-        /* the calculations don't blow up. */
-        for (i=0; i<G_numHits; i++)  {
-            while ((G_hitSlopeXs[i] > 128) || (G_hitSlopeYs[i] > 128))  {
-                G_hitSlopeXs[i] >>= 1 ;
-                G_hitSlopeYs[i] >>= 1 ;
-            }
-        }
+/* the calculations don't blow up. */
+for (i=0; i<G_numHits; i++)  {
+while ((G_hitSlopeXs[i] > 128) || (G_hitSlopeYs[i] > 128))  {
+G_hitSlopeXs[i] >>= 1 ;
+G_hitSlopeYs[i] >>= 1 ;
+}
+}
 #endif
 
-        for (i=0; i<G_numHits; i++)  {
-            j = G_numHits ;
+        for (i = 0; i < G_numHits; i++)
+        {
+            j = G_numHits;
 //printf("i: %d, type: %d %d (%d %d)\n", i, G_hitType[i], G_hitWho[i], G_hitSlopeXs[i], G_hitSlopeYs[i]) ;
             /* Only consider lines ('cause they have endpoints) */
-            if (G_hitType[i] == HIT_TYPE_LINE)  {
+            if (G_hitType[i] == HIT_TYPE_LINE)
+            {
                 /* Skip lines we can jump through */
-                if (hitStepThrough[i] == TRUE)  {
+                if (hitStepThrough[i] == TRUE)
+                {
 //printf("   line %d can step through\n", G_hitWho[i]) ;
-                    continue ;
-                } else {
+                    continue;
+                }
+                else
+                {
 //printf("   line %d can't step through\n", G_hitWho[i]) ;
                 }
 
                 /* See if an endpoint is in the box. */
-                vertexNum = G_3dLineArray[G_hitWho[i]].from ;
+                vertexNum = G_3dLineArray[G_hitWho[i]].from;
 //printf("  vertex num from %d\n", vertexNum) ;
-                vertexX = G_3dVertexArray[vertexNum].x ;
-                vertexY = G_3dVertexArray[vertexNum].y ;
+                vertexX = G_3dVertexArray[vertexNum].x;
+                vertexY = G_3dVertexArray[vertexNum].y;
                 if ((vertexX < leftX) ||
                     (vertexX > rightX) ||
                     (vertexY < topY) ||
-                    (vertexY > bottomY))  {
+                    (vertexY > bottomY))
+                {
                     /* try the other end. */
-                    vertexNum = G_3dLineArray[G_hitWho[i]].to ;
+                    vertexNum = G_3dLineArray[G_hitWho[i]].to;
 //printf("  vertex num to %d\n", vertexNum) ;
-                    vertexX = G_3dVertexArray[vertexNum].x ;
-                    vertexY = G_3dVertexArray[vertexNum].y ;
+                    vertexX = G_3dVertexArray[vertexNum].x;
+                    vertexY = G_3dVertexArray[vertexNum].y;
                     if ((vertexX < leftX) ||
                         (vertexX > rightX) ||
                         (vertexY < topY) ||
-                        (vertexY > bottomY))  {
-                        vertexNum = 0xFFFF ;
-                    } else {
-                        /* Note who is on the other end. */
-                        otherI = G_3dLineArray[G_hitWho[i]].from ;
+                        (vertexY > bottomY))
+                    {
+                        vertexNum = 0xFFFF;
                     }
-                } else {
+                    else
+                    {
+                        /* Note who is on the other end. */
+                        otherI = G_3dLineArray[G_hitWho[i]].from;
+                    }
+                }
+                else
+                {
                     /* this is the correct end, note the other end. */
-                    otherI = G_3dLineArray[G_hitWho[i]].to ;
+                    otherI = G_3dLineArray[G_hitWho[i]].to;
                 }
 
                 /* Did we find a line with an endpoint? */
-                if (vertexNum != 0xFFFF)  {
+                if (vertexNum != 0xFFFF)
+                {
 //printf("  try vertex %d\n", vertexNum) ;
                     /* Check this line with all the other lines */
                     /* and see if there are matching end points. */
-                    for (j=0; j<G_numHits; j++)  {
-                         if (i == j)
-                             continue ;
+                    for (j = 0; j < G_numHits; j++)
+                    {
+                        if (i == j)
+                            continue;
 
-                         if (hitStepThrough[j] == TRUE)  {
+                        if (hitStepThrough[j] == TRUE)
+                        {
 //printf("   2) line %d can step through\n", G_hitWho[j]) ;
-                             continue ;
-                         }
+                            continue;
+                        }
 
                         /* Only consider other lines. */
-                        if (G_hitType[j] == HIT_TYPE_LINE)  {
-                            if (G_hitWho[j] == G_hitWho[i])  {
+                        if (G_hitType[j] == HIT_TYPE_LINE)
+                        {
+                            if (G_hitWho[j] == G_hitWho[i])
+                            {
                                 /* No comparison, same lines! */
 //printf("  same!\n") ;
-                                continue ;
+                                continue;
                             }
                             if ((G_3dLineArray[G_hitWho[j]].from == vertexNum) ||
-                                (G_3dLineArray[G_hitWho[j]].to == vertexNum))  {
+                                (G_3dLineArray[G_hitWho[j]].to == vertexNum))
+                            {
 //printf("  match j = %d\n", j) ;
                                 /* Matching end point!  Do we do this line */
                                 /* (i'th line) or the other line (jth line)? */
 
                                 /* Who is on the other end of this line (j'th) ? */
-                                if (G_3dLineArray[G_hitWho[j]].from == vertexNum)  {
-                                    otherJ = G_3dLineArray[G_hitWho[j]].to ;
-                                } else {
-                                    otherJ = G_3dLineArray[G_hitWho[j]].from ;
+                                if (G_3dLineArray[G_hitWho[j]].from == vertexNum)
+                                {
+                                    otherJ = G_3dLineArray[G_hitWho[j]].to;
+                                }
+                                else
+                                {
+                                    otherJ = G_3dLineArray[G_hitWho[j]].from;
                                 }
 
 //printf("    otherI = %d, otherJ = %d\n", otherI, otherJ) ;
@@ -1942,151 +2061,171 @@ T_sword16 IMoveToXYWithStep(
                                 /* Compute the angles from this vertex */
                                 /* to the other ends. */
                                 angleI = MathArcTangent(
-                                             G_3dVertexArray[otherI].x - vertexX,
-                                             G_3dVertexArray[otherI].y - vertexY) ;
+                                    G_3dVertexArray[otherI].x - vertexX,
+                                    G_3dVertexArray[otherI].y - vertexY);
                                 angleJ = MathArcTangent(
-                                             G_3dVertexArray[otherJ].x - vertexX,
-                                             G_3dVertexArray[otherJ].y - vertexY) ;
+                                    G_3dVertexArray[otherJ].x - vertexX,
+                                    G_3dVertexArray[otherJ].y - vertexY);
                                 angleF = MathArcTangent(
-                                             (origX - vertexX),
-                                             (origY - vertexY)) ;
+                                    (origX - vertexX),
+                                    (origY - vertexY));
 //                                angleF = MathArcTangent(
 //                                             ((lastX)>>16) - vertexX,
 //                                             ((lastY)>>16) - vertexY) ;
 
-                                angleDistI = angleF - angleI ;
+                                angleDistI = angleF - angleI;
                                 if (angleDistI > INT_ANGLE_180)
-                                    angleDistI = -angleDistI ;
+                                    angleDistI = -angleDistI;
 
-                                angleDistJ = angleF - angleJ ;
+                                angleDistJ = angleF - angleJ;
                                 if (angleDistJ > INT_ANGLE_180)
-                                    angleDistJ = -angleDistJ ;
+                                    angleDistJ = -angleDistJ;
 
 //printf("    angleI = %04X, angleJ = %04X, angleF = %04X\n", angleI, angleJ, angleF) ;
 //printf("    distI = %04X, distJ = %04X\n", angleDistI, angleDistJ) ;
-                                if (angleDistI < angleDistJ)  {
+                                if (angleDistI < angleDistJ)
+                                {
                                     /* i'th line is closer than j'th line */
                                     /* Ignore j */
 //printf("    keep i\n") ;
-                                } else if (angleDistI == angleDistJ) {
-                                    if (i < j)  {
-                                    } else {
-                                        break ;
+                                }
+                                else if (angleDistI == angleDistJ)
+                                {
+                                    if (i < j)
+                                    {
                                     }
-                                } else {
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
                                     /* j'th line is closer than i'th line */
                                     /* Take this j, not the i line */
 //printf("    keep j\n") ;
-                                    break ;
+                                    break;
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 /* This line did not have a matching */
                                 /* end point. Ignore this line (j'th line) */
                             }
                         }
                     }
                 }
-            } else {
+            }
+            else
+            {
                 /* Not a line, so go ahead and do this. */
-                j = G_numHits ;
+                j = G_numHits;
             }
 
 //printf("  j = %d %d\n", j, G_numHits) ;
-            if (j == G_numHits)  {
-            offX >>= 10 ;
-            offY >>= 10 ;
+            if (j == G_numHits)
+            {
+                offX >>= 10;
+                offY >>= 10;
 //printf("XY Hit %d:  %ld %ld, pre: %ld, %ld", i, G_hitSlopeXs[i], G_hitSlopeYs[i], offX, offY) ;
-            ProjectXYOntoLine(&offX, &offY, G_hitSlopeXs[i], G_hitSlopeYs[i]) ;
+                ProjectXYOntoLine(&offX, &offY, G_hitSlopeXs[i], G_hitSlopeYs[i]);
 //printf("  post: %ld, %ld\n", offX, offY) ;
-            offX <<= 10 ;
-            offY <<= 10 ;
+                offX <<= 10;
+                offY <<= 10;
 
-            if (count > 4)  {
-                angle = INT_ANGLE_270 + MathArcTangent(
-                                           G_hitSlopeXs[i],
-                                           G_hitSlopeYs[i]) ;
-                if ((G_hitType[i] == HIT_TYPE_LINE) && (IOnRightOfLine(lastX>>16, lastY>>16, G_hitWho[i])))
-                    angle += INT_ANGLE_180 ;
+                if (count > 4)
+                {
+                    angle = INT_ANGLE_270 + MathArcTangent(
+                        G_hitSlopeXs[i],
+                        G_hitSlopeYs[i]);
+                    if ((G_hitType[i] == HIT_TYPE_LINE)
+                        && (IOnRightOfLine(lastX >> 16, lastY >> 16, G_hitWho[i])))
+                        angle += INT_ANGLE_180;
 
-                offX += (MathCosineLookup(angle))*2 ;
-                offY += (MathSineLookup(angle))*2 ;
-            }
+                    offX += (MathCosineLookup(angle)) * 2;
+                    offY += (MathSineLookup(angle)) * 2;
+                }
 
-            if (ObjectGetAttributes(p_obj) & OBJECT_ATTR_SLIDE_ONLY)  {
-                /* Affect the velocity too. */
-                p_obj->objMove.XV>>=12 ;
-                p_obj->objMove.YV>>=12 ;
+                if (ObjectGetAttributes(p_obj) & OBJECT_ATTR_SLIDE_ONLY)
+                {
+                    /* Affect the velocity too. */
+                    p_obj->objMove.XV >>= 12;
+                    p_obj->objMove.YV >>= 12;
 //printf("   Vel %d:  %ld %ld, pre: %ld, %ld", i, G_hitSlopeXs[i], G_hitSlopeYs[i], p_obj->objMove.XV, p_obj->objMove.YV) ;
-                ProjectXYOntoLine(
-                    &p_obj->objMove.XV,
-                    &p_obj->objMove.YV,
-                    G_hitSlopeXs[i],
-                    G_hitSlopeYs[i]) ;
+                    ProjectXYOntoLine(
+                        &p_obj->objMove.XV,
+                        &p_obj->objMove.YV,
+                        G_hitSlopeXs[i],
+                        G_hitSlopeYs[i]);
 //printf("  post: %ld, %ld\n", p_obj->objMove.XV, p_obj->objMove.YV) ;
-                p_obj->objMove.XV<<=12 ;
-                p_obj->objMove.YV<<=12 ;
-            } else {
+                    p_obj->objMove.XV <<= 12;
+                    p_obj->objMove.YV <<= 12;
+                }
+                else
+                {
 //puts("reflect") ;
-                /* Reflect off the surface. */
-                velX = p_obj->objMove.XV ;
-                velY = p_obj->objMove.YV ;
+                    /* Reflect off the surface. */
+                    velX = p_obj->objMove.XV;
+                    velY = p_obj->objMove.YV;
 
-                angle = INT_ANGLE_90 + MathArcTangent32(
-                                           G_hitSlopeXs[i],
-                                           G_hitSlopeYs[i]) ;
-                angle2 = MathArcTangent32(velX, velY) ;
-                mag = (CalculateDistance(0, 0, velX>>8, velY>>8))<<8 ;
-                angle2 = INT_ANGLE_180 + angle + (angle - angle2) ;
-                velX = Mult32By32AndDiv32(
-                           mag,
-                           MathCosineLookup(angle2),
-                           0x10000) ;
-                velY = Mult32By32AndDiv32(
-                           mag,
-                           MathSineLookup(angle2),
-                           0x10000) ;
-                p_obj->objMove.YV = velY ;
-                p_obj->objMove.XV = velX ;
-            }
+                    angle = INT_ANGLE_90 + MathArcTangent32(
+                        G_hitSlopeXs[i],
+                        G_hitSlopeYs[i]);
+                    angle2 = MathArcTangent32(velX, velY);
+                    mag = (CalculateDistance(0, 0, velX >> 8, velY >> 8)) << 8;
+                    angle2 = INT_ANGLE_180 + angle + (angle - angle2);
+                    velX = Mult32By32AndDiv32(
+                        mag,
+                        MathCosineLookup(angle2),
+                        0x10000);
+                    velY = Mult32By32AndDiv32(
+                        mag,
+                        MathSineLookup(angle2),
+                        0x10000);
+                    p_obj->objMove.YV = velY;
+                    p_obj->objMove.XV = velX;
+                }
             }
         }
-        newX = G_hitAtX + offX ;
-        newY = G_hitAtY + offY ;
+        newX = G_hitAtX + offX;
+        newY = G_hitAtY + offY;
 
-        if ((newX == G_hitAtX) && (newY == G_hitAtY))  {
-            return code ;
+        if ((newX == G_hitAtX) && (newY == G_hitAtY))
+        {
+            return code;
         }
 
 //        G_numSurroundingSectors = 0 ;
-        G_hitSlopeX = G_hitSlopeY = 0 ;
+        G_hitSlopeX = G_hitSlopeY = 0;
 
-        step -= G_hitDistance ;
+        step -= G_hitDistance;
         if (step < 0)
-            step = 0 ;
+            step = 0;
 
-        count++ ;
+        count++;
 #if 0
         if (count == 3)  {
-            if (G_hitSlopeXs[i] >= G_hitSlopeYs[i])  {
-                G_hitSlopeXs[i] = 1 ;
-                G_hitSlopeYs[i] = 0 ;
-            } else {
-                G_hitSlopeXs[i] = 0 ;
-                G_hitSlopeYs[i] = 1 ;
-            }
-        }
+if (G_hitSlopeXs[i] >= G_hitSlopeYs[i])  {
+G_hitSlopeXs[i] = 1 ;
+G_hitSlopeYs[i] = 0 ;
+} else {
+G_hitSlopeXs[i] = 0 ;
+G_hitSlopeYs[i] = 1 ;
+}
+}
 #endif
 
-        if (count == 10)  {
+        if (count == 10)
+        {
 //            *oldX = lastX ;
 //            *oldY = lastY ;
-            return code ;
+            return code;
         }
     }
-    *oldX = newX ;
-    *oldY = newY ;
+    *oldX = newX;
+    *oldY = newY;
 
-    return code ;
+    return code;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2100,14 +2239,15 @@ T_sword16 IMoveToXYWithStep(
  *  @param ceiling -- Returned ceiling height
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dGetFloorAndCeilingHeight(T_sword16 *floor, T_sword16 *ceiling)
+T_void
+View3dGetFloorAndCeilingHeight(T_sword16 *floor, T_sword16 *ceiling)
 {
-    DebugRoutine("View3dGetFloorAndCeilingHeight") ;
+    DebugRoutine("View3dGetFloorAndCeilingHeight");
 
-    *floor = G_tallestFloor ;
-    *ceiling = G_shortestCeiling ;
+    *floor = G_tallestFloor;
+    *ceiling = G_shortestCeiling;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2120,15 +2260,16 @@ T_void View3dGetFloorAndCeilingHeight(T_sword16 *floor, T_sword16 *ceiling)
  *  @param sector -- Default sector above and below.
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dSetInitialCeilingAboveAndFloorBelow(T_word16 sector)
+T_void
+View3dSetInitialCeilingAboveAndFloorBelow(T_word16 sector)
 {
-    DebugRoutine("View3dSetInitialCeilingAboveAndFloorBelow") ;
-    DebugCheck(sector < G_Num3dSectors) ;
+    DebugRoutine("View3dSetInitialCeilingAboveAndFloorBelow");
+    DebugCheck(sector < G_Num3dSectors);
 
     G_ceilingBelow = sector;
     G_floorAbove = sector;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2141,14 +2282,15 @@ T_void View3dSetInitialCeilingAboveAndFloorBelow(T_word16 sector)
  *  @param above -- Returned floor
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dGetFloorAbove(T_word16 *above)
+T_void
+View3dGetFloorAbove(T_word16 *above)
 {
-    DebugRoutine("View3dGetFloorAbove") ;
-    DebugCheck(above != NULL) ;
+    DebugRoutine("View3dGetFloorAbove");
+    DebugCheck(above != NULL);
 
-    *above = G_floorAbove ;
+    *above = G_floorAbove;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2161,14 +2303,15 @@ T_void View3dGetFloorAbove(T_word16 *above)
  *  @param below -- Returned ceiling
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dGetCeilingBelow(T_word16 *below)
+T_void
+View3dGetCeilingBelow(T_word16 *below)
 {
-    DebugRoutine("View3dGetCeilngBelow") ;
-    DebugCheck(below != NULL) ;
+    DebugRoutine("View3dGetCeilngBelow");
+    DebugCheck(below != NULL);
 
-    *below = G_ceilingBelow ;
+    *below = G_ceilingBelow;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2181,18 +2324,19 @@ T_void View3dGetCeilingBelow(T_word16 *below)
  *  @param exceptId -- ID of object to exclude
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dSetExceptObject(T_word16 exceptId)
+T_void
+View3dSetExceptObject(T_word16 exceptId)
 {
-    T_3dObject *p_obj ;
+    T_3dObject *p_obj;
 
-    DebugRoutine("View3dSetExceptObject") ;
+    DebugRoutine("View3dSetExceptObject");
 
-    p_obj = ObjectFind(exceptId) ;
-    DebugCheck(p_obj != NULL) ;
+    p_obj = ObjectFind(exceptId);
+    DebugCheck(p_obj != NULL);
 
-    G_exceptObjMove = &(p_obj->objMove) ;
+    G_exceptObjMove = &(p_obj->objMove);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2206,13 +2350,14 @@ T_void View3dSetExceptObject(T_word16 exceptId)
  *      to exclude.
  *
  *<!-----------------------------------------------------------------------*/
-T_void View3dSetExceptObjectByPtr(T_objMoveStruct *p_objMove)
+T_void
+View3dSetExceptObjectByPtr(T_objMoveStruct *p_objMove)
 {
-    DebugRoutine("View3dSetExceptObjectByPtr") ;
+    DebugRoutine("View3dSetExceptObjectByPtr");
 
-    G_exceptObjMove = p_objMove ;
+    G_exceptObjMove = p_objMove;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -2222,7 +2367,7 @@ T_void View3dSetExceptObjectByPtr(T_objMoveStruct *p_objMove)
  *  This routine returns a pointer to a list of sectors and the number
  *  sectors in that list.
  *
- *  NOTE: 
+ *  NOTE:
  *  The data at the returned pointer is NOT to be modified, just copied.
  *
  *  @param numSectors -- Returned number of sectors in list.
@@ -2230,15 +2375,16 @@ T_void View3dSetExceptObjectByPtr(T_objMoveStruct *p_objMove)
  *  @return Pointer to list of sectors
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 *View3dGetSurroundingSectors(T_word16 *numSectors)
+T_word16 *
+View3dGetSurroundingSectors(T_word16 *numSectors)
 {
-    DebugRoutine("View3dGetSurroundingSectors") ;
+    DebugRoutine("View3dGetSurroundingSectors");
 
-    *numSectors = G_numSurroundingSectors ;
+    *numSectors = G_numSurroundingSectors;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return G_surroundingSectors ;
+    return G_surroundingSectors;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2249,41 +2395,42 @@ T_word16 *View3dGetSurroundingSectors(T_word16 *numSectors)
  *  slide and thus is a faster version.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 View3dMoveToFast(
-         T_sword32 *oldX,
-         T_sword32 *oldY,
-         T_word16 angle,
-         T_sword32 step,
-         T_sword32 radius,
-         T_sword32 foot,
-         T_sword32 head,
-         T_sword32 height,
-         T_3dObject *p_obj)
+T_sword16
+View3dMoveToFast(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_word16 angle,
+    T_sword32 step,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword32 height,
+    T_3dObject *p_obj)
 {
-    T_sword16 code = 0 ;
-    T_sword32 newX, newY ;
+    T_sword16 code = 0;
+    T_sword32 newX, newY;
 
-    G_currentHeight = foot>>16 ;
+    G_currentHeight = foot >> 16;
 
-    newX = *oldX + step * MathCosineLookup(angle) ;
-    newY = *oldY + step * MathSineLookup(angle) ;
+    newX = *oldX + step * MathCosineLookup(angle);
+    newY = *oldY + step * MathSineLookup(angle);
 
-    step = easyabs(step) ;
-    G_numSurroundingSectors = 0 ;
+    step = easyabs(step);
+    G_numSurroundingSectors = 0;
 
     code = MoveToFast(
-               oldX,
-               oldY,
-               newX,
-               newY,
-               step,
-               radius,
-               foot,
-               head,
-               (T_sword16)height,
-               p_obj) ;
+        oldX,
+        oldY,
+        newX,
+        newY,
+        step,
+        radius,
+        foot,
+        head,
+        (T_sword16) height,
+        p_obj);
 
-    return code ;
+    return code;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2308,56 +2455,59 @@ T_sword16 View3dMoveToFast(
  *  @return TRUE=collision
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MoveToFast(
-         T_sword32 *oldX,
-         T_sword32 *oldY,
-         T_sword32 newX,
-         T_sword32 newY,
-         T_sword32 distance,
-         T_sword32 radius,
-         T_sword32 foot,
-         T_sword32 head,
-         T_sword16 height,
-         T_3dObject *p_movingObject)
+E_Boolean
+MoveToFast(
+    T_sword32 *oldX,
+    T_sword32 *oldY,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 distance,
+    T_sword32 radius,
+    T_sword32 foot,
+    T_sword32 head,
+    T_sword16 height,
+    T_3dObject *p_movingObject)
 {
-    T_sword32 left, right, top, bottom ;
-    T_word16 surroundingSectors[20] ;
-    T_word16 numSurroundingSectors ;
+    T_sword32 left, right, top, bottom;
+    T_word16 surroundingSectors[20];
+    T_word16 numSurroundingSectors;
 
-T_sword32 ooldX, ooldY ;
-T_sword32 ooldX2, ooldY2 ;
-T_sword32 midX, midY ;
+    T_sword32 ooldX, ooldY;
+    T_sword32 ooldX2, ooldY2;
+    T_sword32 midX, midY;
 
-    ooldX2 = ooldX = *oldX ;
-    ooldY2 = ooldY = *oldY ;
+    ooldX2 = ooldX = *oldX;
+    ooldY2 = ooldY = *oldY;
 
-    G_shortestCeiling = 0x7FFE ;
-    G_tallestFloor = -0x7FFE ;
+    G_shortestCeiling = 0x7FFE;
+    G_tallestFloor = -0x7FFE;
 
     /* Store previous hit condition. */
     memcpy(
         surroundingSectors,
         G_surroundingSectors,
-        sizeof(G_surroundingSectors)) ;
-    numSurroundingSectors = G_numSurroundingSectors ;
-    G_numSurroundingSectors = 0 ;
+        sizeof(G_surroundingSectors));
+    numSurroundingSectors = G_numSurroundingSectors;
+    G_numSurroundingSectors = 0;
 
 //    while (distance > (1+(radius>>1)))  {
 //    while (distance > 3)  {
-    while (distance >= radius)  {
-        midX = (ooldX+newX)>>1 ;
-        midY = (ooldY+newY)>>1 ;
+    while (distance >= radius)
+    {
+        midX = (ooldX + newX) >> 1;
+        midY = (ooldY + newY) >> 1;
         if (MoveToFast(
-               &ooldX,
-               &ooldY,
-               midX,
-               midY,
-               (distance>>1),
-               radius,
-               foot,
-               head,
-               height,
-               p_movingObject) == TRUE)  {
+            &ooldX,
+            &ooldY,
+            midX,
+            midY,
+            (distance >> 1),
+            radius,
+            foot,
+            head,
+            height,
+            p_movingObject) == TRUE)
+        {
             /* I've hit something.  Record where this occured. */
 //            *oldX = ooldX ;
 //            *oldY = ooldY ;
@@ -2366,64 +2516,66 @@ T_sword32 midX, midY ;
             memcpy(
                 G_surroundingSectors,
                 surroundingSectors,
-                sizeof(G_surroundingSectors)) ;
-            G_numSurroundingSectors = numSurroundingSectors ;
+                sizeof(G_surroundingSectors));
+            G_numSurroundingSectors = numSurroundingSectors;
 
-            return TRUE ;
+            return TRUE;
         }
-        distance -= (distance>>1) ;
-        *oldX = ooldX = midX ;
-        *oldY = ooldY = midY ;
+        distance -= (distance >> 1);
+        *oldX = ooldX = midX;
+        *oldY = ooldY = midY;
     }
 
-    left = (newX>>16) - radius ;
-    right = (newX>>16) + radius ;
-    top = (newY>>16) - radius ;
-    bottom = (newY>>16) + radius ;
+    left = (newX >> 16) - radius;
+    right = (newX >> 16) + radius;
+    top = (newY >> 16) - radius;
+    bottom = (newY >> 16) + radius;
 
     if (LineHit(
-          (T_sword16)((*oldX)>>16),
-          (T_sword16)((*oldY)>>16),
-          left,
-          top,
-          right,
-          bottom,
-          (T_sword16)radius,
-          p_movingObject) == TRUE)  {
+        (T_sword16) ((*oldX) >> 16),
+        (T_sword16) ((*oldY) >> 16),
+        left,
+        top,
+        right,
+        bottom,
+        (T_sword16) radius,
+        p_movingObject) == TRUE)
+    {
         /* We hit something, this isn't good for our end position. */
         /* Restore the last surrounding sectors. */
         memcpy(
             G_surroundingSectors,
             surroundingSectors,
-            sizeof(G_surroundingSectors)) ;
-        G_numSurroundingSectors = numSurroundingSectors ;
-        return TRUE ;
+            sizeof(G_surroundingSectors));
+        G_numSurroundingSectors = numSurroundingSectors;
+        return TRUE;
     }
 
     if (View3dObjectHitFast(
-            ((T_sword16)(newX>>16)),
-            ((T_sword16)(newY>>16)),
-            (T_sword16)radius,
-            (T_sword16)((*oldX)>>16),
-            (T_sword16)((*oldY)>>16),
-            (T_sword16)(foot>>16),
-            (T_sword16)(head>>16),
-            height,
-            p_movingObject) == TRUE)  {
+        ((T_sword16) (newX >> 16)),
+        ((T_sword16) (newY >> 16)),
+        (T_sword16) radius,
+        (T_sword16) ((*oldX) >> 16),
+        (T_sword16) ((*oldY) >> 16),
+        (T_sword16) (foot >> 16),
+        (T_sword16) (head >> 16),
+        height,
+        p_movingObject) == TRUE)
+    {
         /* We hit something, this isn't good for our end position. */
         /* Restore the last surrounding sectors. */
         memcpy(
             G_surroundingSectors,
             surroundingSectors,
-            sizeof(G_surroundingSectors)) ;
-        G_numSurroundingSectors = numSurroundingSectors ;
-        return TRUE ;
+            sizeof(G_surroundingSectors));
+        G_numSurroundingSectors = numSurroundingSectors;
+        return TRUE;
     }
 
-    *oldX = newX ;
-    *oldY = newY ;
+    *oldX = newX;
+    *oldY = newY;
 
-    return FALSE ;
+    return FALSE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2444,76 +2596,85 @@ T_sword32 midX, midY ;
  *      or -1 if no hit.
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 ICheckLineHitsLine(
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2,
-              T_word16 lineNum)
+T_sword16
+ICheckLineHitsLine(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_word16 lineNum)
 {
-    T_sword16 lx1, lx2, ly1, ly2 ;
-    T_sword16 left, right, top, bottom ;
-    T_sword32 ox1, ox2, oy1, oy2 ;
-    T_sword32 rx1, rx2, ry1, ry2 ;
-    T_sword16 t ;
-    T_sword32 x ;
+    T_sword16 lx1, lx2, ly1, ly2;
+    T_sword16 left, right, top, bottom;
+    T_sword32 ox1, ox2, oy1, oy2;
+    T_sword32 rx1, rx2, ry1, ry2;
+    T_sword16 t;
+    T_sword32 x;
 
-    if (x1 < x2)  {
-        left = x1 ;
-        right = x2 ;
-    } else  {
-        left = x2 ;
-        right = x1 ;
+    if (x1 < x2)
+    {
+        left = x1;
+        right = x2;
+    }
+    else
+    {
+        left = x2;
+        right = x1;
     }
 
-    if (y1 < y2)  {
-        top = y1 ;
-        bottom = y2 ;
-    } else {
-        top = y2 ;
-        bottom = y1 ;
+    if (y1 < y2)
+    {
+        top = y1;
+        bottom = y2;
+    }
+    else
+    {
+        top = y2;
+        bottom = y1;
     }
 
-    lx1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x ;
-    ly1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y ;
-    lx2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x ;
-    ly2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y ;
+    lx1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x;
+    ly1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y;
+    lx2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x;
+    ly2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y;
 
     if (((lx1 < left) && (lx2 < left)) ||
         ((lx1 > right) && (lx2 > right)) ||
         ((ly1 < top) && (ly2 < top)) ||
-        ((ly1 > bottom) && (ly2 > bottom)))  {
-        return -1 ;
+        ((ly1 > bottom) && (ly2 > bottom)))
+    {
+        return -1;
     }
 
     /* Now we have to do the real check by finding an intersection. */
-    ox1 = lx1 - x1 ;
-    oy1 = ly1 - y1 ;
-    ox2 = lx2 - x1 ;
-    oy2 = ly2 - y1 ;
+    ox1 = lx1 - x1;
+    oy1 = ly1 - y1;
+    ox2 = lx2 - x1;
+    oy2 = ly2 - y1;
 
-    rx1 = (ox1 * G_sinLineAngle + oy1 * G_cosLineAngle)>>16 ;
-    ry1 = (ox1 * G_cosLineAngle - oy1 * G_sinLineAngle)>>16 ;
-    rx2 = (ox2 * G_sinLineAngle + oy2 * G_cosLineAngle)>>16 ;
-    ry2 = (ox2 * G_cosLineAngle - oy2 * G_sinLineAngle)>>16 ;
+    rx1 = (ox1 * G_sinLineAngle + oy1 * G_cosLineAngle) >> 16;
+    ry1 = (ox1 * G_cosLineAngle - oy1 * G_sinLineAngle) >> 16;
+    rx2 = (ox2 * G_sinLineAngle + oy2 * G_cosLineAngle) >> 16;
+    ry2 = (ox2 * G_cosLineAngle - oy2 * G_sinLineAngle) >> 16;
 
     /* Swap Y's to make ry1 less than ry2.  For what we are doing, */
     /* it doesn't matter if the line is mirror along the y axis. */
-    if (ry1 > ry2)  {
-        t = ry1 ;
-        ry1 = ry2 ;
-        ry2 = t ;
+    if (ry1 > ry2)
+    {
+        t = ry1;
+        ry1 = ry2;
+        ry2 = t;
     }
 
     /* Does the line intersect the X axis? */
     if ((ry1 > 0) || (ry2 < 0))
         /* It does not straddle the axis--it is outside. */
-        return -1 ;
+        return -1;
 
     /* Where on the x axis does it intersect? */
-    x = rx1 - (((rx2-rx1)*ry1) / (ry2-ry1)) ;  //!!! DIVIDE ZERO ERROR HERE
+    x = rx1 - (((rx2 - rx1) * ry1) / (ry2 - ry1));  //!!! DIVIDE ZERO ERROR HERE
 
-    return x ;
+    return x;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2536,45 +2697,48 @@ T_sword16 ICheckLineHitsLine(
  *  @return Number of lines hit.
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 View3dFindLineHits(
-           T_sword16 x1,
-           T_sword16 y1,
-           T_sword16 x2,
-           T_sword16 y2,
-           T_word16 maxHits,
-           T_sword16 *lines)
+T_word16
+View3dFindLineHits(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_word16 maxHits,
+    T_sword16 *lines)
 {
-    T_word16 i ;
-    T_word16 count = 0 ;
-    T_word16 theta ;
-    T_sword16 dx, dy ;
-    T_sword16 dist ;
+    T_word16 i;
+    T_word16 count = 0;
+    T_word16 theta;
+    T_sword16 dx, dy;
+    T_sword16 dist;
 
     /* Get the angle of the line so that we can use it in our */
     /* calculations for line interestion. */
-    dy = y2-y1 ;
-    dx = x2-x1 ;
-    theta = MathArcTangent(dy, dx) ;
-    G_cosLineAngle = MathCosineLookup(theta) ;
-    G_sinLineAngle = MathSineLookup(theta) ;
+    dy = y2 - y1;
+    dx = x2 - x1;
+    theta = MathArcTangent(dy, dx);
+    G_cosLineAngle = MathCosineLookup(theta);
+    G_sinLineAngle = MathSineLookup(theta);
 //    G_numSurroundingSectors = 0 ;
 
     /* Check all lines to see if they intersect with the line */
     /* in question. */
-    for (i=0; (i<G_Num3dLines) && (count < maxHits); i++)  {
+    for (i = 0; (i < G_Num3dLines) && (count < maxHits); i++)
+    {
         if ((dist = ICheckLineHitsLine(
-               x1,
-               y1,
-               x2,
-               y2,
-               i)) >= 0)  {
-            *(lines++) = i ;
-            *(lines++) = dist ;
-            count++ ;
+            x1,
+            y1,
+            x2,
+            y2,
+            i)) >= 0)
+        {
+            *(lines++) = i;
+            *(lines++) = dist;
+            count++;
         }
     }
 
-    return count ;
+    return count;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2591,7 +2755,7 @@ T_word16 View3dFindLineHits(
  *  Unfortunately, this can cause problems in accuracy and divide by zero
  *  errors.
  *
- *  NOTE: 
+ *  NOTE:
  *  See above.  Calling routine must be sure that c is not zero.
  *
  *  @param a -- Value to multiply
@@ -2602,21 +2766,22 @@ T_word16 View3dFindLineHits(
  *
  *<!-----------------------------------------------------------------------*/
 #ifdef NO_ASSEMBLY
-T_sword32 Mult32By32AndDiv32(
-              T_sword32 a,
-              T_sword32 b,
-              T_sword32 c)
+T_sword32
+Mult32By32AndDiv32(
+    T_sword32 a,
+    T_sword32 b,
+    T_sword32 c)
 {
-	// It's slow, but it works
-	double aa, bb, cc;
-	double answer;
+    // It's slow, but it works
+    double aa, bb, cc;
+    double answer;
 
-	aa = a;
-	bb = b;
-	cc = c;
-	answer = (aa*bb)/cc;
+    aa = a;
+    bb = b;
+    cc = c;
+    answer = (aa * bb) / cc;
 
-	return (T_sword32)answer;
+    return (T_sword32) answer;
 }
 #endif
 
@@ -2635,28 +2800,29 @@ T_sword32 Mult32By32AndDiv32(
  *  @return TRUE=on side of line, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IIsOnLeftOfLine(
-                     T_sword32 pointX,
-                     T_sword32 pointY,
-                     T_sword32 lineX1,
-                     T_sword32 lineY1,
-                     T_sword32 lineX2,
-                     T_sword32 lineY2)
+static E_Boolean
+IIsOnLeftOfLine(
+    T_sword32 pointX,
+    T_sword32 pointY,
+    T_sword32 lineX1,
+    T_sword32 lineY1,
+    T_sword32 lineX2,
+    T_sword32 lineY2)
 {
-    T_sword32 px, py ;
-    T_sword32 dx, dy ;
+    T_sword32 px, py;
+    T_sword32 dx, dy;
 
     /* Translate to put one end of line at origin (now line is */
     /* really a slope. */
-    px = pointX - lineX1 ;
-    py = pointY - lineY1 ;
-    dx = lineX2 - lineX1 ;
-    dy = lineY2 - lineY1 ;
+    px = pointX - lineX1;
+    py = pointY - lineY1;
+    dx = lineX2 - lineX1;
+    dy = lineY2 - lineY1;
 
     /* Multiply and subtract */
     if (Mult32x32AndCompare(px, dy, py, dx) > 0)
-        return TRUE ;
-    return FALSE ;
+        return TRUE;
+    return FALSE;
 
 }
 
@@ -2674,7 +2840,7 @@ static E_Boolean IIsOnLeftOfLine(
  *  POSITIVE if (c*d) is greater than (a*b)
  *  NEGATIVE if (c*d) is less than (a*b)
  *
- *  NOTE: 
+ *  NOTE:
  *  The C routine is a 32 bit approximization of the assembly version
  *  which is true to 64 bits.  Downgrading may cause more 0's returned
  *  than expected.
@@ -2684,26 +2850,29 @@ static E_Boolean IIsOnLeftOfLine(
  *  @return 0, POSITIVE, or NEGATIVE
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 Mult32x32AndCompare(
-              T_sword32 a,
-              T_sword32 b,
-              T_sword32 c,
-              T_sword32 d)
+T_sword32
+Mult32x32AndCompare(
+    T_sword32 a,
+    T_sword32 b,
+    T_sword32 c,
+    T_sword32 d)
 {
     /* return (c*d) - (a*b) */
 
     /* Bring down the accuracy to avoid overflow. */
-    while ((a & 0xFFFF0000) || (c & 0xFFFF0000))  {
-        a >>= 4 ;
-        c >>= 4 ;
+    while ((a & 0xFFFF0000) || (c & 0xFFFF0000))
+    {
+        a >>= 4;
+        c >>= 4;
     }
     /* Bring down the accuracy to avoid overflow. */
-    while ((b & 0xFFFF0000) || (d & 0xFFFF0000))  {
-        b >>= 4 ;
-        d >>= 4 ;
+    while ((b & 0xFFFF0000) || (d & 0xFFFF0000))
+    {
+        b >>= 4;
+        d >>= 4;
     }
 
-    return ((c*d)-(a*b)) ;
+    return ((c * d) - (a * b));
 }
 #endif
 
@@ -2725,36 +2894,38 @@ T_sword32 Mult32x32AndCompare(
  *  @return TRUE=collision
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean MoveTo(
-         T_sword32 oldX,
-         T_sword32 oldY,
-         T_sword32 newX,
-         T_sword32 newY,
-         T_sword32 distance,
-         T_3dObject *p_obj)
+E_Boolean
+MoveTo(
+    T_sword32 oldX,
+    T_sword32 oldY,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 distance,
+    T_3dObject *p_obj)
 {
-    T_sword32 halfX, halfY ;
-    T_sword32 step ;
-    T_sword32 hereX, hereY ;
-    T_sword32 radius, foot, head ;
-    T_sword32 height ;
-    T_sword16 z ;
-    E_Boolean hadHit = FALSE ;
+    T_sword32 halfX, halfY;
+    T_sword32 step;
+    T_sword32 hereX, hereY;
+    T_sword32 radius, foot, head;
+    T_sword32 height;
+    T_sword16 z;
+    E_Boolean hadHit = FALSE;
 
-    radius = ObjectGetRadius(p_obj) ;
-    foot = ObjectGetZ(p_obj) ;
-    height = ObjectGetHeight(p_obj) ;
-    head = foot + (height<<16) ;
+    radius = ObjectGetRadius(p_obj);
+    foot = ObjectGetZ(p_obj);
+    height = ObjectGetHeight(p_obj);
+    head = foot + (height << 16);
 //    foot += (ObjectGetClimbHeight(p_obj) << 16) ;
 
-    if (distance < radius)  {
+    if (distance < radius)
+    {
 //    if (distance <= 2)  {
         /* Short enough segment.  Check for intersections here. */
-        hereX = newX ;
-        hereY = newY ;
-        G_hitAtX = oldX ;
-        G_hitAtY = oldY ;
-        G_hitDistance += distance ;
+        hereX = newX;
+        hereY = newY;
+        G_hitAtX = oldX;
+        G_hitAtY = oldY;
+        G_hitDistance += distance;
 
 /*
         if (CheckVertexHit(
@@ -2769,57 +2940,62 @@ E_Boolean MoveTo(
 */
 
         if (LineHit(
-                ((T_sword16)(oldX>>16)),
-                ((T_sword16)(oldY>>16)),
-                ((T_sword16)((hereX>>16)-radius)),
-                ((T_sword16)((hereY>>16)-radius)),
-                ((T_sword16)((hereX>>16)+radius)),
-                ((T_sword16)((hereY>>16)+radius)),
-                (T_sword16)radius,
-                p_obj) == TRUE)  {
-            return TRUE ;
+            ((T_sword16) (oldX >> 16)),
+            ((T_sword16) (oldY >> 16)),
+            ((T_sword16) ((hereX >> 16) - radius)),
+            ((T_sword16) ((hereY >> 16) - radius)),
+            ((T_sword16) ((hereX >> 16) + radius)),
+            ((T_sword16) ((hereY >> 16) + radius)),
+            (T_sword16) radius,
+            p_obj) == TRUE)
+        {
+            return TRUE;
         }
         if (View3dObjectHitFast(
-                (T_sword16)(hereX>>16),
-                (T_sword16)(hereY>>16),
-                (T_sword16)radius,
-                (T_sword16)(oldX>>16),
-                (T_sword16)(oldY>>16),
-                (T_sword16)(foot>>16),
-                (T_sword16)(head>>16),
-                (T_sword16)height,
-                p_obj) == TRUE)  {
-            return TRUE ;
+            (T_sword16) (hereX >> 16),
+            (T_sword16) (hereY >> 16),
+            (T_sword16) radius,
+            (T_sword16) (oldX >> 16),
+            (T_sword16) (oldY >> 16),
+            (T_sword16) (foot >> 16),
+            (T_sword16) (head >> 16),
+            (T_sword16) height,
+            p_obj) == TRUE)
+        {
+            return TRUE;
         }
-        z = ObjectGetZ16(p_obj) ;
+        z = ObjectGetZ16(p_obj);
         if (ICanSqueezeThroughWithClimb(
-                p_obj,
-                &z,
-                ObjectGetClimbHeight(p_obj),
-                ObjectGetHeight(p_obj),
-                G_numSurroundingSectors,
-                G_surroundingSectors) == FALSE)  {
+            p_obj,
+            &z,
+            ObjectGetClimbHeight(p_obj),
+            ObjectGetHeight(p_obj),
+            G_numSurroundingSectors,
+            G_surroundingSectors) == FALSE)
+        {
 //puts("MoveTo:  Can't squeeze") ;
-            return TRUE ;
+            return TRUE;
         }
-    } else {
+    }
+    else
+    {
         /* Find the midpoint. */
-        halfX = (oldX + newX)>>1 ;
-        halfY = (oldY + newY)>>1 ;
+        halfX = (oldX + newX) >> 1;
+        halfY = (oldY + newY) >> 1;
 
         /* Halve the distance. */
-        step = distance >> 1 ;
+        step = distance >> 1;
 
         /* Check first half of line. */
         if (MoveTo(oldX, oldY, halfX, halfY, step, p_obj) == TRUE)
-            return TRUE ;
+            return TRUE;
 
         /* Check second half of line. */
-        if (MoveTo(halfX, halfY, newX, newY, distance-step, p_obj) == TRUE)
-            return TRUE ;
+        if (MoveTo(halfX, halfY, newX, newY, distance - step, p_obj) == TRUE)
+            return TRUE;
     }
 
-    return FALSE ;
+    return FALSE;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2838,87 +3014,88 @@ E_Boolean MoveTo(
  *  @return Number walls/lines found
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 Collide3dGetWallsInBox(
-             T_sword32 x,
-             T_sword32 y,
-             T_word16 radius,
-             T_word16 maxWalls,
-             T_word16 *p_walls)
+T_word16
+Collide3dGetWallsInBox(
+    T_sword32 x,
+    T_sword32 y,
+    T_word16 radius,
+    T_word16 maxWalls,
+    T_word16 *p_walls)
 {
-    T_sword32 x1, y1, x2, y2 ;
-    T_sword32 radius32 ;
-    T_word16 numLines = 0 ;
-    T_sword32 block1, block2, block3, block4 ;
+    T_sword32 x1, y1, x2, y2;
+    T_sword32 radius32;
+    T_word16 numLines = 0;
+    T_sword32 block1, block2, block3, block4;
 
-    DebugRoutine("Collide3dGetWallsInBox") ;
-    DebugCheck(radius <= 128) ;
-    DebugCheck(p_walls != NULL) ;
+    DebugRoutine("Collide3dGetWallsInBox");
+    DebugCheck(radius <= 128);
+    DebugCheck(p_walls != NULL);
 
-    radius32 = radius<<16 ;
+    radius32 = radius << 16;
 
-    x1 = x-radius32 ;
-    x1 >>= 16 ;
-    y1 = y-radius32 ;
-    y1 >>= 16 ;
-    x2 = x+radius32 ;
-    x2 >>= 16 ;
-    y2 = y+radius32 ;
-    y2 >>= 16 ;
+    x1 = x - radius32;
+    x1 >>= 16;
+    y1 = y - radius32;
+    y1 >>= 16;
+    x2 = x + radius32;
+    x2 >>= 16;
+    y2 = y + radius32;
+    y2 >>= 16;
 
     /* Determine the blocks at the four corners. */
-    block1 = IGetBlock((T_sword16)x1, (T_sword16)y1) ;
-    block2 = IGetBlock((T_sword16)x1, (T_sword16)y2) ;
-    block3 = IGetBlock((T_sword16)x2, (T_sword16)y2) ;
-    block4 = IGetBlock((T_sword16)x2, (T_sword16)y1) ;
+    block1 = IGetBlock((T_sword16) x1, (T_sword16) y1);
+    block2 = IGetBlock((T_sword16) x1, (T_sword16) y2);
+    block3 = IGetBlock((T_sword16) x2, (T_sword16) y2);
+    block4 = IGetBlock((T_sword16) x2, (T_sword16) y1);
     /* Check each corner for lines that are hit, but don't */
     /* repeat any blocks that we have already checked. */
     if (block1 != -1)
         IWallTouchInBlock(
-            (T_sword16)x1,
-            (T_sword16)y1,
-            (T_sword16)x2,
-            (T_sword16)y2,
+            (T_sword16) x1,
+            (T_sword16) y1,
+            (T_sword16) x2,
+            (T_sword16) y2,
             block1,
             maxWalls,
             &numLines,
-            p_walls) ;
+            p_walls);
 
     if ((block2 != block1) && (block2 != -1))
         IWallTouchInBlock(
-            (T_sword16)x1,
-            (T_sword16)y1,
-            (T_sword16)x2,
-            (T_sword16)y2,
+            (T_sword16) x1,
+            (T_sword16) y1,
+            (T_sword16) x2,
+            (T_sword16) y2,
             block2,
             maxWalls,
             &numLines,
-            p_walls) ;
+            p_walls);
 
     if ((block3 != block1) && (block3 != block2) && (block3 != -1))
         IWallTouchInBlock(
-            (T_sword16)x1,
-            (T_sword16)y1,
-            (T_sword16)x2,
-            (T_sword16)y2,
+            (T_sword16) x1,
+            (T_sword16) y1,
+            (T_sword16) x2,
+            (T_sword16) y2,
             block3,
             maxWalls,
             &numLines,
-            p_walls) ;
+            p_walls);
 
     if ((block4 != block1) && (block4 != block2) && (block4 != block3) && (block4 != -1))
         IWallTouchInBlock(
-            (T_sword16)x1,
-            (T_sword16)y1,
-            (T_sword16)x2,
-            (T_sword16)y2,
+            (T_sword16) x1,
+            (T_sword16) y1,
+            (T_sword16) x2,
+            (T_sword16) y2,
             block4,
             maxWalls,
             &numLines,
-            p_walls) ;
+            p_walls);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return numLines ;
+    return numLines;
 }
 
 /*-------------------------------------------------------------------------*
@@ -2939,68 +3116,76 @@ T_word16 Collide3dGetWallsInBox(
  *  @return TRUE if ran over max walls.
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean IWallTouchInBlock(
-                     T_sword16 x1,
-                     T_sword16 y1,
-                     T_sword16 x2,
-                     T_sword16 y2,
-                     T_sword32 blockIndex,
-                     T_word16 maxWalls,
-                     T_word16 *p_numWalls,
-                     T_word16 *p_walls)
+static E_Boolean
+IWallTouchInBlock(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_sword32 blockIndex,
+    T_word16 maxWalls,
+    T_word16 *p_numWalls,
+    T_word16 *p_walls)
 {
-    T_word16 i, j ;
-    E_Boolean overflowOccured = FALSE ;
-    E_Boolean foundWall ;
+    T_word16 i, j;
+    E_Boolean overflowOccured = FALSE;
+    E_Boolean foundWall;
 
-    DebugRoutine("IWallTouchInBlock") ;
-    DebugCheck(p_walls != NULL) ;
-    DebugCheck(p_numWalls != NULL) ;
+    DebugRoutine("IWallTouchInBlock");
+    DebugCheck(p_walls != NULL);
+    DebugCheck(p_numWalls != NULL);
 
     /* Go through the list of walls for this block until we */
     /* reach the 0xFFFF end marker. */
-    while ((i=G_3dBlockMapArray[blockIndex]) != 0xFFFF)  {
-        DebugCheck(i < G_Num3dLines) ;
-        if (i < G_Num3dLines)  {
+    while ((i = G_3dBlockMapArray[blockIndex]) != 0xFFFF)
+    {
+        DebugCheck(i < G_Num3dLines);
+        if (i < G_Num3dLines)
+        {
             /* For each wall, check to see if we hit the box. */
             if (Collide3dCheckSegmentHitBox(
-                    i,
-                    x1,
-                    y1,
-                    x2,
-                    y2) != 0)  {
+                i,
+                x1,
+                y1,
+                x2,
+                y2) != 0)
+            {
                 /* Go through the list of already colliding walls */
                 /* and make sure this line is not already in the list. */
-                foundWall = FALSE ;
-                for (j=0; j<*p_numWalls; j++)  {
-                    if (i==p_walls[j])  {
-                        foundWall = TRUE ;
-                        break ;
+                foundWall = FALSE;
+                for (j = 0; j < *p_numWalls; j++)
+                {
+                    if (i == p_walls[j])
+                    {
+                        foundWall = TRUE;
+                        break;
                     }
                 }
 
                 /* If we never found the wall, we need to add it to the */
                 /* list.  If we did find the wall, just ignore it and */
                 /* continue. */
-                if (!foundWall)  {
+                if (!foundWall)
+                {
                     /* Make sure we don't go over the limit. */
-                    if (*p_numWalls == maxWalls)  {
-                        DebugCheck(FALSE) ;
-                        overflowOccured = TRUE ;
-                        break ;
+                    if (*p_numWalls == maxWalls)
+                    {
+                        DebugCheck(FALSE);
+                        overflowOccured = TRUE;
+                        break;
                     }
 
                     /* Limit is not a problem.  Just add. */
-                    p_walls[(*p_numWalls)++] = i ;
+                    p_walls[(*p_numWalls)++] = i;
                 }
             }
         }
-        blockIndex++ ;
+        blockIndex++;
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return overflowOccured ;
+    return overflowOccured;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3021,123 +3206,145 @@ static E_Boolean IWallTouchInBlock(
  *
  *<!-----------------------------------------------------------------------*/
 #define COLLIDE_3D_MAX_LINES_FOR_SECTORS 100
-E_Boolean Collide3dGetSectorsInBox(
-              T_sword32 x,
-              T_sword32 y,
-              T_word16 radius,
-              T_word16 maxSectors,
-              T_word16 *p_sectors,
-              T_word16 *p_numSectors)
+E_Boolean
+Collide3dGetSectorsInBox(
+    T_sword32 x,
+    T_sword32 y,
+    T_word16 radius,
+    T_word16 maxSectors,
+    T_word16 *p_sectors,
+    T_word16 *p_numSectors)
 {
-    T_word16 numLines ;
-    T_word16 lines[COLLIDE_3D_MAX_LINES_FOR_SECTORS] ;
-    E_Boolean foundVoid=FALSE ;
-    T_word16 sector ;
-    T_word16 i, j ;
-    T_word16 side ;
-    T_word16 line ;
-    T_word16 sideNum ;
-    E_Boolean foundSector ;
+    T_word16 numLines;
+    T_word16 lines[COLLIDE_3D_MAX_LINES_FOR_SECTORS];
+    E_Boolean foundVoid = FALSE;
+    T_word16 sector;
+    T_word16 i, j;
+    T_word16 side;
+    T_word16 line;
+    T_word16 sideNum;
+    E_Boolean foundSector;
 
-    DebugRoutine("Collide3dGetSectorsInBox") ;
-    DebugCheck(radius <= 128) ;
-    DebugCheck(p_sectors != NULL) ;
-    DebugCheck(p_numSectors != NULL) ;
+    DebugRoutine("Collide3dGetSectorsInBox");
+    DebugCheck(radius <= 128);
+    DebugCheck(p_sectors != NULL);
+    DebugCheck(p_numSectors != NULL);
 
     /* Start by finding the sector that we are over. */
     sector = View3dFindSectorNum(
-                 (T_sword16)(x>>16),
-                 (T_sword16)(y>>16)) ;
+        (T_sword16) (x >> 16),
+        (T_sword16) (y >> 16));
 
     /* If this is void, make a note of it. */
-    if (sector == 0xFFFF)  {
-        foundVoid = TRUE ;
-        *p_numSectors = 0 ;
-    } else {
+    if (sector == 0xFFFF)
+    {
+        foundVoid = TRUE;
+        *p_numSectors = 0;
+    }
+    else
+    {
         /* Otherwise, record the sector. */
-        *p_numSectors = 1 ;
-        DebugCheck(sector < G_Num3dSectors) ;
-        p_sectors[0] = sector ;
+        *p_numSectors = 1;
+        DebugCheck(sector < G_Num3dSectors);
+        p_sectors[0] = sector;
     }
 
     /* Found all the lines that go through the box. */
     numLines = Collide3dGetWallsInBox(
-                   x,
-                   y,
-                   radius,
-                   COLLIDE_3D_MAX_LINES_FOR_SECTORS,
-                   lines) ;
+        x,
+        y,
+        radius,
+        COLLIDE_3D_MAX_LINES_FOR_SECTORS,
+        lines);
     /* Go through this list of lines and find all the sectors. */
-    for (i=0; i<numLines; i++)  {
-        line = lines[i] ;
-        DebugCheck(line < G_Num3dLines) ;
-        if (line < G_Num3dLines)  {
+    for (i = 0; i < numLines; i++)
+    {
+        line = lines[i];
+        DebugCheck(line < G_Num3dLines);
+        if (line < G_Num3dLines)
+        {
             /* Check to see if this line is impassable. */
-            if (G_3dLineArray[line].flags & G_wallDefinition)  {
+            if (G_3dLineArray[line].flags & G_wallDefinition)
+            {
                 /* Hit an impassable wall, pretend it is */
                 /* void on one side. */
-                foundVoid = TRUE ;
+                foundVoid = TRUE;
             }
             /* Do both sides of a line. */
-            for (side=0; side<2; side++)  {
+            for (side = 0; side < 2; side++)
+            {
                 /* Check to see if the side exists. */
-                if ((sideNum = G_3dLineArray[line].side[side]) != 0xFFFF)  {
+                if ((sideNum = G_3dLineArray[line].side[side]) != 0xFFFF)
+                {
                     /* Side exists.  Add the sector to the list. */
-                    DebugCheck(sideNum < G_Num3dSides) ;
-                    if (sideNum < G_Num3dSides)  {
-                        sector = G_3dSideArray[sideNum].sector ;
+                    DebugCheck(sideNum < G_Num3dSides);
+                    if (sideNum < G_Num3dSides)
+                    {
+                        sector = G_3dSideArray[sideNum].sector;
                         /* Is this a void area? */
-                        if (sector == 0xFFFF)  {
+                        if (sector == 0xFFFF)
+                        {
                             /* Yes, the side's sector is void. */
                             /* Just note that we found a void */
                             /* and continue. */
-                            foundVoid = TRUE ;
-                        } else {
+                            foundVoid = TRUE;
+                        }
+                        else
+                        {
                             /* Nope, no void here. */
-                            DebugCheck(sector < G_Num3dSectors) ;
-                            if (sector < G_Num3dSectors)  {
+                            DebugCheck(sector < G_Num3dSectors);
+                            if (sector < G_Num3dSectors)
+                            {
                                 /* Try adding this to the list, */
                                 /* but make sure we */
                                 /* don't duplicate it. */
-                                foundSector = FALSE ;
-                                for (j=0; j<*p_numSectors; j++)  {
-                                    if (p_sectors[j] == sector)  {
-                                        foundSector = TRUE ;
-                                        break ;
+                                foundSector = FALSE;
+                                for (j = 0; j < *p_numSectors; j++)
+                                {
+                                    if (p_sectors[j] == sector)
+                                    {
+                                        foundSector = TRUE;
+                                        break;
                                     }
                                 }
 
                                 /* Did we find the sector */
                                 /* in the list? */
-                                if (!foundSector)  {
+                                if (!foundSector)
+                                {
                                     /* No.  Then add it. */
                                     /* Are we over the limit? */
-                                    if (*p_numSectors < maxSectors)  {
+                                    if (*p_numSectors < maxSectors)
+                                    {
                                         /* Not over the limit. */
-                                        p_sectors[(*p_numSectors)++] = sector ;
-                                    } else {
+                                        p_sectors[(*p_numSectors)++] = sector;
+                                    }
+                                    else
+                                    {
                                         /* Over the limit.  */
                                         /* If debug version, crash. */
-                                        DebugCheck(FALSE) ;
+                                        DebugCheck(FALSE);
                                         /* If not debug, stop processing */
                                         /* by skipping to the end. */
-                                        i = numLines ;
+                                        i = numLines;
                                     }
                                 }
                             }
                         }
                     }
-                } else {
+                }
+                else
+                {
                     /* Side does not exist, thus we touch a void. */
-                    foundVoid = TRUE ;
+                    foundVoid = TRUE;
                 }
             }
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return foundVoid ;
+    return foundVoid;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3158,81 +3365,87 @@ E_Boolean Collide3dGetSectorsInBox(
  *  @return TRUE=can fit, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean ICanSqueezeThrough(
-        T_3dObject *p_obj,
-		T_sword16 zPos,
-		T_sword16 height,
-		T_word16 numSectors,
-		T_word16 *p_sectorList)
+static E_Boolean
+ICanSqueezeThrough(
+    T_3dObject *p_obj,
+    T_sword16 zPos,
+    T_sword16 height,
+    T_word16 numSectors,
+    T_word16 *p_sectorList)
 {
-    E_Boolean canSqueeze = TRUE ;
-    T_word16 i ;
-    T_word16 sector ;
-    T_sword16 floor, ceiling ;
-    T_sword16 floor2, ceiling2 ;
-    T_sword16 zTop ;
+    E_Boolean canSqueeze = TRUE;
+    T_word16 i;
+    T_word16 sector;
+    T_sword16 floor, ceiling;
+    T_sword16 floor2, ceiling2;
+    T_sword16 zTop;
 
-    DebugRoutine("ICanSqueezeThrough") ;
-    DebugCheck(p_sectorList != NULL) ;
+    DebugRoutine("ICanSqueezeThrough");
+    DebugCheck(p_sectorList != NULL);
 
     /* Precalculate the top of the head. */
-    zTop = zPos + height ;
+    zTop = zPos + height;
 
 #if 0
     /* Go through the list of sectors and determine if we can fit. */
-    for (i=0; i<numSectors; i++)  {
-        sector = p_sectorList[i] ;
-        DebugCheck(sector < G_Num3dSectors) ;
+for (i=0; i<numSectors; i++)  {
+sector = p_sectorList[i] ;
+DebugCheck(sector < G_Num3dSectors) ;
 //        floor = G_3dSectorArray[sector].floorHt ;
 //        if ((G_allowDip) &&
 //            (G_3dSectorArray[sector].trigger & SECTOR_DIP_FLAG))
 //            floor -= VIEW_WATER_DIP_LEVEL ;
-        floor = MapGetWalkingFloorHeight(sector) ;
-        ceiling = G_3dSectorArray[sector].ceilingHt ;
+floor = MapGetWalkingFloorHeight(sector) ;
+ceiling = G_3dSectorArray[sector].ceilingHt ;
 
-        /* See if the ceiling is too low. */
-        if (ceiling < zTop)  {
+/* See if the ceiling is too low. */
+if (ceiling < zTop)  {
 //printf("CanSqueeze: ceiling < zTop\n") ;
-            canSqueeze = FALSE ;
-            break ;
-        }
+canSqueeze = FALSE ;
+break ;
+}
 
-        /* See if the floor is too high. */
-        if (floor > zPos)  {
+/* See if the floor is too high. */
+if (floor > zPos)  {
 //printf("CanSqueeze: floor < zPos\n") ;
-            canSqueeze = FALSE ;
-            break ;
-        }
-    }
+canSqueeze = FALSE ;
+break ;
+}
+}
 #endif
-    floor = -32767 ;
-    ceiling = 32767 ;
-    for (i=0; i<numSectors; i++)  {
-        sector = p_sectorList[i] ;
-        floor2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector) ;
+    floor = -32767;
+    ceiling = 32767;
+    for (i = 0; i < numSectors; i++)
+    {
+        sector = p_sectorList[i];
+        floor2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector);
         if (floor2 > floor)
-            floor = floor2 ;
-        ceiling2 = G_3dSectorArray[sector].ceilingHt ;
+            floor = floor2;
+        ceiling2 = G_3dSectorArray[sector].ceilingHt;
 //printf("ceiling for %d is %d\n", sector, ceiling2) ;
         if (ceiling2 < ceiling)
-            ceiling = ceiling2 ;
+            ceiling = ceiling2;
     }
 
 //printf("CanSqueeze: floor=%d, ceiling=%d, zPos=%d, zTop=%d\n", floor, ceiling, zPos, zTop) ;
     /* See if the ceiling is too low. */
-    if (ceiling < zTop)  {
-        canSqueeze = FALSE ;
-    } else {
+    if (ceiling < zTop)
+    {
+        canSqueeze = FALSE;
+    }
+    else
+    {
         /* See if the floor is too high. */
-        if (floor > zPos)  {
-            canSqueeze = FALSE ;
+        if (floor > zPos)
+        {
+            canSqueeze = FALSE;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
 //printf("CanSqueeze = %d\n", canSqueeze) ;
-    return canSqueeze ;
+    return canSqueeze;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3253,98 +3466,106 @@ static E_Boolean ICanSqueezeThrough(
  *  @return TRUE=can fit, else FALSE
  *
  *<!-----------------------------------------------------------------------*/
-static E_Boolean ICanSqueezeThroughWithClimb(
-        T_3dObject *p_obj,
-		T_sword16 *zPos,
-		T_sword16 climbHeight,
-		T_sword16 height,
-		T_word16 numSectors,
-		T_word16 *p_sectorList)
+static E_Boolean
+ICanSqueezeThroughWithClimb(
+    T_3dObject *p_obj,
+    T_sword16 *zPos,
+    T_sword16 climbHeight,
+    T_sword16 height,
+    T_word16 numSectors,
+    T_word16 *p_sectorList)
 {
-    E_Boolean canSqueeze = TRUE ;
-    T_word16 i ;
-    T_word16 sector ;
-    T_sword16 floor, ceiling ;
-    T_sword16 floor2, ceiling2 ;
+    E_Boolean canSqueeze = TRUE;
+    T_word16 i;
+    T_word16 sector;
+    T_sword16 floor, ceiling;
+    T_sword16 floor2, ceiling2;
 
-    DebugRoutine("ICanSqueezeThroughWithClimb") ;
+    DebugRoutine("ICanSqueezeThroughWithClimb");
 
 #if 0
     /* Find how high we have to step in order to be here. */
-    biggestStep = 0 ;
-    for (i=0; i<numSectors; i++)  {
-        sector = p_sectorList[i] ;
-        DebugCheck(sector < G_Num3dSectors) ;
+biggestStep = 0 ;
+for (i=0; i<numSectors; i++)  {
+sector = p_sectorList[i] ;
+DebugCheck(sector < G_Num3dSectors) ;
 //        floor = G_3dSectorArray[sector].floorHt ;
 //        if ((G_allowDip) &&
 //            (G_3dSectorArray[sector].trigger & SECTOR_DIP_FLAG))
 //            floor -= VIEW_WATER_DIP_LEVEL ;
-        floor = MapGetWalkingFloorHeight(sector) ;
-        step = floor - *zPos ;
-        if (step > biggestStep)
-            biggestStep = step ;
-    }
+floor = MapGetWalkingFloorHeight(sector) ;
+step = floor - *zPos ;
+if (step > biggestStep)
+biggestStep = step ;
+}
 
-    /* Can we make the step? */
-    if (biggestStep <= climbHeight)  {
-        /* Yes.  Step up to this new height. */
-        *zPos += biggestStep ;
+/* Can we make the step? */
+if (biggestStep <= climbHeight)  {
+/* Yes.  Step up to this new height. */
+*zPos += biggestStep ;
 
-        /* Precalculate the top of the head. */
-        zTop = *zPos + height ;
+/* Precalculate the top of the head. */
+zTop = *zPos + height ;
 
-        /* Go through the list of sectors and determine if we can fit */
-        /* under the ceilings with the new height we have. */
-        for (i=0; i<numSectors; i++)  {
-            sector = p_sectorList[i] ;
-            DebugCheck(sector < G_Num3dSectors) ;
-            ceiling = G_3dSectorArray[sector].ceilingHt ;
+/* Go through the list of sectors and determine if we can fit */
+/* under the ceilings with the new height we have. */
+for (i=0; i<numSectors; i++)  {
+sector = p_sectorList[i] ;
+DebugCheck(sector < G_Num3dSectors) ;
+ceiling = G_3dSectorArray[sector].ceilingHt ;
 
-            /* See if the ceiling is too low. */
-            if (ceiling < zTop)  {
+/* See if the ceiling is too low. */
+if (ceiling < zTop)  {
 //printf("CanSqueezeWithClimb: ceiling < zTop\n") ;
-                canSqueeze = FALSE ;
-                break ;
-            }
-        }
-    } else {
+canSqueeze = FALSE ;
+break ;
+}
+}
+} else {
 //printf("CanSqueezeWithClimb: biggestStep > climbHeight\n") ;
-        canSqueeze = FALSE ;
-    }
+canSqueeze = FALSE ;
+}
 #endif
     /* Find the lowest ceiling and highest floor. */
-    floor = -32767 ;
-    ceiling = 32767 ;
-    for (i=0; i<numSectors; i++)  {
-        sector = p_sectorList[i] ;
-        floor2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector) ;
+    floor = -32767;
+    ceiling = 32767;
+    for (i = 0; i < numSectors; i++)
+    {
+        sector = p_sectorList[i];
+        floor2 = MapGetWalkingFloorHeight(&p_obj->objMove, sector);
         if (floor2 > floor)
-            floor = floor2 ;
-        ceiling2 = G_3dSectorArray[sector].ceilingHt ;
+            floor = floor2;
+        ceiling2 = G_3dSectorArray[sector].ceilingHt;
         if (ceiling2 < ceiling)
-            ceiling = ceiling2 ;
+            ceiling = ceiling2;
     }
 
 //printf("CanSqueezeClimb: floor=%d, ceiling=%d, zPos=%d, height=%d, climb=%d\n", floor, ceiling, *zPos, height, climbHeight) ;
     /* See if there is general room to squeeze. */
-    if ((floor + height >= ceiling) || (*zPos + height >= ceiling))  {
-        canSqueeze = FALSE ;
-    } else {
+    if ((floor + height >= ceiling) || (*zPos + height >= ceiling))
+    {
+        canSqueeze = FALSE;
+    }
+    else
+    {
         /* See if the step is too high. */
-        if (*zPos + climbHeight >= floor)  {
+        if (*zPos + climbHeight >= floor)
+        {
             /* Step up if can. */
             if (*zPos < floor)
-                *zPos = floor ;
-        } else {
+                *zPos = floor;
+        }
+        else
+        {
             /* Cannot step up, must block. */
-            canSqueeze = FALSE ;
+            canSqueeze = FALSE;
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
 //printf("CanSqueezeClimb = %d\n", canSqueeze) ;
-    return canSqueeze ;
+    return canSqueeze;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3361,171 +3582,187 @@ static E_Boolean ICanSqueezeThroughWithClimb(
  *  @return TRUE=collision
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean Collide3dMoveToXYZ(
-              T_3dObject *p_obj,
-              T_sword32 newX,
-              T_sword32 newY,
-              T_sword32 newZ)
+E_Boolean
+Collide3dMoveToXYZ(
+    T_3dObject *p_obj,
+    T_sword32 newX,
+    T_sword32 newY,
+    T_sword32 newZ)
 {
-    T_sword32 oldX, oldY, oldZ ;
-    T_sword32 halfX, halfY, halfZ ;
-    T_word16 distance ;
-    E_Boolean collided ;
-    T_sword16 newZ16 ;
-    T_sword16 radius ;
-    static T_word16 depth = 0 ;
+    T_sword32 oldX, oldY, oldZ;
+    T_sword32 halfX, halfY, halfZ;
+    T_word16 distance;
+    E_Boolean collided;
+    T_sword16 newZ16;
+    T_sword16 radius;
+    static T_word16 depth = 0;
 
-    DebugRoutine("Collide3dMoveToXYZ") ;
+    DebugRoutine("Collide3dMoveToXYZ");
 
     /* Make sure this routine doesn't run too deep. */
-    if (depth == 8)  {
-        DebugEnd() ;
+    if (depth == 8)
+    {
+        DebugEnd();
 
-        return TRUE ;
+        return TRUE;
     }
 
-    depth++ ;
+    depth++;
 
 //if (ObjectIsCreature(p_obj))
 // printf("CMTXYZ: aim to %08lX %08lX %08lX\n", newX, newY, newZ) ;
 
     /* First, note that we have not collided with anything. */
-    collided = FALSE ;
+    collided = FALSE;
 
     /* Zero out the count of hits. */
-    G_numHits = 0 ;
+    G_numHits = 0;
 
     /* Where are we moving from? */
-    oldX = ObjectGetX(p_obj) ;
-    oldY = ObjectGetY(p_obj) ;
-    oldZ = ObjectGetZ(p_obj) ;
+    oldX = ObjectGetX(p_obj);
+    oldY = ObjectGetY(p_obj);
+    oldZ = ObjectGetZ(p_obj);
 
     /* How far do we need to go? */
     distance = CalculateDistance(
-                   oldX >> 16,
-                   oldY >> 16,
-                   newX >> 16,
-                   newY >> 16) ;
+        oldX >> 16,
+        oldY >> 16,
+        newX >> 16,
+        newY >> 16);
 
     /* Make sure we don't jump around forever. */
     if (distance > 200)
-        distance = 200 ;
+        distance = 200;
 
-    radius = ObjectGetRadius(p_obj) ;
+    radius = ObjectGetRadius(p_obj);
     if (radius < 5)
-        radius = 5 ;
+        radius = 5;
 
     /* While the distance is too great, split it up. */
-    while ((distance > radius) && (!collided))  {
+    while ((distance > radius) && (!collided))
+    {
         /* Where is half way? */
-        halfX = (oldX + newX) >> 1 ;
-        halfY = (oldY + newY) >> 1 ;
-        halfZ = (oldZ + newZ) >> 1 ;
+        halfX = (oldX + newX) >> 1;
+        halfY = (oldY + newY) >> 1;
+        halfZ = (oldZ + newZ) >> 1;
         /* Try moving to that position. */
         collided = Collide3dMoveToXYZ(
-                       p_obj,
-                       halfX,
-                       halfY,
-                       halfZ) ;
+            p_obj,
+            halfX,
+            halfY,
+            halfZ);
 
-        if (!collided)  {
+        if (!collided)
+        {
             /* Where are we moving from? */
-            oldX = ObjectGetX(p_obj) ;
-            oldY = ObjectGetY(p_obj) ;
-            oldZ = ObjectGetZ(p_obj) ;
+            oldX = ObjectGetX(p_obj);
+            oldY = ObjectGetY(p_obj);
+            oldZ = ObjectGetZ(p_obj);
 
             /* How far do we need to go? */
             distance = CalculateDistance(
-                           oldX >> 16,
-                           oldY >> 16,
-                           newX >> 16,
-                           newY >> 16) ;
-        } else {
-            break ;
+                oldX >> 16,
+                oldY >> 16,
+                newX >> 16,
+                newY >> 16);
+        }
+        else
+        {
+            break;
         }
     }
 
     /* Make sure we have not collided yet. */
-    if (!collided)  {
+    if (!collided)
+    {
         /* OK, test for a collision at the new location we */
         /* are moving to. */
 
         /* What are the list of sectors of where we are trying */
         /* to go. */
         collided = Collide3dGetSectorsInBox(
-                       newX,
-                       newY,
-                       ObjectGetRadius(p_obj),
-                       20,
-                       G_surroundingSectors,
-                       &G_numSurroundingSectors) ;
+            newX,
+            newY,
+            ObjectGetRadius(p_obj),
+            20,
+            G_surroundingSectors,
+            &G_numSurroundingSectors);
 //if (collided)
 // if (ObjectIsCreature(p_obj))
 //   printf("Collide3dMoveToXYZ by sectors in box at %08lX %08lX for %d\n", newX, newY, ObjectGetServerId(p_obj)) ;
         /* Did we collide here? */
-        if (!collided)  {
+        if (!collided)
+        {
             /* Nope.  Still good. */
 
             /* Can we fit in the new area? */
 //puts("\n\ncheck") ;  fflush(stdout) ;
             if (!ICanSqueezeThrough(
-                    p_obj,
-                    (T_sword16)(newZ >> 16),
-                    ObjectGetHeight(p_obj),
-                    G_numSurroundingSectors,
-                    G_surroundingSectors))  {
+                p_obj,
+                (T_sword16) (newZ >> 16),
+                ObjectGetHeight(p_obj),
+                G_numSurroundingSectors,
+                G_surroundingSectors))
+            {
 //printf("Tight one\n") ;  fflush(stdout) ;
 #if 0
                 /* Can't squeeze into that new location! */
-                collided = TRUE ;
+collided = TRUE ;
 #else
-                newZ16 = newZ >> 16 ;
+                newZ16 = newZ >> 16;
                 if (!ICanSqueezeThroughWithClimb(
                     p_obj,
                     &newZ16,
-                    (T_word16)(8+ObjectGetClimbHeight(p_obj)),
-                    (T_word16)(ObjectGetHeight(p_obj)),
-                    (T_word16)G_numSurroundingSectors,
-                    G_surroundingSectors))  {
+                    (T_word16) (8 + ObjectGetClimbHeight(p_obj)),
+                    (T_word16) (ObjectGetHeight(p_obj)),
+                    (T_word16) G_numSurroundingSectors,
+                    G_surroundingSectors))
+                {
 
 //puts("Tighter") ; fflush(stdout) ;
                     /* Can't squeeze into that new location! */
-                    collided = TRUE ;
+                    collided = TRUE;
 /*
 if (ObjectIsCreature(p_obj)) {
  printf("Squeeze collide for %d\n", ObjectGetServerId(p_obj)) ;
  printf("  squeeze parms: %04X %d %d %d\n", newZ16, 8+ObjectGetClimbHeight(p_obj), ObjectGetHeight(p_obj), G_numSurroundingSectors) ;
 }
 */
-                } else {
+                }
+                else
+                {
                     newZ = newZ16 << 16;
 //puts("ok") ; fflush(stdout) ;
                 }
 #endif
             }
-            if (!collided)  {
+            if (!collided)
+            {
                 /* How about objects? */
-                G_numHits = 0 ;
+                G_numHits = 0;
                 collided = View3dObjectHitFast(
-                               (T_sword16)(newX>>16),
-                               (T_sword16)(newY>>16),
-                               ObjectGetRadius(p_obj),
-                               (T_sword16)(ObjectGetX16(p_obj)),
-                               (T_sword16)(ObjectGetY16(p_obj)),
-                               newZ>>16,
-                               (newZ>>16) + ObjectGetHeight(p_obj),
+                    (T_sword16) (newX >> 16),
+                    (T_sword16) (newY >> 16),
+                    ObjectGetRadius(p_obj),
+                    (T_sword16) (ObjectGetX16(p_obj)),
+                    (T_sword16) (ObjectGetY16(p_obj)),
+                    newZ >> 16,
+                    (newZ >> 16) + ObjectGetHeight(p_obj),
 //                               (T_sword16)(ObjectGetZ16(p_obj)),
 //                               (T_sword16)(ObjectGetZ16(p_obj) + ObjectGetHeight(p_obj)),
-                               ObjectGetHeight(p_obj),
-                               p_obj) ;
+                    ObjectGetHeight(p_obj),
+                    p_obj);
 
                 /* Did we collide? */
-                if (!collided)  {
+                if (!collided)
+                {
                     /* Nope.  Then move to that location. */
-                    ObjectSetX(p_obj, newX) ;
-                    ObjectSetY(p_obj, newY) ;
-                    ObjectSetZ(p_obj, newZ) ;
-                } else {
+                    ObjectSetX(p_obj, newX);
+                    ObjectSetY(p_obj, newY);
+                    ObjectSetZ(p_obj, newZ);
+                }
+                else
+                {
 //if (ObjectIsCreature(p_obj))
 //  printf("Collide3dMoveToXYZ at %08lX %08lX for %d\n", newX, newY, ObjectGetServerId(p_obj)) ;
                 }
@@ -3533,242 +3770,272 @@ if (ObjectIsCreature(p_obj)) {
         }
     }
 
-    depth-- ;
+    depth--;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return collided ;
+    return collided;
 }
 
 /* LES 04/12/96 */
-T_sword16 Collide3dCheckSegmentHitsSegment(
-              T_sword16 x1,
-              T_sword16 y1,
-              T_sword16 x2,
-              T_sword16 y2,
-              T_word16 lineNum)
+T_sword16
+Collide3dCheckSegmentHitsSegment(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_word16 lineNum)
 {
-    T_sword16 lx1, lx2, ly1, ly2 ;
-    T_sword16 left, right, top, bottom ;
-    T_byte8 a, b ;
+    T_sword16 lx1, lx2, ly1, ly2;
+    T_sword16 left, right, top, bottom;
+    T_byte8 a, b;
 
-    if (x1 < x2)  {
-        left = x1 ;
-        right = x2 ;
-    } else  {
-        left = x2 ;
-        right = x1 ;
+    if (x1 < x2)
+    {
+        left = x1;
+        right = x2;
+    }
+    else
+    {
+        left = x2;
+        right = x1;
     }
 
-    if (y1 < y2)  {
-        top = y1 ;
-        bottom = y2 ;
-    } else {
-        top = y2 ;
-        bottom = y1 ;
+    if (y1 < y2)
+    {
+        top = y1;
+        bottom = y2;
+    }
+    else
+    {
+        top = y2;
+        bottom = y1;
     }
 
-    lx1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x ;
-    ly1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y ;
-    lx2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x ;
-    ly2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y ;
+    lx1 = G_3dVertexArray[G_3dLineArray[lineNum].from].x;
+    ly1 = G_3dVertexArray[G_3dLineArray[lineNum].from].y;
+    lx2 = G_3dVertexArray[G_3dLineArray[lineNum].to].x;
+    ly2 = G_3dVertexArray[G_3dLineArray[lineNum].to].y;
 
     if (((lx1 < left) && (lx2 < left)) ||
         ((lx1 > right) && (lx2 > right)) ||
         ((ly1 < top) && (ly2 < top)) ||
-        ((ly1 > bottom) && (ly2 > bottom)))  {
-        return -1 ;
+        ((ly1 > bottom) && (ly2 > bottom)))
+    {
+        return -1;
     }
 
     /* Now we have to do the real check by finding an intersection. */
     a = Collide3dPointOnRight(
-            lx1,
-            ly1,
-            lx2,
-            ly2,
-            x1,
-            y1) ;
+        lx1,
+        ly1,
+        lx2,
+        ly2,
+        x1,
+        y1);
     b = Collide3dPointOnRight(
-            lx1,
-            ly1,
-            lx2,
-            ly2,
-            x2,
-            y2) ;
+        lx1,
+        ly1,
+        lx2,
+        ly2,
+        x2,
+        y2);
     if (a == b)
-        return -1 ;
+        return -1;
 
     a = Collide3dPointOnRight(
-            x1,
-            y1,
-            x2,
-            y2,
-            lx1,
-            ly1) ;
+        x1,
+        y1,
+        x2,
+        y2,
+        lx1,
+        ly1);
     b = Collide3dPointOnRight(
-            x1,
-            y1,
-            x2,
-            y2,
-            lx2,
-            ly2) ;
+        x1,
+        y1,
+        x2,
+        y2,
+        lx2,
+        ly2);
     if (a == b)
-        return -1 ;
+        return -1;
 
     /* Must be intersecting. */
-    return 1 ;
+    return 1;
 }
 
 /* LES 04/12/96 */
-T_byte8 Collide3dPointOnRight(
-            T_sword32 lineX1,
-            T_sword32 lineY1,
-            T_sword32 lineX2,
-            T_sword32 lineY2,
-            T_sword32 pointX,
-            T_sword32 pointY)
+T_byte8
+Collide3dPointOnRight(
+    T_sword32 lineX1,
+    T_sword32 lineY1,
+    T_sword32 lineX2,
+    T_sword32 lineY2,
+    T_sword32 pointX,
+    T_sword32 pointY)
 {
     if (((lineX1 - lineX2) * (pointY - lineY2)) >=
         ((lineY1 - lineY2) * (pointX - lineX2)))
-        return 1 ;
-    return 0 ;
+        return 1;
+    return 0;
 }
 
 /* LES 04/12/96 */
-E_Boolean Collide3dCheckLineOfSight(
-              T_sword16 sightStartX,
-              T_sword16 sightStartY,
-              T_sword16 sightEndX,
-              T_sword16 sightEndY)
+E_Boolean
+Collide3dCheckLineOfSight(
+    T_sword16 sightStartX,
+    T_sword16 sightStartY,
+    T_sword16 sightEndX,
+    T_sword16 sightEndY)
 {
-    T_word16 i ;
-    T_sword16 ceiling1, ceiling2 ;
-    T_sword16 floor1, floor2 ;
+    T_word16 i;
+    T_sword16 ceiling1, ceiling2;
+    T_sword16 floor1, floor2;
 
     /* Determine if there is something in the way. */
-    for (i=0; i<G_Num3dLines; i++)  {
+    for (i = 0; i < G_Num3dLines; i++)
+    {
         /* Is the line passable or impassible? */
-        if (G_3dLineArray[i].flags & LINE_IS_IMPASSIBLE)  {
+        if (G_3dLineArray[i].flags & LINE_IS_IMPASSIBLE)
+        {
             /* impassible. */
             if (Collide3dCheckSegmentHitsSegment(
+                sightStartX,
+                sightStartY,
+                sightEndX,
+                sightEndY,
+                i) != -1)
+                return TRUE;
+        }
+        else
+        {
+            /* passible. */
+            /* Find the lower ceiling in the two sides. */
+            ceiling1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].ceilingHt;
+            ceiling2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].ceilingHt;
+            if (ceiling2 < ceiling1)
+                ceiling1 = ceiling2;
+
+            /* Find the highest floor on the two sides. */
+            floor1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].floorHt;
+            floor2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].floorHt;
+            if (floor2 > floor1)
+                floor1 = floor2;
+
+            /* If the floor touches the ceiling or shears, */
+            /* consider this wall impassible. */
+            if (floor1 >= ceiling1)
+            {
+                /* Is either floor or ceiling blocking the view. */
+                if (Collide3dCheckSegmentHitsSegment(
                     sightStartX,
                     sightStartY,
                     sightEndX,
                     sightEndY,
                     i) != -1)
-                return TRUE ;
-        } else {
-            /* passible. */
-            /* Find the lower ceiling in the two sides. */
-            ceiling1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].ceilingHt ;
-            ceiling2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].ceilingHt ;
-            if (ceiling2 < ceiling1)
-                ceiling1 = ceiling2 ;
-
-            /* Find the highest floor on the two sides. */
-            floor1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].floorHt ;
-            floor2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].floorHt ;
-            if (floor2 > floor1)
-                floor1 = floor2 ;
-
-            /* If the floor touches the ceiling or shears, */
-            /* consider this wall impassible. */
-            if (floor1 >= ceiling1)  {
-                /* Is either floor or ceiling blocking the view. */
-                if (Collide3dCheckSegmentHitsSegment(
-                        sightStartX,
-                        sightStartY,
-                        sightEndX,
-                        sightEndY,
-                        i) != -1)
-                    return TRUE ;
+                    return TRUE;
             }
         }
     }
 
-    return FALSE ;
+    return FALSE;
 }
 
 /* LES 04/23/96 -- Get a list of walls that intersect the given */
 /* line.  Returns the number of walls found. */
-T_word16 Collide3dFindWallList(
-             T_sword16 x1,
-             T_sword16 y1,
-             T_sword16 x2,
-             T_sword16 y2,
-             T_sword16 z,
-             T_word16 maxWalls,
-             T_wallListItem *p_list,
-             T_byte8 wallTypes)
+T_word16
+Collide3dFindWallList(
+    T_sword16 x1,
+    T_sword16 y1,
+    T_sword16 x2,
+    T_sword16 y2,
+    T_sword16 z,
+    T_word16 maxWalls,
+    T_wallListItem *p_list,
+    T_byte8 wallTypes)
 {
-    T_word16 i, j ;
-    T_sword16 floor, floor2, ceiling, ceiling2 ;
-    T_word16 side ;
-    T_word16 count = 0 ;
-    T_word16 sector ;
+    T_word16 i, j;
+    T_sword16 floor, floor2, ceiling, ceiling2;
+    T_word16 side;
+    T_word16 count = 0;
+    T_word16 sector;
 
-    DebugRoutine("Collide3dFindWallList") ;
+    DebugRoutine("Collide3dFindWallList");
 
     /* Go through the list of lines. */
-    for (i=0; (i<G_Num3dLines) && (count < maxWalls); i++)  {
+    for (i = 0; (i < G_Num3dLines) && (count < maxWalls); i++)
+    {
         /* First, determine if there is a basic collision */
         /* of the given segment with the given line. */
-        if (Collide3dCheckSegmentHitsSegment(x1, y1, x2, y2, i) != -1)   {
+        if (Collide3dCheckSegmentHitsSegment(x1, y1, x2, y2, i) != -1)
+        {
             /* There is a collision going on here. */
             /* But we need to check based on height what type */
             /* and if the collision is really occuring. */
 
-            floor = -0x7FFE ;
-            ceiling = 0x7FFE ;
-            for (j=0; j<2; j++)  {
-                side = G_3dLineArray[i].side[j] ;
-                if (side != 0xFFFF)  {
-                    sector = G_3dSideArray[side].sector ;
-                    if (sector != 0xFFFF)  {
-                        floor2 = G_3dSectorArray[sector].floorHt ;
-                        ceiling2 = G_3dSectorArray[sector].ceilingHt ;
+            floor = -0x7FFE;
+            ceiling = 0x7FFE;
+            for (j = 0; j < 2; j++)
+            {
+                side = G_3dLineArray[i].side[j];
+                if (side != 0xFFFF)
+                {
+                    sector = G_3dSideArray[side].sector;
+                    if (sector != 0xFFFF)
+                    {
+                        floor2 = G_3dSectorArray[sector].floorHt;
+                        ceiling2 = G_3dSectorArray[sector].ceilingHt;
                         if (floor2 > floor)
-                            floor = floor2 ;
+                            floor = floor2;
                         if (ceiling2 < ceiling)
-                            ceiling = ceiling2 ;
+                            ceiling = ceiling2;
                     }
                 }
             }
 
             /* Is this supposed to be an upper, lower, or middle? */
-            if (z < floor)  {
+            if (z < floor)
+            {
                 /* Must be a lower section. */
                 /* Don't do lower sections unless asked. */
-                if (wallTypes & WALL_LIST_ITEM_LOWER)  {
-                    p_list[count].lineNumber = i ;
-                    p_list[count].itemType = WALL_LIST_ITEM_LOWER ;
-                    count++ ;
+                if (wallTypes & WALL_LIST_ITEM_LOWER)
+                {
+                    p_list[count].lineNumber = i;
+                    p_list[count].itemType = WALL_LIST_ITEM_LOWER;
+                    count++;
                 }
-            } else if (z > ceiling) {
+            }
+            else if (z > ceiling)
+            {
                 /* Must be an upper section. */
                 /* Don't do upper sections unless asked. */
-                if (wallTypes & WALL_LIST_ITEM_UPPER)  {
-                    p_list[count].lineNumber = i ;
-                    p_list[count].itemType = WALL_LIST_ITEM_UPPER ;
-                    count++ ;
+                if (wallTypes & WALL_LIST_ITEM_UPPER)
+                {
+                    p_list[count].lineNumber = i;
+                    p_list[count].itemType = WALL_LIST_ITEM_UPPER;
+                    count++;
                 }
-            } else {
+            }
+            else
+            {
                 /* Must be a main section. */
                 /* Only collides if this wall is impassible */
-                if (wallTypes & WALL_LIST_ITEM_MAIN)  {
-                    if (G_3dLineArray[i].flags & G_wallDefinition)  {
-                        p_list[count].lineNumber = i ;
-                        p_list[count].itemType = WALL_LIST_ITEM_MAIN ;
-                        count++ ;
+                if (wallTypes & WALL_LIST_ITEM_MAIN)
+                {
+                    if (G_3dLineArray[i].flags & G_wallDefinition)
+                    {
+                        p_list[count].lineNumber = i;
+                        p_list[count].itemType = WALL_LIST_ITEM_MAIN;
+                        count++;
                     }
                 }
             }
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return count ;
+    return count;
 }
 
 /*-------------------------------------------------------------------------*
@@ -3783,17 +4050,18 @@ T_word16 Collide3dFindWallList(
  *  for normal creatures
  *
  *<!-----------------------------------------------------------------------*/
-T_void Collide3dSetWallDefinition(T_word16 lineFlags)
+T_void
+Collide3dSetWallDefinition(T_word16 lineFlags)
 {
-    DebugRoutine("Collide3dSetWallDefinition") ;
+    DebugRoutine("Collide3dSetWallDefinition");
 
     DebugCheck(
-       (lineFlags == LINE_IS_IMPASSIBLE) ||
-       (lineFlags == (LINE_IS_IMPASSIBLE | LINE_IS_CREATURE_IMPASSIBLE))) ;
+        (lineFlags == LINE_IS_IMPASSIBLE) ||
+            (lineFlags == (LINE_IS_IMPASSIBLE | LINE_IS_CREATURE_IMPASSIBLE)));
 
-    G_wallDefinition = lineFlags ;
+    G_wallDefinition = lineFlags;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 // Templates:
 //Collide3dSetWallDefinition(LINE_IS_IMPASSIBLE) ;
@@ -3802,165 +4070,179 @@ T_void Collide3dSetWallDefinition(T_word16 lineFlags)
 //    LINE_IS_CREATURE_IMPASSIBLE) ;
 //
 
-E_Boolean Collide3dObjectToObjectCheckLineOfSight(
-              T_3dObject *p_from,
-              T_3dObject *p_to)
+E_Boolean
+Collide3dObjectToObjectCheckLineOfSight(
+    T_3dObject *p_from,
+    T_3dObject *p_to)
 {
-    T_word32 index ;
-    E_Boolean isBlocked ;
-    static int powers[8] = { 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80 } ;
+    T_word32 index;
+    E_Boolean isBlocked;
+    static int powers[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
 
-    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight") ;
+    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight");
 
     index = ObjectGetCenterSector(p_from) * G_Num3dSectors +
-            ObjectGetCenterSector(p_to) ;
-    if (G_3dReject[index>>3] & powers[index&7])
-        isBlocked = TRUE ;
+        ObjectGetCenterSector(p_to);
+    if (G_3dReject[index >> 3] & powers[index & 7])
+        isBlocked = TRUE;
     else
         isBlocked = Collide3dCheckLineOfSight(
-                        ObjectGetX16(p_from),
-                        ObjectGetY16(p_from),
-                        ObjectGetX16(p_to),
-                        ObjectGetY16(p_to)) ;
+            ObjectGetX16(p_from),
+            ObjectGetY16(p_from),
+            ObjectGetX16(p_to),
+            ObjectGetY16(p_to));
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isBlocked ;
+    return isBlocked;
 }
 
-T_void Collide3dUpdateLineOfSightLast(
-           T_lineOfSightLast *p_lastSight,
-           T_3dObject *p_target)
+T_void
+Collide3dUpdateLineOfSightLast(
+    T_lineOfSightLast *p_lastSight,
+    T_3dObject *p_target)
 {
-    if (p_target != NULL)  {
-        p_lastSight->x = ObjectGetX16(p_target) ;
-        p_lastSight->y = ObjectGetY16(p_target) ;
-        p_lastSight->sector = ObjectGetCenterSector(p_target) ;
-    } else {
+    if (p_target != NULL)
+    {
+        p_lastSight->x = ObjectGetX16(p_target);
+        p_lastSight->y = ObjectGetY16(p_target);
+        p_lastSight->sector = ObjectGetCenterSector(p_target);
+    }
+    else
+    {
         p_lastSight->x =
-        p_lastSight->y = 0x7FFF ;
-        p_lastSight->sector = 0 ;
+        p_lastSight->y = 0x7FFF;
+        p_lastSight->sector = 0;
     }
 }
 
-E_Boolean Collide3dObjectToXYCheckLineOfSight(
-              T_3dObject *p_from,
-              T_lineOfSightLast *p_lastSight,
-              T_sword16 x,
-              T_sword16 y)
+E_Boolean
+Collide3dObjectToXYCheckLineOfSight(
+    T_3dObject *p_from,
+    T_lineOfSightLast *p_lastSight,
+    T_sword16 x,
+    T_sword16 y)
 {
-    T_word32 index ;
-    E_Boolean isBlocked ;
-    static int powers[8] = { 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80 } ;
+    T_word32 index;
+    E_Boolean isBlocked;
+    static int powers[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
 
-    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight") ;
+    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight");
 
-    if ((p_lastSight->x != x) || (p_lastSight->y != y))  {
-        p_lastSight->x = x ;
-        p_lastSight->y = y ;
-        p_lastSight->sector = View3dFindSectorNum(x, y) ;
+    if ((p_lastSight->x != x) || (p_lastSight->y != y))
+    {
+        p_lastSight->x = x;
+        p_lastSight->y = y;
+        p_lastSight->sector = View3dFindSectorNum(x, y);
     }
 
     index = ObjectGetCenterSector(p_from) * G_Num3dSectors +
-            p_lastSight->sector ;
-    if (G_3dReject[index>>3] & powers[index&7])
-        isBlocked = TRUE ;
+        p_lastSight->sector;
+    if (G_3dReject[index >> 3] & powers[index & 7])
+        isBlocked = TRUE;
     else
         isBlocked = Collide3dCheckLineOfSight(
-                        ObjectGetX16(p_from),
-                        ObjectGetY16(p_from),
-                        x,
-                        y) ;
+            ObjectGetX16(p_from),
+            ObjectGetY16(p_from),
+            x,
+            y);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isBlocked ;
+    return isBlocked;
 }
 
-E_Boolean Collide3dCheckLineOfSightWithZ(
-              T_sword16 sightStartX,
-              T_sword16 sightStartY,
-              T_sword16 sightEndX,
-              T_sword16 sightEndY,
-              T_sword16 sightZ)
+E_Boolean
+Collide3dCheckLineOfSightWithZ(
+    T_sword16 sightStartX,
+    T_sword16 sightStartY,
+    T_sword16 sightEndX,
+    T_sword16 sightEndY,
+    T_sword16 sightZ)
 {
-    T_word16 i ;
-    T_sword16 ceiling1, ceiling2 ;
-    T_sword16 floor1, floor2 ;
+    T_word16 i;
+    T_sword16 ceiling1, ceiling2;
+    T_sword16 floor1, floor2;
 
     /* Determine if there is something in the way. */
-    for (i=0; i<G_Num3dLines; i++)  {
+    for (i = 0; i < G_Num3dLines; i++)
+    {
         /* Is the line passable or impassible? */
-        if (G_3dLineArray[i].flags & LINE_IS_IMPASSIBLE)  {
+        if (G_3dLineArray[i].flags & LINE_IS_IMPASSIBLE)
+        {
             /* impassible. */
             if (Collide3dCheckSegmentHitsSegment(
+                sightStartX,
+                sightStartY,
+                sightEndX,
+                sightEndY,
+                i) != -1)
+                return TRUE;
+        }
+        else
+        {
+            /* passible. */
+            /* Find the lower ceiling in the two sides. */
+            ceiling1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].ceilingHt;
+            ceiling2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].ceilingHt;
+            if (ceiling2 < ceiling1)
+                ceiling1 = ceiling2;
+
+            /* Find the highest floor on the two sides. */
+            floor1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].floorHt;
+            floor2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].floorHt;
+            if (floor2 > floor1)
+                floor1 = floor2;
+
+            /* If the floor touches the ceiling or shears, */
+            /* consider this wall impassible. */
+            if ((floor1 >= ceiling1) || (sightZ >= ceiling1) || (sightZ <= floor1))
+            {
+                /* Is either floor or ceiling blocking the view. */
+                if (Collide3dCheckSegmentHitsSegment(
                     sightStartX,
                     sightStartY,
                     sightEndX,
                     sightEndY,
                     i) != -1)
-                return TRUE ;
-        } else {
-            /* passible. */
-            /* Find the lower ceiling in the two sides. */
-            ceiling1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].ceilingHt ;
-            ceiling2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].ceilingHt ;
-            if (ceiling2 < ceiling1)
-                ceiling1 = ceiling2 ;
-
-            /* Find the highest floor on the two sides. */
-            floor1 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[0]].sector].floorHt ;
-            floor2 = G_3dSectorArray[G_3dSideArray[G_3dLineArray[i].side[1]].sector].floorHt ;
-            if (floor2 > floor1)
-                floor1 = floor2 ;
-
-            /* If the floor touches the ceiling or shears, */
-            /* consider this wall impassible. */
-            if ((floor1 >= ceiling1) || (sightZ >= ceiling1) || (sightZ <= floor1))  {
-                /* Is either floor or ceiling blocking the view. */
-                if (Collide3dCheckSegmentHitsSegment(
-                        sightStartX,
-                        sightStartY,
-                        sightEndX,
-                        sightEndY,
-                        i) != -1)
-                    return TRUE ;
+                    return TRUE;
             }
         }
     }
 
-    return FALSE ;
+    return FALSE;
 }
 
-E_Boolean Collide3dObjectToXYCheckLineOfSightWithZ(
-              T_3dObject *p_from,
-              T_sword16 x,
-              T_sword16 y,
-              T_sword16 z)
+E_Boolean
+Collide3dObjectToXYCheckLineOfSightWithZ(
+    T_3dObject *p_from,
+    T_sword16 x,
+    T_sword16 y,
+    T_sword16 z)
 {
-    T_word32 index ;
-    E_Boolean isBlocked ;
-    static int powers[8] = { 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80 } ;
-    T_word16 sector ;
+    T_word32 index;
+    E_Boolean isBlocked;
+    static int powers[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+    T_word16 sector;
 
-    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight") ;
+    DebugRoutine("Collide3dObjectToObjectCheckLineOfSight");
 
-    sector = View3dFindSectorNum(x, y) ;
+    sector = View3dFindSectorNum(x, y);
 
-    index = ObjectGetCenterSector(p_from) * G_Num3dSectors + sector ;
-    if (G_3dReject[index>>3] & powers[index&7])
-        isBlocked = TRUE ;
+    index = ObjectGetCenterSector(p_from) * G_Num3dSectors + sector;
+    if (G_3dReject[index >> 3] & powers[index & 7])
+        isBlocked = TRUE;
     else
         isBlocked = Collide3dCheckLineOfSightWithZ(
-                        ObjectGetX16(p_from),
-                        ObjectGetY16(p_from),
-                        x,
-                        y,
-                        z) ;
+            ObjectGetX16(p_from),
+            ObjectGetY16(p_from),
+            x,
+            y,
+            z);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isBlocked ;
+    return isBlocked;
 }
 
 /** @} */

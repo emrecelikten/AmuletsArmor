@@ -15,8 +15,8 @@
                             All Rights Reserved
 ****************************************************************************/
 
-#ifndef  _SOS_DEFINED   
-#define  _SOS_DEFINED   
+#ifndef  _SOS_DEFINED
+#define  _SOS_DEFINED
 
 #ifdef PHARLAP
 #include <pharlap.h>
@@ -26,7 +26,7 @@
 #include "sosdefs.h"
 
 // macro for creating a left/right volume value for the mixer
-#define MK_VOLUME( l, r ) ( ( short )r << 16 | ( short )l )
+#define MK_VOLUME(l, r) ( ( short )r << 16 | ( short )l )
 
 // define for an active state 
 #define  _ACTIVE           0x8000
@@ -37,23 +37,23 @@
 // structure for the VDS system
 typedef struct _tag_sos_evds_struct
 {
-	unsigned       region_size;
-	unsigned       offset;
-	unsigned       segment;
-	unsigned short	number_available;
-	unsigned short number_used;
-	unsigned       page0;
+    unsigned region_size;
+    unsigned offset;
+    unsigned segment;
+    unsigned short number_available;
+    unsigned short number_used;
+    unsigned page0;
 
 } _SOS_EVDS_STRUCT;
 
 // structure for the VDS system
-typedef struct _tag_sos_vds_struct 
+typedef struct _tag_sos_vds_struct
 {
-	unsigned       region_size;
-	unsigned       offset;
-	unsigned short segment;
-	unsigned short	ID;
-	unsigned       physical;
+    unsigned region_size;
+    unsigned offset;
+    unsigned short segment;
+    unsigned short ID;
+    unsigned physical;
 
 } _SOS_VDS_STRUCT;
 
@@ -64,7 +64,7 @@ typedef struct _tag_sos_vds_struct
 #pragma pack(4)
 
 // define for the maximum length of a path 
-#define  _SOS_MAX_DIR         128 
+#define  _SOS_MAX_DIR         128
 
 // local equates
 #define  _MIXING_BSIZE        0x4000
@@ -101,50 +101,50 @@ typedef struct _tag_sos_vds_struct
 #define  _VOLUME_MAX       0x7fff7fff
 
 // new sample type
-typedef  struct   _tag_sos_sample
+typedef struct _tag_sos_sample
 {
-   PSTR  pSample;                      // pointer to sample data
-   PSTR  pSampleCurrent;               // pointer to current location
-   PSTR  pSampleLoop;                  // loop point if any
+    PSTR pSample;                      // pointer to sample data
+    PSTR pSampleCurrent;               // pointer to current location
+    PSTR pSampleLoop;                  // loop point if any
 
-   DWORD wLength;                      // length of sample
-   DWORD wLoopLength;                  // length of sample loop
-   DWORD wLoopEndLength;               // length of loop end
-   DWORD wLoopStage;                   // loop stage: Attack, Sustain, Release
+    DWORD wLength;                      // length of sample
+    DWORD wLoopLength;                  // length of sample loop
+    DWORD wLoopEndLength;               // length of loop end
+    DWORD wLoopStage;                   // loop stage: Attack, Sustain, Release
 
-   DWORD wID;                          // sample ID
-   DWORD wFlags;                       // sample flags
-   DWORD wPriority;                    // priority of sample
-   DWORD hSample;                      // handle to sample
+    DWORD wID;                          // sample ID
+    DWORD wFlags;                       // sample flags
+    DWORD wPriority;                    // priority of sample
+    DWORD hSample;                      // handle to sample
 
-   DWORD wVolume;                      // volume
-   DWORD wLoopCount;                   // loop count
+    DWORD wVolume;                      // volume
+    DWORD wLoopCount;                   // loop count
 
-   DWORD wRate;                        // sample rate
-   DWORD wBitsPerSample;               // sample size 8/16
-   DWORD wChannels;                    // channels per sample 1/2, mono/stereo
-   DWORD wFormat;                      // sample format: signed, unsigned, etc..
+    DWORD wRate;                        // sample rate
+    DWORD wBitsPerSample;               // sample size 8/16
+    DWORD wChannels;                    // channels per sample 1/2, mono/stereo
+    DWORD wFormat;                      // sample format: signed, unsigned, etc..
 
-   DWORD wPanPosition;                 // pan position 0x8000 == center
-   DWORD wPanSpeed;                    // speed of auto pan
-   DWORD wPanStart;                    // start of pan 
-   DWORD wPanEnd;                      // end of pan
-   DWORD wPanMode;                     // mode: ONCE, PING-PONG, LOOP
+    DWORD wPanPosition;                 // pan position 0x8000 == center
+    DWORD wPanSpeed;                    // speed of auto pan
+    DWORD wPanStart;                    // start of pan
+    DWORD wPanEnd;                      // end of pan
+    DWORD wPanMode;                     // mode: ONCE, PING-PONG, LOOP
 
-   DWORD wTotalBytesProcessed;         // total bytes actually played
+    DWORD wTotalBytesProcessed;         // total bytes actually played
 
-   VOID  ( cdecl * pfnSampleProcessed )( struct _tag_sos_sample * );  // sample complete callback
-   VOID  ( cdecl * pfnSampleDone )( struct _tag_sos_sample * );       // sample complete callback
-   VOID  ( cdecl * pfnSampleLoop )( struct _tag_sos_sample * );       // sample loop call back
+    VOID  ( cdecl * pfnSampleProcessed )( struct _tag_sos_sample * );  // sample complete callback
+    VOID  ( cdecl * pfnSampleDone )( struct _tag_sos_sample * );       // sample complete callback
+    VOID  ( cdecl * pfnSampleLoop )( struct _tag_sos_sample * );       // sample loop call back
 
-   DWORD wSystem  [ 16 ];              // system data
-   DWORD wUser    [ 16 ];              // user data
+    DWORD wSystem[16];              // system data
+    DWORD wUser[16];              // user data
 
-   struct _tag_sos_sample *  pLink;         // link to next buffer/sample
-   struct _tag_sos_sample *  pNext;         // next sample in chain
+    struct _tag_sos_sample *pLink;         // link to next buffer/sample
+    struct _tag_sos_sample *pNext;         // next sample in chain
 
 } _SOS_SAMPLE;
-typedef _SOS_SAMPLE * PSOSSAMPLE;
+typedef _SOS_SAMPLE *PSOSSAMPLE;
 
 // error definition for sound operating system  
 #define  _SOS_ERR          -1
@@ -154,55 +154,55 @@ typedef _SOS_SAMPLE * PSOSSAMPLE;
 
 // flag types for driver
 #define  _FLAGS_SIGNED              0x8000
-  
+
 // define for no slots available
 #define  _ERR_NO_SLOTS ( W32 )-1
 
 // enumeration for the driver functions
 enum
 {
-   _DETDRV_EXISTS,
-   _DETDRV_GET_SETTINGS,
-   _DETDRV_GET_CAPABILITIES
+    _DETDRV_EXISTS,
+    _DETDRV_GET_SETTINGS,
+    _DETDRV_GET_CAPABILITIES
 };
 
 // size of the temporary driver buffer
 #define  _DRIVER_BUFFER_SIZE 4096
- 
+
 // error codes for the system
 enum
 {
-   _ERR_NO_ERROR,
-   _ERR_DRIVER_NOT_LOADED,
-   _ERR_INVALID_POINTER,
-   _ERR_DETECT_INITIALIZED,
-   _ERR_FAIL_ON_FILE_OPEN,
-   _ERR_MEMORY_FAIL,
-   _ERR_INVALID_DRIVER_ID,
-   _ERR_NO_DRIVER_FOUND,
-   _ERR_DETECTION_FAILURE,
-   _ERR_DRIVER_LOADED,
-   _ERR_INVALID_HANDLE,
-   _ERR_NO_HANDLES,
-   _ERR_PAUSED,   
-   _ERR_NOT_PAUSED,
-   _ERR_INVALID_DATA,
-   _ERR_DRV_FILE_FAIL,
-   _ERR_INVALID_PORT,
-   _ERR_INVALID_IRQ,
-   _ERR_INVALID_DMA,
-   _ERR_INVALID_DMA_IRQ,
-   _ERR_STREAM_PLAYING,      
-   _ERR_STREAM_EMPTY,        
-   _ERR_STREAM_PAUSED,       
-   _ERR_STREAM_NOT_PAUSED, 
-   _ERR_INITIALIZED,
-   _ERR_NOT_INITIALIZED,
-   _ERR_NO_TRACKS
-};   
+    _ERR_NO_ERROR,
+    _ERR_DRIVER_NOT_LOADED,
+    _ERR_INVALID_POINTER,
+    _ERR_DETECT_INITIALIZED,
+    _ERR_FAIL_ON_FILE_OPEN,
+    _ERR_MEMORY_FAIL,
+    _ERR_INVALID_DRIVER_ID,
+    _ERR_NO_DRIVER_FOUND,
+    _ERR_DETECTION_FAILURE,
+    _ERR_DRIVER_LOADED,
+    _ERR_INVALID_HANDLE,
+    _ERR_NO_HANDLES,
+    _ERR_PAUSED,
+    _ERR_NOT_PAUSED,
+    _ERR_INVALID_DATA,
+    _ERR_DRV_FILE_FAIL,
+    _ERR_INVALID_PORT,
+    _ERR_INVALID_IRQ,
+    _ERR_INVALID_DMA,
+    _ERR_INVALID_DMA_IRQ,
+    _ERR_STREAM_PLAYING,
+    _ERR_STREAM_EMPTY,
+    _ERR_STREAM_PAUSED,
+    _ERR_STREAM_NOT_PAUSED,
+    _ERR_INITIALIZED,
+    _ERR_NOT_INITIALIZED,
+    _ERR_NO_TRACKS
+};
 
 // maximum number of timer events that can be registered 
-#define  _TIMER_MAX_EVENTS    0x10  
+#define  _TIMER_MAX_EVENTS    0x10
 
 // flags for the debugging system
 #define  _SOS_DEBUG_NORMAL       0x0000
@@ -273,10 +273,10 @@ enum
 #define  _WAVEJAMMERCD_8_ST         0xe034
 #define  _WAVEJAMMERCD_16_MONO      0xe035
 #define  _WAVEJAMMERCD_16_ST        0xe036
-#define  _TB_MULTISOUND_8_MONO      0xe037 
-#define  _TB_MULTISOUND_8_ST        0xe038 
-#define  _TB_MULTISOUND_16_MONO     0xe039 
-#define  _TB_MULTISOUND_16_ST       0xe03a 
+#define  _TB_MULTISOUND_8_MONO      0xe037
+#define  _TB_MULTISOUND_8_ST        0xe038
+#define  _TB_MULTISOUND_16_MONO     0xe039
+#define  _TB_MULTISOUND_16_ST       0xe03a
 #define  _SOUND_BLASTER_8_MONO_R    0xe050
 #define  _MICROSOFT_8_MONO_R        0xe051
 #define  _SOUND_MASTER_II_8_MONO_R  0xe052
@@ -303,20 +303,20 @@ enum
 
 // call indexes for the loadable drivers
 enum
-{ 
-   _DRV_INIT,
-   _DRV_UNINIT,
-   _DRV_SETRATE,
-   _DRV_SETACTION,
-   _DRV_START,
-   _DRV_STOP,
-   _DRV_PAUSE,
-   _DRV_RESUME,
-   _DRV_CAPABILITIES,
-   _DRV_PLAY_FOREGROUND,
-   _DRV_GET_FILL_INFO, 
-   _DRV_GET_CALL_FUNCTIONS,
-   _DRV_SET_CALL_FUNCTIONS
+{
+    _DRV_INIT,
+    _DRV_UNINIT,
+    _DRV_SETRATE,
+    _DRV_SETACTION,
+    _DRV_START,
+    _DRV_STOP,
+    _DRV_PAUSE,
+    _DRV_RESUME,
+    _DRV_CAPABILITIES,
+    _DRV_PLAY_FOREGROUND,
+    _DRV_GET_FILL_INFO,
+    _DRV_GET_CALL_FUNCTIONS,
+    _DRV_SET_CALL_FUNCTIONS
 };
 
 // maximum number of available voice
@@ -340,43 +340,43 @@ enum
 // structure definition for the capabilities
 typedef struct _tagCAPABILITIES
 {
-   BYTE  szDeviceName[ 32 ];  // device name
-   W32  wDeviceVersion;      // device version
-   W32  wBitsPerSample;      // bits per sound sample
-   W32  wChannels;           // stereo/mono sound card
-   W32  wMinRate;            // minimum rate
-   W32  wMaxRate;            // maximum rate
-   W32  wMixerOnBoard;       // board contains mixer
-   W32  wMixerFlags;         // mixer capabilities
-   W32  wFlags;              // miscellaneous flags   
-   short far * lpPortList;         // list of usable ports
-   short far * lpDMAList;          // list of usable dma channels
-   short far * lpIRQList;          // list of usable irq channels
-   short far * lpRateList;         // list of usable rates, -1 if any in min to max
-   W32  fBackground;         // foreground or background driver
-   W32  wID;                 // ID for the device
-   W32  wTimerID;            // ID for the timer
-   
-} _SOS_CAPABILITIES; 
-typedef _SOS_CAPABILITIES * PSOSCAPABILITIES;
+    BYTE szDeviceName[32];  // device name
+    W32 wDeviceVersion;      // device version
+    W32 wBitsPerSample;      // bits per sound sample
+    W32 wChannels;           // stereo/mono sound card
+    W32 wMinRate;            // minimum rate
+    W32 wMaxRate;            // maximum rate
+    W32 wMixerOnBoard;       // board contains mixer
+    W32 wMixerFlags;         // mixer capabilities
+    W32 wFlags;              // miscellaneous flags
+    short far * lpPortList;         // list of usable ports
+    short far * lpDMAList;          // list of usable dma channels
+    short far * lpIRQList;          // list of usable irq channels
+    short far * lpRateList;         // list of usable rates, -1 if any in min to max
+    W32 fBackground;         // foreground or background driver
+    W32 wID;                 // ID for the device
+    W32 wTimerID;            // ID for the timer
+
+} _SOS_CAPABILITIES;
+typedef _SOS_CAPABILITIES *PSOSCAPABILITIES;
 
 // device hardware information
 typedef struct
 {
-   // port to be used
-   W32  wPort;
+    // port to be used
+    W32 wPort;
 
-   // irq to use
-   W32  wIRQ;
+    // irq to use
+    W32 wIRQ;
 
-   // dma channel to se
-   W32  wDMA; 
-  
-   // extra parameter
-   W32  wParam;
+    // dma channel to se
+    W32 wDMA;
+
+    // extra parameter
+    W32 wParam;
 
 } _SOS_HARDWARE;
-typedef _SOS_HARDWARE * PSOSHARDWARE;
+typedef _SOS_HARDWARE *PSOSHARDWARE;
 
 // flags for the _SOS_DIGI_DRIVER.wFlags
 #define _SOS_DRV_INITIALIZED           0x0001
@@ -385,152 +385,154 @@ typedef _SOS_HARDWARE * PSOSHARDWARE;
 
 // structure for a driver
 typedef struct _tag_sos_driver
-{  
-   // flags for the driver
-   // _SOS_DRV_INITIALIZED
-   // _SOS_DRV_LOADED
-   // _SOS_DRV_DMA_BUFFER_ALLOCATED
-   W32 wFlags;
+{
+    // flags for the driver
+    // _SOS_DRV_INITIALIZED
+    // _SOS_DRV_LOADED
+    // _SOS_DRV_DMA_BUFFER_ALLOCATED
+    W32 wFlags;
 
-   // rate dma is moving in samples per second
-   DWORD wDriverRate;
+    // rate dma is moving in samples per second
+    DWORD wDriverRate;
 
-   // number of channels that the driver is using(1,2)
-   DWORD wDriverChannels;
+    // number of channels that the driver is using(1,2)
+    DWORD wDriverChannels;
 
-   // number of bits per sample(8,16)
-   DWORD wDriverBitsPerSample;
+    // number of bits per sample(8,16)
+    DWORD wDriverBitsPerSample;
 
-   // driver format
-   DWORD wDriverFormat;
+    // driver format
+    DWORD wDriverFormat;
 
-   // number of channels that the mixer is using
-   DWORD wMixerChannels;
+    // number of channels that the mixer is using
+    DWORD wMixerChannels;
 
-   // dma count register
-   DWORD wDMACountRegister;
+    // dma count register
+    DWORD wDMACountRegister;
 
-   // current position of the dma controller 
-   DWORD wDMAPosition;
+    // current position of the dma controller
+    DWORD wDMAPosition;
 
-   // last position that the dma controller was at
-   DWORD wDMALastPosition;
+    // last position that the dma controller was at
+    DWORD wDMALastPosition;
 
-   // amount moved on last dma tick 
-   DWORD wDMADistance;
+    // amount moved on last dma tick
+    DWORD wDMADistance;
 
-   // position to transfer data to
-   PSTR  pXFERPosition;
+    // position to transfer data to
+    PSTR pXFERPosition;
 
-   // amount to jump ahead of the dma controller each time a sample
-   // is started
-   DWORD wXFERJumpAhead;
+    // amount to jump ahead of the dma controller each time a sample
+    // is started
+    DWORD wXFERJumpAhead;
 
-   // pointer to the sample list
-   _SOS_SAMPLE * pSampleList;
+    // pointer to the sample list
+    _SOS_SAMPLE *pSampleList;
 
-   // pointer to the PSEUDO-DMA callback functions
-   VOID ( far * pfnPseudoDMAFunction )( VOID );
+    // pointer to the PSEUDO-DMA callback functions
+    VOID ( far
+    * pfnPseudoDMAFunction )( VOID );
 
-   // pointer to the dma buffer
-   PSTR  pDMABuffer;
+    // pointer to the dma buffer
+    PSTR pDMABuffer;
 
-   // pointer to the end of the dma buffer
-   PSTR  pDMABufferEnd;
+    // pointer to the end of the dma buffer
+    PSTR pDMABufferEnd;
 
-   // size of the dma buffer
-   DWORD wDMABufferSize;
+    // size of the dma buffer
+    DWORD wDMABufferSize;
 
-   // pointer to the mixing buffer
-   PSTR  pMixingBuffer;
+    // pointer to the mixing buffer
+    PSTR pMixingBuffer;
 
-   // pointer to the end of the mixing buffer
-   PSTR  pMixingBufferEnd;
+    // pointer to the end of the mixing buffer
+    PSTR pMixingBufferEnd;
 
-   // size of the mixing buffer
-   DWORD wMixingBufferSize;
+    // size of the mixing buffer
+    DWORD wMixingBufferSize;
 
-   // number of active channels for the mixer 
-   DWORD wActiveChannels;
+    // number of active channels for the mixer
+    DWORD wActiveChannels;
 
-   // pointer to the sample list
-   _SOS_SAMPLE * pSamples;
+    // pointer to the sample list
+    _SOS_SAMPLE *pSamples;
 
-   // hardware information 
-   _SOS_HARDWARE sHardware;
+    // hardware information
+    _SOS_HARDWARE sHardware;
 
-   // capabilities for the driver
-   _SOS_CAPABILITIES sCaps;
+    // capabilities for the driver
+    _SOS_CAPABILITIES sCaps;
 
-   // pointers to the driver
-   LPSTR lpDriverDS;
-   LPSTR lpDriverCS;
+    // pointers to the driver
+    LPSTR lpDriverDS;
+    LPSTR lpDriverCS;
 
-   // size of the driver
-   W32 wSize;
+    // size of the driver
+    W32 wSize;
 
-   // linear address of the driver
-   DWORD dwLinear;
+    // linear address of the driver
+    DWORD dwLinear;
 
-   // physical address of the dma buffer
-   DWORD dwDMAPhysical;
+    // physical address of the dma buffer
+    DWORD dwDMAPhysical;
 
-   // far pointer to the dma buffer 
-   LPSTR lpDMABuffer;
+    // far pointer to the dma buffer
+    LPSTR lpDMABuffer;
 
-   // memory handle for the driver
-   W32 hMemory;
+    // memory handle for the driver
+    W32 hMemory;
 
-   // real mode segment of dma buffer
-   W32 wDMARealSeg;
+    // real mode segment of dma buffer
+    W32 wDMARealSeg;
 
-   // ID for the driver
-   W32 wID;
+    // ID for the driver
+    W32 wID;
 
-   // pointer to mix function
-   VOID ( * pfnMixFunction )( VOID );
+    // pointer to mix function
+    VOID
+    ( *pfnMixFunction )(VOID);
 
 } _SOS_DIGI_DRIVER;
-typedef _SOS_DIGI_DRIVER * PSOSDIGIDRIVER;
+typedef _SOS_DIGI_DRIVER *PSOSDIGIDRIVER;
 
 // file header structure
 typedef struct
 {
-   // name ID
-   BYTE  szName[ 32 ];
+    // name ID
+    BYTE szName[32];
 
-   // number of drivers in the file
-   W32  wDrivers;
+    // number of drivers in the file
+    W32 wDrivers;
 
-   // offset of first driver
-   W32  lOffset;
+    // offset of first driver
+    W32 lOffset;
 
-   // size of the file
-   W32  lFileSize;
+    // size of the file
+    W32 lFileSize;
 
 } _SOS_DRV_FILEHEADER;
-typedef _SOS_DRV_FILEHEADER * PSOSDRVFILEHEADER;
+typedef _SOS_DRV_FILEHEADER *PSOSDRVFILEHEADER;
 
 // driver header structure
 typedef struct
 {
-   // name ID
-   BYTE  szName[ 32 ];
+    // name ID
+    BYTE szName[32];
 
-   // offset of next driver
-   W32  lNextDriver;
+    // offset of next driver
+    W32 lNextDriver;
 
-   // size of current driver
-   W32  wSize;
+    // size of current driver
+    W32 wSize;
 
-   // id for the current device
-   W32  wDeviceID;
+    // id for the current device
+    W32 wDeviceID;
 
-   // id for the type of DOS extender
-   W32  wExtenderType;
+    // id for the type of DOS extender
+    W32 wExtenderType;
 
 } _SOS_DRV_DRIVERHEADER;
-typedef _SOS_DRV_DRIVERHEADER * PSOSDRVDRIVERHEADER;
+typedef _SOS_DRV_DRIVERHEADER *PSOSDRVDRIVERHEADER;
 
 // flags for the _SOS_SYSTEM.wFlags
 #define  _SOS_SYSTEM_INITIALIZED    0x0001
@@ -538,34 +540,36 @@ typedef _SOS_DRV_DRIVERHEADER * PSOSDRVDRIVERHEADER;
 // structure for all of the system information
 typedef struct _tag_sos_system
 {
-   // flags for the system
-   // _SOS_SYSTEM_INITIALIZED
-   W32 wFlags;
-    
-   // path to the drivers
-   BYTE szDriverPath[ _SOS_MAX_DIR ];
+    // flags for the system
+    // _SOS_SYSTEM_INITIALIZED
+    W32 wFlags;
 
-   // temporary path to the drivers
-   BYTE szTempDriverPath[ _SOS_MAX_DIR ];
+    // path to the drivers
+    BYTE szDriverPath[_SOS_MAX_DIR];
 
-   // pointers to all of the driver structures
-   PSOSDIGIDRIVER pDriver[ _SOS_MAX_DRIVERS ];
- 
-   // VDS information
-   _SOS_VDS_STRUCT sVDS;
+    // temporary path to the drivers
+    BYTE szTempDriverPath[_SOS_MAX_DIR];
 
-   // structures for loading a driver
-   _SOS_DRV_FILEHEADER sFileHeader;
-   _SOS_DRV_DRIVERHEADER sDriverHeader;
+    // pointers to all of the driver structures
+    PSOSDIGIDRIVER pDriver[_SOS_MAX_DRIVERS];
 
-   // pointers to the memory allocation functions
-   PSTR ( * pMemAllocFunction )( DWORD );
+    // VDS information
+    _SOS_VDS_STRUCT sVDS;
+
+    // structures for loading a driver
+    _SOS_DRV_FILEHEADER sFileHeader;
+    _SOS_DRV_DRIVERHEADER sDriverHeader;
+
+    // pointers to the memory allocation functions
+    PSTR
+    ( *pMemAllocFunction )(DWORD);
 // NEW
-   VOID ( * pMemFreeFunction )( PSTR, W32 );
+    VOID
+    ( *pMemFreeFunction )(PSTR, W32);
 // END
 
 } _SOS_SYSTEM;
-typedef _SOS_SYSTEM * PSOSSYSTEM;
+typedef _SOS_SYSTEM *PSOSSYSTEM;
 
 // flags for the _SOS_DET_SYSTEM.wFlags
 #define  _SOS_DET_SYSTEM_INITIALIZED    0x0001
@@ -573,47 +577,47 @@ typedef _SOS_SYSTEM * PSOSSYSTEM;
 // structure for all of the detection system information
 typedef struct _tag_sos_det_system
 {
-   // flags for the system
-   // _SOS_DET_SYSTEM_INITIALIZED
-   W32 wFlags;
-    
-   // path to the drivers
-   BYTE szDriverPath[ _SOS_MAX_DIR ];
+    // flags for the system
+    // _SOS_DET_SYSTEM_INITIALIZED
+    W32 wFlags;
 
-   // temporary path to the drivers
-   BYTE szTempDriverPath[ _SOS_MAX_DIR ];
+    // path to the drivers
+    BYTE szDriverPath[_SOS_MAX_DIR];
 
-   // structures for loading a driver
-   _SOS_DRV_FILEHEADER sFileHeader;
-   _SOS_DRV_DRIVERHEADER sDriverHeader;
+    // temporary path to the drivers
+    BYTE szTempDriverPath[_SOS_MAX_DIR];
 
-   // capabilities for the driver
-   _SOS_CAPABILITIES sCaps;
- 
-   // pointer to the detection device caps 
-   PSOSCAPABILITIES pCaps;
+    // structures for loading a driver
+    _SOS_DRV_FILEHEADER sFileHeader;
+    _SOS_DRV_DRIVERHEADER sDriverHeader;
 
-   // pointer to the temporary detection system driver buffer data segment 
-   LPSTR lpBufferDS;
+    // capabilities for the driver
+    _SOS_CAPABILITIES sCaps;
 
-   // pointer to the temporary detection system driver buffer data segment 
-   LPSTR lpBufferCS;
+    // pointer to the detection device caps
+    PSOSCAPABILITIES pCaps;
 
-   // handle for the detection driver file 
-   W32 hFile;
+    // pointer to the temporary detection system driver buffer data segment
+    LPSTR lpBufferDS;
 
-   // indexes into the detection driver file
-   DWORD dwDriverIndex;
-   W32 wDriverIndexCur;
+    // pointer to the temporary detection system driver buffer data segment
+    LPSTR lpBufferCS;
 
-   // memory handle for the detection system temporary buffer
-   W32 hMemory;
+    // handle for the detection driver file
+    W32 hFile;
 
-   // linear address of the detection system temporary buffer
-   DWORD dwLinear;
+    // indexes into the detection driver file
+    DWORD dwDriverIndex;
+    W32 wDriverIndexCur;
+
+    // memory handle for the detection system temporary buffer
+    W32 hMemory;
+
+    // linear address of the detection system temporary buffer
+    DWORD dwLinear;
 
 } _SOS_DET_SYSTEM;
-typedef _SOS_DET_SYSTEM * PSOSDETSYSTEM;
+typedef _SOS_DET_SYSTEM *PSOSDETSYSTEM;
 
 // flags for the _SOS_TIMER_SYSTEM.wFlags
 #define  _SOS_TIMER_INITIALIZED     0x0001
@@ -623,43 +627,44 @@ typedef _SOS_DET_SYSTEM * PSOSDETSYSTEM;
 // structure for the timer system
 typedef struct _tag_sos_timer_system
 {
-   // flags for the system 
-   // _SOS_TIMER_INTIALIZED
-   // _SOS_TIMER_USED
-   // _SOS_TIMER_ACTIVE
-   W32 wFlags;
+    // flags for the system
+    // _SOS_TIMER_INTIALIZED
+    // _SOS_TIMER_USED
+    // _SOS_TIMER_ACTIVE
+    W32 wFlags;
 
-   // last value written to the timer chip
-   W32 wChipDivisor;
+    // last value written to the timer chip
+    W32 wChipDivisor;
 
-   // event list pointers
-   VOID ( * pfnEvent[ _TIMER_MAX_EVENTS ] )( VOID );
+    // event list pointers
+    VOID
+    ( *pfnEvent[_TIMER_MAX_EVENTS] )(VOID);
 
-   // rate for each event
-   W32 wEventRate[ _TIMER_MAX_EVENTS ];
+    // rate for each event
+    W32 wEventRate[_TIMER_MAX_EVENTS];
 
-   // fractional value to add to the current summation each timer tick
-   DWORD dwAdditiveFraction[ _TIMER_MAX_EVENTS ];
+    // fractional value to add to the current summation each timer tick
+    DWORD dwAdditiveFraction[_TIMER_MAX_EVENTS];
 
-   // current summation for each event
-   DWORD dwCurrentSummation[ _TIMER_MAX_EVENTS ];
+    // current summation for each event
+    DWORD dwCurrentSummation[_TIMER_MAX_EVENTS];
 
-   // handle of the song that is relative to the current events
-   W32  wMIDIEventSongHandle[ _TIMER_MAX_EVENTS ];
+    // handle of the song that is relative to the current events
+    W32 wMIDIEventSongHandle[_TIMER_MAX_EVENTS];
 
-   // current song handle
-   W32  wMIDIActiveSongHandle;
+    // current song handle
+    W32 wMIDIActiveSongHandle;
 
 #ifdef PHARLAP
-   // pharlap timer system variables
-   RMC_BLK sRealRegs;
-   REALPTR pPrevRealPtr;
-   FARPTR pPrevProtPtr;
-   FARPTR pCurProtPtr;
+    // pharlap timer system variables
+    RMC_BLK sRealRegs;
+    REALPTR pPrevRealPtr;
+    FARPTR pPrevProtPtr;
+    FARPTR pCurProtPtr;
 #endif
 
 } _SOS_TIMER_SYSTEM;
-typedef _SOS_TIMER_SYSTEM * PSOSTIMERSYSTEM;
+typedef _SOS_TIMER_SYSTEM *PSOSTIMERSYSTEM;
 
 // restore the structure packing back to the default command line packing
 #pragma pack()

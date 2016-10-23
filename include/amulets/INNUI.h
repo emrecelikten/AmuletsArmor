@@ -12,8 +12,11 @@ typedef enum
     INN_ROOM_UNKNOWN
 } E_innRoomType;
 
-T_void InnUIStart    (T_word32 formNum);
-T_void InnUIUpdate   (T_void);
-T_void InnUIEnd      (T_void);
+T_void
+InnUIStart(T_word32 formNum);
+T_void
+InnUIUpdate(T_void);
+T_void
+InnUIEnd(T_void);
 
 #endif

@@ -41,17 +41,19 @@ T_sword32 G_sinTable[MATH_MAX_ANGLE];
 T_sword32 G_tanTable[MATH_MAX_ANGLE];
 T_sword32 G_cosTable[MATH_MAX_ANGLE];
 T_sword32 G_invCosTable[MATH_MAX_ANGLE];
-T_word16 G_arcTanTable[256][256] ;
-T_byte8 G_translucentTable[256][256] ;
+T_word16 G_arcTanTable[256][256];
+T_byte8 G_translucentTable[256][256];
 
 //TAKE OUT         T_word16 G_distanceTable[256][256] ;
 
-T_sword32 G_viewTanTable[MAX_VIEW3D_WIDTH] ;
+T_sword32 G_viewTanTable[MAX_VIEW3D_WIDTH];
 T_sword32 G_invDistTable[MATH_MAX_DISTANCE];
-T_byte8 G_power2table[257] ;
+T_byte8 G_power2table[257];
 
-T_void IMathPower2Init(T_void) ;
-T_void ISetupViewTable(T_void) ;
+T_void
+IMathPower2Init(T_void);
+T_void
+ISetupViewTable(T_void);
 
 //extern T_byte8 *P_shadeIndex ;
 
@@ -68,14 +70,15 @@ T_void ISetupViewTable(T_void) ;
  *  @param angle -- Degrees of angle to report sine of
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 MathCosine(T_word16 angle)
+T_sword32
+MathCosine(T_word16 angle)
 {
 /*
     T_float64 radians = (((T_float64)angle) * M_PI) / (T_float64)32768.0 ;
 
     return (T_sword32)(cos(radians) * (T_float64)65536.0) ;
 */
-    return 0 ;
+    return 0;
 }
 
 /*-------------------------------------------------------------------------*
@@ -91,14 +94,15 @@ T_sword32 MathCosine(T_word16 angle)
  *  @param angle -- Degrees of angle to report sine of
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 MathSine(T_word16 angle)
+T_sword32
+MathSine(T_word16 angle)
 {
 /*
     T_float64 radians = (((T_float64)angle) * M_PI) / (T_float64)32768.0 ;
 
     return (T_sword32)(sin(radians) * (T_float64)65536.0) ;
 */
-    return 0 ;
+    return 0;
 }
 
 /*-------------------------------------------------------------------------*
@@ -114,14 +118,15 @@ T_sword32 MathSine(T_word16 angle)
  *  @param angle -- Degrees of angle to report sine of
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 MathTangent(T_word16 angle)
+T_sword32
+MathTangent(T_word16 angle)
 {
 /*
     T_float64 radians = (((T_float64)angle) * M_PI) / (T_float64)32768.0 ;
 
     return (T_sword32)(tan(radians) * (T_float64)65536.0) ;
 */
-    return 0 ;
+    return 0;
 }
 
 /*-------------------------------------------------------------------------*
@@ -137,26 +142,29 @@ T_sword32 MathTangent(T_word16 angle)
  *  @param screenWidth -- Width of the screen
  *
  *<!-----------------------------------------------------------------------*/
-T_void MathInitializeInvDistTable(T_word32 screenWidth)
+T_void
+MathInitializeInvDistTable(T_word32 screenWidth)
 {
-    T_word32 numerator = (screenWidth/2)<<16 ;
-    T_word32 distance ;
+    T_word32 numerator = (screenWidth / 2) << 16;
+    T_word32 distance;
 
-    for (distance=0;  distance<MATH_MAX_DISTANCE; distance++)  {
+    for (distance = 0; distance < MATH_MAX_DISTANCE; distance++)
+    {
         /* The one is added to dist in the denomintator */
         /* to avoid divide by zero ... and it doesn't affect */
         /* the calculations much. */
-        G_invDistTable[distance] = numerator / (distance + 1) ;
+        G_invDistTable[distance] = numerator / (distance + 1);
     }
 }
 
-T_void MathInitializeOld(T_word32 screenWidth)
+T_void
+MathInitializeOld(T_word32 screenWidth)
 {
-    FILE *fp ;
+    FILE *fp;
 
-    DebugRoutine("MathInitialize") ;
+    DebugRoutine("MathInitialize");
 
-    MathInitializeInvDistTable(screenWidth) ;
+    MathInitializeInvDistTable(screenWidth);
 
     /* Calculate each one for each angle. */
 /*
@@ -184,35 +192,35 @@ T_void MathInitializeOld(T_word32 screenWidth)
     fclose(fp) ;
 */
 
-    fp = fopen("cosine.dat", "rb") ;
-DebugCheck(fp != NULL) ;
-    fread(G_cosTable, sizeof(G_cosTable), 1, fp) ;
-    fclose(fp) ;
+    fp = fopen("cosine.dat", "rb");
+    DebugCheck(fp != NULL);
+    fread(G_cosTable, sizeof(G_cosTable), 1, fp);
+    fclose(fp);
 
-    fp = fopen("sine.dat", "rb") ;
-DebugCheck(fp != NULL) ;
-    fread(G_sinTable, sizeof(G_sinTable), 1, fp) ;
-    fclose(fp) ;
+    fp = fopen("sine.dat", "rb");
+    DebugCheck(fp != NULL);
+    fread(G_sinTable, sizeof(G_sinTable), 1, fp);
+    fclose(fp);
 
-    fp = fopen("tangent.dat", "rb") ;
-DebugCheck(fp != NULL) ;
-    fread(G_tanTable, sizeof(G_tanTable), 1, fp) ;
-    fclose(fp) ;
+    fp = fopen("tangent.dat", "rb");
+    DebugCheck(fp != NULL);
+    fread(G_tanTable, sizeof(G_tanTable), 1, fp);
+    fclose(fp);
 
-    fp = fopen("arctan.dat", "rb") ;
-DebugCheck(fp != NULL) ;
-    fread(G_arcTanTable, sizeof(G_arcTanTable), 1, fp) ;
-    fclose(fp) ;
+    fp = fopen("arctan.dat", "rb");
+    DebugCheck(fp != NULL);
+    fread(G_arcTanTable, sizeof(G_arcTanTable), 1, fp);
+    fclose(fp);
 
-    fp = fopen("invcos.dat", "rb") ;
-DebugCheck(fp != NULL) ;
-    fread(G_invCosTable, sizeof(G_invCosTable), 1, fp) ;
-    fclose(fp) ;
-    ISetupViewTable() ;
+    fp = fopen("invcos.dat", "rb");
+    DebugCheck(fp != NULL);
+    fread(G_invCosTable, sizeof(G_invCosTable), 1, fp);
+    fclose(fp);
+    ISetupViewTable();
 
-    IMathPower2Init() ;
+    IMathPower2Init();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -230,7 +238,8 @@ DebugCheck(fp != NULL) ;
  *  @return 1/(65536 * cos(angle))
  *
  *<!-----------------------------------------------------------------------*/
-T_sword32 MathInvCosine(T_word16 angle)
+T_sword32
+MathInvCosine(T_word16 angle)
 {
 /*
     T_float64 radians = (((T_float64)angle) * M_PI) / (T_float64)32768.0 ;
@@ -240,7 +249,7 @@ T_sword32 MathInvCosine(T_word16 angle)
 
     return((T_sword32) (((T_sword32)65536) / cos(radians))) ;
 */
-    return 0 ;
+    return 0;
 }
 
 /*-------------------------------------------------------------------------*
@@ -255,13 +264,14 @@ T_sword32 MathInvCosine(T_word16 angle)
  *  @return x * cos(angle)
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MathXTimesCosAngle(
-              T_sword16 x,
-              T_word16 angle)
+T_sword16
+MathXTimesCosAngle(
+    T_sword16 x,
+    T_word16 angle)
 {
-    T_sword32 tx = x ;
+    T_sword32 tx = x;
 
-    return ((T_sword16) ((tx * MathCosineLookup(angle)) >> 16)) ;
+    return ((T_sword16) ((tx * MathCosineLookup(angle)) >> 16));
 }
 
 /*-------------------------------------------------------------------------*
@@ -276,13 +286,14 @@ T_sword16 MathXTimesCosAngle(
  *  @return x * sin(angle)
  *
  *<!-----------------------------------------------------------------------*/
-T_sword16 MathXTimesSinAngle(
-              T_sword16 x,
-              T_word16 angle)
+T_sword16
+MathXTimesSinAngle(
+    T_sword16 x,
+    T_word16 angle)
 {
-    T_sword32 tx = x ;
+    T_sword32 tx = x;
 
-    return((T_sword16) ((tx * MathSineLookup(angle)) >> 16)) ;
+    return ((T_sword16) ((tx * MathSineLookup(angle)) >> 16));
 }
 
 /*-------------------------------------------------------------------------*
@@ -292,9 +303,10 @@ T_sword16 MathXTimesSinAngle(
  *  ISetupViewTable
  *
  *<!-----------------------------------------------------------------------*/
-T_void ISetupViewTable(T_void)
+T_void
+ISetupViewTable(T_void)
 {
-    T_sword32 i ;
+    T_sword32 i;
 
 /*
     for (i=0; i<VIEW3D_WIDTH; i++)  {
@@ -304,8 +316,9 @@ T_void ISetupViewTable(T_void)
         G_viewTanTable[i] = -G_tanTable[angle] ;
     }
 */
-    for (i=-VIEW3D_HALF_WIDTH; i<VIEW3D_HALF_WIDTH; i++)  {
-        G_viewTanTable[i+VIEW3D_HALF_WIDTH] = -(i * 65536)/VIEW3D_HALF_WIDTH ;
+    for (i = -VIEW3D_HALF_WIDTH; i < VIEW3D_HALF_WIDTH; i++)
+    {
+        G_viewTanTable[i + VIEW3D_HALF_WIDTH] = -(i * 65536) / VIEW3D_HALF_WIDTH;
     }
 }
 
@@ -322,16 +335,18 @@ T_void ISetupViewTable(T_void)
  *  @return Angle result
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MathArcTangent(T_sword32 y, T_sword32 x)
+T_word16
+MathArcTangent(T_sword32 y, T_sword32 x)
 {
     /* Now both x and y must be less than 128 for table lookup. */
-    while ((x > 127) || (x < -127) || (y > 127) || (y < -127))  {
-        x >>= 1 ;
-        y >>= 1 ;
+    while ((x > 127) || (x < -127) || (y > 127) || (y < -127))
+    {
+        x >>= 1;
+        y >>= 1;
     }
 
     /* Return that angle. */
-    return (G_arcTanTable[y+128][x+128]) ;
+    return (G_arcTanTable[y + 128][x + 128]);
 }
 
 /*-------------------------------------------------------------------------*
@@ -346,65 +361,75 @@ T_word16 MathArcTangent(T_sword32 y, T_sword32 x)
  *  @return Angle result
  *
  *<!-----------------------------------------------------------------------*/
-T_word16 MathArcTangent32(T_sword32 y, T_sword32 x)
+T_word16
+MathArcTangent32(T_sword32 y, T_sword32 x)
 {
     /* Now both x and y must be less than 128 for table lookup. */
-    while ((x > 127) || (x < -127) || (y > 127) || (y < -127))  {
-        x >>= 1 ;
-        y >>= 1 ;
+    while ((x > 127) || (x < -127) || (y > 127) || (y < -127))
+    {
+        x >>= 1;
+        y >>= 1;
     }
 
     /* Return that angle. */
-    return (G_arcTanTable[y+128][x+128]) ;
+    return (G_arcTanTable[y + 128][x + 128]);
 }
 
-T_word16 MathArcTangentOld(T_sword16 y, T_sword16 x)
+T_word16
+MathArcTangentOld(T_sword16 y, T_sword16 x)
 {
-    T_sword16 sign ;
-    T_word16 angle ;
+    T_sword16 sign;
+    T_word16 angle;
 
     /* Determine the sign of the fraction. */
-    if (((y < 0) && (x >=0)) || ((x < 0) && (y >= 0)))  {
-        sign = -1 ;
-    } else {
-        sign = 1 ;
+    if (((y < 0) && (x >= 0)) || ((x < 0) && (y >= 0)))
+    {
+        sign = -1;
+    }
+    else
+    {
+        sign = 1;
     }
 
     /* Positives only, please. */
     if (x < 0)
-        x = -x ;
+        x = -x;
     if (y < 0)
-        y = -y ;
+        y = -y;
 
     /* Now both x and y must be less than 128 for table lookup. */
-    while ((x & 0xFF80) || (y & 0xFF80))  {
-        x >>= 1 ;
-        y >>= 1 ;
+    while ((x & 0xFF80) || (y & 0xFF80))
+    {
+        x >>= 1;
+        y >>= 1;
     }
 
     /* Get the angular value. */
-    angle = G_arcTanTable[y][x] ;
+    angle = G_arcTanTable[y][x];
 
     /* If the sign is negative, flip the angle over the 360 mark. */
     if (sign == -1)
         if (angle != 0)
-            angle = MATH_MAX_ANGLE-angle ;
+            angle = MATH_MAX_ANGLE - angle;
 
     /* Return that angle. */
-    return (angle<<6) ;
+    return (angle << 6);
 }
 
-T_void IMathPower2Init(T_void)
+T_void
+IMathPower2Init(T_void)
 {
-    T_sword16 i, power, next ;
+    T_sword16 i, power, next;
 
-    G_power2table[0] = 0 ;
-    for (i=1, power=-1, next=1; i<257; i++)  {
-        if (next == i)  {
-            power++ ;
-            next <<= 1 ;
+    G_power2table[0] = 0;
+    for (i = 1, power = -1, next = 1; i < 257; i++)
+    {
+        if (next == i)
+        {
+            power++;
+            next <<= 1;
         }
-        G_power2table[i] = (T_byte8)power ;
+        G_power2table[i] = (T_byte8) power;
     }
 }
 
@@ -420,32 +445,36 @@ T_void IMathPower2Init(T_void)
  *  @param screenWidth -- Width of view screen.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MathInitialize(T_word32 screenWidth)
+T_void
+MathInitialize(T_word32 screenWidth)
 {
-    T_file fh ;
+    T_file fh;
 
-    DebugRoutine("MathInitialize") ;
+    DebugRoutine("MathInitialize");
 
     /* Set up an inverse distance table (pretty much a 1/Z table). */
-    MathInitializeInvDistTable(screenWidth) ;
+    MathInitializeInvDistTable(screenWidth);
 
 //    G_arcTanTable = FileLoad("mdat.res", &size) ;
-    fh = FileOpen("res/MDAT.RES", FILE_MODE_READ) ;
-    if (fh == FILE_BAD)  {
-        puts("Cannot load MDAT.RES!") ;
+    fh = FileOpen("res/MDAT.RES", FILE_MODE_READ);
+    if (fh == FILE_BAD)
+    {
+        puts("Cannot load MDAT.RES!");
 //        DebugRoutine(FALSE) ;
-        exit(1) ;
-    } else {
+        exit(1);
+    }
+    else
+    {
         /* Reindex all the pointers off of the first pointer. */
-        FileRead(fh, G_arcTanTable, sizeof(G_arcTanTable)) ;
-        FileRead(fh, G_cosTable, sizeof(G_cosTable)) ;
-        FileRead(fh, G_invCosTable, sizeof(G_invCosTable)) ;
-        FileRead(fh, P_shadeIndex, sizeof(P_shadeIndex)) ;
-        FileRead(fh, G_sinTable, sizeof(G_sinTable)) ;
-        FileRead(fh, G_tanTable, sizeof(G_tanTable)) ;
-        FileRead(fh, G_translucentTable, sizeof(G_translucentTable)) ;
+        FileRead(fh, G_arcTanTable, sizeof(G_arcTanTable));
+        FileRead(fh, G_cosTable, sizeof(G_cosTable));
+        FileRead(fh, G_invCosTable, sizeof(G_invCosTable));
+        FileRead(fh, P_shadeIndex, sizeof(P_shadeIndex));
+        FileRead(fh, G_sinTable, sizeof(G_sinTable));
+        FileRead(fh, G_tanTable, sizeof(G_tanTable));
+        FileRead(fh, G_translucentTable, sizeof(G_translucentTable));
 //TAKE OUT        FileRead(fh, G_distanceTable, sizeof(G_distanceTable)) ;
-        FileClose(fh) ;
+        FileClose(fh);
 /*
         G_cosTable = (T_sword32 *)(((T_byte8 *)G_arcTanTable) +
                       sizeof(T_word16) * 256 * 256) ;
@@ -461,13 +490,13 @@ T_void MathInitialize(T_word32 screenWidth)
 */
 
         /* Setup the angular values for the view table. */
-        ISetupViewTable() ;
+        ISetupViewTable();
 
         /* Setup the power of 2 table. */
-        IMathPower2Init() ;
+        IMathPower2Init();
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -478,14 +507,15 @@ T_void MathInitialize(T_word32 screenWidth)
  *  They are all unloaded.
  *
  *<!-----------------------------------------------------------------------*/
-T_void MathFinish(T_void)
+T_void
+MathFinish(T_void)
 {
-    DebugRoutine("MathFinish") ;
+    DebugRoutine("MathFinish");
 
     /* All we have to do is free up the memory used by Math. */
 //    MemFree(G_arcTanTable) ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /** @} */

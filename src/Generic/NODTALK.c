@@ -8,23 +8,24 @@
 #include "MEMORY.H"
 
 /* Callback routines to handle receiving and requests to send. */
-static T_directTalkReceiveCallback G_receiveCallback = NULL ;
-static T_directTalkSendCallback G_sendCallback = NULL ;
-static T_directTalkConnectCallback G_connectCallback = NULL ;
-static T_directTalkDisconnectCallback G_disconnectCallback = NULL ;
+static T_directTalkReceiveCallback G_receiveCallback = NULL;
+static T_directTalkSendCallback G_sendCallback = NULL;
+static T_directTalkConnectCallback G_connectCallback = NULL;
+static T_directTalkDisconnectCallback G_disconnectCallback = NULL;
 
 /* Location of direct talk struct. */
 //static T_directTalkStruct *G_talk ;
 #define DITALK_MAX_PACKETS  10
-typedef struct {
-    void *p_data ;
-    T_word16 size ;
-} T_ditalkRecording ;
-static T_ditalkRecording G_packets[DITALK_MAX_PACKETS] ;
+typedef struct
+{
+    void *p_data;
+    T_word16 size;
+} T_ditalkRecording;
+static T_ditalkRecording G_packets[DITALK_MAX_PACKETS];
 
-static T_word16 G_numPackets = 0 ;
+static T_word16 G_numPackets = 0;
 static int G_ipxEnabled = 0;
-static T_directTalkUniqueAddress G_blankAddress ;
+static T_directTalkUniqueAddress G_blankAddress;
 
 /*--------------------------------------------------------------------------*
  * Routine: DirectTalkInit
@@ -41,30 +42,34 @@ static T_directTalkUniqueAddress G_blankAddress ;
  * @return The handle to the direct talk system.
  */
 /*--------------------------------------------------------------------------*/
-T_directTalkHandle DirectTalkInit(
-           T_directTalkReceiveCallback p_callRecv,
-           T_directTalkSendCallback p_callSend,
-           T_directTalkConnectCallback p_callConnect,
-           T_directTalkDisconnectCallback p_callDisconnect,
-           T_directTalkHandle handle)
+T_directTalkHandle
+DirectTalkInit(
+    T_directTalkReceiveCallback p_callRecv,
+    T_directTalkSendCallback p_callSend,
+    T_directTalkConnectCallback p_callConnect,
+    T_directTalkDisconnectCallback p_callDisconnect,
+    T_directTalkHandle handle)
 {
-    memset(&G_blankAddress, 0, sizeof(G_blankAddress)) ;
+    memset(&G_blankAddress, 0, sizeof(G_blankAddress));
 
     /* Record the send and receive callbacks. */
-    G_receiveCallback = p_callRecv ;
-    G_sendCallback = p_callSend ;
-    G_connectCallback = p_callConnect ;
-    G_disconnectCallback = p_callDisconnect ;
-    G_numPackets = 0 ;
-    if (handle == 1) {
+    G_receiveCallback = p_callRecv;
+    G_sendCallback = p_callSend;
+    G_connectCallback = p_callConnect;
+    G_disconnectCallback = p_callDisconnect;
+    G_numPackets = 0;
+    if (handle == 1)
+    {
         // IPX is enabled
         G_ipxEnabled = 1;
-    } else {
+    }
+    else
+    {
         G_ipxEnabled = 0;
     }
 
     /* Just return any ol' handle, just not 0 */
-    return (T_directTalkHandle)1 ;
+    return (T_directTalkHandle) 1;
 }
 
 /*--------------------------------------------------------------------------*
@@ -76,14 +81,15 @@ T_directTalkHandle DirectTalkInit(
  * @param handle Returned direct talk handle created by DirectTalkInit().
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkFinish(T_directTalkHandle handle)
+T_void
+DirectTalkFinish(T_directTalkHandle handle)
 {
-    DebugRoutine("DirectTalkFinish") ;
+    DebugRoutine("DirectTalkFinish");
 
     /* Mark the structure no longer valid (aka closed out) */
     //G_talk->tag = DIRECT_TALK_DEAD_TAG ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*--------------------------------------------------------------------------*
@@ -96,18 +102,20 @@ T_void DirectTalkFinish(T_directTalkHandle handle)
  * @param size Size of data block (in bytes) to send.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSendData(T_void *p_data, T_byte8 size)
+T_void
+DirectTalkSendData(T_void *p_data, T_byte8 size)
 {
-    T_void *p_storeddata ;
+    T_void *p_storeddata;
 
     DebugRoutine("DirectTalkSendData");
 
-    if (G_numPackets < DITALK_MAX_PACKETS)  {
-        p_storeddata = (void *)MemAlloc((T_word32)size) ;
-        memcpy(p_storeddata, p_data, size) ;
-        G_packets[G_numPackets].p_data = p_storeddata ;
-        G_packets[G_numPackets].size = size ;
-        G_numPackets++ ;
+    if (G_numPackets < DITALK_MAX_PACKETS)
+    {
+        p_storeddata = (void *) MemAlloc((T_word32) size);
+        memcpy(p_storeddata, p_data, size);
+        G_packets[G_numPackets].p_data = p_storeddata;
+        G_packets[G_numPackets].size = size;
+        G_numPackets++;
     }
 
     DebugEnd();
@@ -122,21 +130,23 @@ T_void DirectTalkSendData(T_void *p_data, T_byte8 size)
  *          configuration.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkPollData(T_void)
+T_void
+DirectTalkPollData(T_void)
 {
     char buffer[2048];
     unsigned int length;
 
-    if (G_numPackets)  {
+    if (G_numPackets)
+    {
         G_receiveCallback(
             G_packets[0].p_data,
-            G_packets[0].size) ;
+            G_packets[0].size);
         if (G_numPackets > 1)
             memmove(
                 &G_packets[0],
                 &G_packets[1],
-                (G_numPackets-1)*sizeof(G_packets[0])) ;
-        G_numPackets-- ;
+                (G_numPackets - 1) * sizeof(G_packets[0]));
+        G_numPackets--;
     }
 }
 
@@ -151,7 +161,8 @@ T_void DirectTalkPollData(T_void)
  * @param p_address String of address to connect to.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkConnect(T_byte8 *p_address)
+T_void
+DirectTalkConnect(T_byte8 *p_address)
 {
 }
 
@@ -164,7 +175,8 @@ T_void DirectTalkConnect(T_byte8 *p_address)
  *
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkDisconnect(T_void)
+T_void
+DirectTalkDisconnect(T_void)
 {
 }
 
@@ -177,9 +189,10 @@ T_void DirectTalkDisconnect(T_void)
  * @return Line/Connection status.
  */
 /*--------------------------------------------------------------------------*/
-E_directTalkLineStatus DirectTalkGetLineStatus(T_void)
+E_directTalkLineStatus
+DirectTalkGetLineStatus(T_void)
 {
-    return DIRECT_TALK_LINE_STATUS_CONNECTED ;
+    return DIRECT_TALK_LINE_STATUS_CONNECTED;
 }
 
 /*--------------------------------------------------------------------------*
@@ -192,7 +205,8 @@ E_directTalkLineStatus DirectTalkGetLineStatus(T_void)
  * @return Line/Connection status.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSetLineStatus(E_directTalkLineStatus status)
+T_void
+DirectTalkSetLineStatus(E_directTalkLineStatus status)
 {
 }
 
@@ -208,9 +222,10 @@ T_void DirectTalkSetLineStatus(E_directTalkLineStatus status)
  * @param p_unique Pointer to place to store the unique address.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkGetUniqueAddress(T_directTalkUniqueAddress *p_unique)
+T_void
+DirectTalkGetUniqueAddress(T_directTalkUniqueAddress *p_unique)
 {
-    memset(p_unique->address, 1, sizeof(p_unique->address)) ;
+    memset(p_unique->address, 1, sizeof(p_unique->address));
 }
 
 /*--------------------------------------------------------------------------*
@@ -223,7 +238,8 @@ T_void DirectTalkGetUniqueAddress(T_directTalkUniqueAddress *p_unique)
  * @param p_unique Pointer to place of unique address to use.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSetUniqueAddress(T_directTalkUniqueAddress *p_unique)
+T_void
+DirectTalkSetUniqueAddress(T_directTalkUniqueAddress *p_unique)
 {
 //    T_word16 i ;
 
@@ -242,9 +258,10 @@ T_void DirectTalkSetUniqueAddress(T_directTalkUniqueAddress *p_unique)
  * @return Unique address of a blank (usually all zero's).
  */
 /*--------------------------------------------------------------------------*/
-T_directTalkUniqueAddress *DirectTalkGetNullBlankUniqueAddress(T_void)
+T_directTalkUniqueAddress *
+DirectTalkGetNullBlankUniqueAddress(T_void)
 {
-    return &G_blankAddress ;
+    return &G_blankAddress;
 }
 
 /*--------------------------------------------------------------------------*
@@ -257,15 +274,16 @@ T_directTalkUniqueAddress *DirectTalkGetNullBlankUniqueAddress(T_void)
  * @param p_addr Pointer to unique address to display.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkPrintAddress(FILE *fp, T_directTalkUniqueAddress *p_addr)
+T_void
+DirectTalkPrintAddress(FILE *fp, T_directTalkUniqueAddress *p_addr)
 {
     fprintf(fp, "%02X:%02X:%02X:%02X:%02X:%02X",
-        p_addr->address[0],
-        p_addr->address[1],
-        p_addr->address[2],
-        p_addr->address[3],
-        p_addr->address[4],
-        p_addr->address[5]) ;
+            p_addr->address[0],
+            p_addr->address[1],
+            p_addr->address[2],
+            p_addr->address[3],
+            p_addr->address[4],
+            p_addr->address[5]);
 }
 
 /*--------------------------------------------------------------------------*
@@ -279,13 +297,14 @@ T_void DirectTalkPrintAddress(FILE *fp, T_directTalkUniqueAddress *p_addr)
  * @return Type of service offered by this direct talk connection.
  */
 /*--------------------------------------------------------------------------*/
-E_directTalkServiceType DirectTalkGetServiceType(T_void)
+E_directTalkServiceType
+DirectTalkGetServiceType(T_void)
 {
     /* No real server out there -- just make a self server */
     if (G_ipxEnabled)
         return DIRECT_TALK_IPX;
     else
-        return DIRECT_TALK_SELF_SERVER ;
+        return DIRECT_TALK_SELF_SERVER;
 }
 
 /*--------------------------------------------------------------------------*
@@ -298,7 +317,8 @@ E_directTalkServiceType DirectTalkGetServiceType(T_void)
  * @return Type of service offered by this direct talk connection.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSetServiceType(E_directTalkServiceType serviceType)
+T_void
+DirectTalkSetServiceType(E_directTalkServiceType serviceType)
 {
 }
 
@@ -311,7 +331,8 @@ T_void DirectTalkSetServiceType(E_directTalkServiceType serviceType)
  * @param p_dest  Unique address of the next packet.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSetDestination(T_directTalkUniqueAddress *p_dest)
+T_void
+DirectTalkSetDestination(T_directTalkUniqueAddress *p_dest)
 {
 }
 
@@ -324,7 +345,8 @@ T_void DirectTalkSetDestination(T_directTalkUniqueAddress *p_dest)
  *          members.
  */
 /*--------------------------------------------------------------------------*/
-T_void DirectTalkSetDestinationAll(T_void)
+T_void
+DirectTalkSetDestinationAll(T_void)
 {
 }
 
@@ -336,9 +358,10 @@ T_void DirectTalkSetDestinationAll(T_void)
  *          NOTE: Not used!
  */
 /*--------------------------------------------------------------------------*/
-T_byte8 *DirectTalkGetDestination(T_void)
+T_byte8 *
+DirectTalkGetDestination(T_void)
 {
-    return (T_byte8 *)DirectTalkGetNullBlankUniqueAddress() ;
+    return (T_byte8 *) DirectTalkGetNullBlankUniqueAddress();
 }
 
 /*--------------------------------------------------------------------------*
@@ -350,11 +373,12 @@ T_byte8 *DirectTalkGetDestination(T_void)
  * @return TRUE if broadcast, else FALSE
  */
 /*--------------------------------------------------------------------------*/
-T_byte8 DirectTalkIsBroadcastAddress(T_directTalkUniqueAddress *p_dest)
+T_byte8
+DirectTalkIsBroadcastAddress(T_directTalkUniqueAddress *p_dest)
 {
-    static const T_byte8 broadcastAddress[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+    static const T_byte8 broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-    return (memcmp(p_dest, broadcastAddress, 6)==0)?TRUE:FALSE;
+    return (memcmp(p_dest, broadcastAddress, 6) == 0) ? TRUE : FALSE;
 }
 
 

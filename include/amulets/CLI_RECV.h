@@ -7,31 +7,41 @@
 #include "GENERAL.H"
 #include "PACKET.H"
 
-T_void ClientReceivePlaceStartPacket(T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceivePlaceStartPacket(T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceivePlayerLogoffPacket(T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceivePlayerLogoffPacket(T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveMessagePacket(T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveMessagePacket(T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveGotoPlacePacket(T_packetEitherShortOrLong *p_gotoPacket) ;
+T_void
+ClientReceiveGotoPlacePacket(T_packetEitherShortOrLong *p_gotoPacket);
 
-T_void ClientReceiveSyncPacket(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveSyncPacket(
+    T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveTownUIMessagePacket(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveTownUIMessagePacket(
+    T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceivePlayerIDSelf(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceivePlayerIDSelf(
+    T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveGameRequestJoinPacket(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveGameRequestJoinPacket(
+    T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveGameRespondJoinPacket(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveGameRespondJoinPacket(
+    T_packetEitherShortOrLong *p_packet);
 
-T_void ClientReceiveGameStartPacket(
-           T_packetEitherShortOrLong *p_packet) ;
+T_void
+ClientReceiveGameStartPacket(
+    T_packetEitherShortOrLong *p_packet);
 
 #endif
 

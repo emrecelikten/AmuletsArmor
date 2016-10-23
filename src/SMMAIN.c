@@ -19,89 +19,109 @@
 //#undef DebugRoutine
 //#define DebugRoutine(name) { puts(name) ; DebugAddRoutine(name, __FILE__, __LINE__) ; }
 
-typedef struct {
-    E_Boolean stateFlags[NUMBER_SMMAIN_FLAGS] ;
-} T_smMainData ;
+typedef struct
+{
+    E_Boolean stateFlags[NUMBER_SMMAIN_FLAGS];
+} T_smMainData;
 
 /* Internal prototypes: */
-static T_smMainData *ISMMainGetExtraData(T_void) ;
+static T_smMainData *
+ISMMainGetExtraData(T_void);
 
 /* Entry exit code: */
-T_void SMMainConnectStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
-T_void SMMainConnectEnd(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
-T_void SMMainConnectUpdate(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainConnectStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
+T_void
+SMMainConnectEnd(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
+T_void
+SMMainConnectUpdate(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainChooseStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainChooseStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainChooseCharacterIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainChooseCharacterIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainChooseCharacterExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMMainChooseCharacterExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMMainLeaveServerStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainLeaveServerStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainPlayGameStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainPlayGameStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainPlayGameIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainPlayGameIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainPlayGameExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMMainPlayGameExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMMainLogoffEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainLogoffEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainLogoffIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainLogoffIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainLogoffExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMMainLogoffExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMMainDisconnectedEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainDisconnectedEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainDisconnectedIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainDisconnectedIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainDisconnectedExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMMainDisconnectedExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
-T_void SMMainLeaveServerIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData) ;
+T_void
+SMMainLeaveServerIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData);
 
-T_void SMMainLeaveServerExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed) ;
+T_void
+SMMainLeaveServerExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed);
 
 /***************************************************************************/
 /*                             CONDITIONALS                                */
@@ -117,7 +137,7 @@ static T_stateMachineConditional SMMainConnectCond[] = {
         SMMAIN_FLAG_CONNECT_COMPLETE,      /* extra data */
         SMMAIN_STATE_CHOOSE_CHARACTER      /* next state */
     }
-} ;
+};
 
 static T_stateMachineConditional SMMainChooseCharacterCond[] = {
     {
@@ -135,7 +155,7 @@ static T_stateMachineConditional SMMainChooseCharacterCond[] = {
         SMMAIN_FLAG_DROPPED,               /* extra data */
         SMMAIN_STATE_DISCONNECTED          /* next state */
     }
-} ;
+};
 
 static T_stateMachineConditional SMMainPlayGameCond[] = {
     {
@@ -150,7 +170,7 @@ static T_stateMachineConditional SMMainPlayGameCond[] = {
         SMMAIN_FLAG_DROPPED,               /* extra data */
         SMMAIN_STATE_DISCONNECTED          /* next state */
     }
-} ;
+};
 
 static T_stateMachineConditional SMMainLogoffCharacterCond[] = {
     {
@@ -158,7 +178,7 @@ static T_stateMachineConditional SMMainLogoffCharacterCond[] = {
         SMMAIN_FLAG_LOGOFF_COMPLETE,       /* extra data */
         SMMAIN_STATE_CHOOSE_CHARACTER      /* next state */
     }
-} ;
+};
 
 static T_stateMachineConditional SMMainLeaveServerCond[] = {
     {
@@ -171,7 +191,7 @@ static T_stateMachineConditional SMMainLeaveServerCond[] = {
         SMMAIN_FLAG_END_GAME,              /* extra data */
         SMMAIN_STATE_EXIT_GAME             /* next state */
     }
-} ;
+};
 
 static T_stateMachineConditional SMMainDisconnectedCond[] = {
     {
@@ -179,7 +199,7 @@ static T_stateMachineConditional SMMainDisconnectedCond[] = {
         SMMAIN_FLAG_DISCONNECT_COMPLETE,   /* extra data */
         SMMAIN_STATE_CONNECT               /* next state */
     }
-} ;
+};
 
 /***************************************************************************/
 /*                             STATES                                      */
@@ -255,7 +275,7 @@ static T_stateMachineState SMMainStates[] = {
         1,                                       /* Num conditionals */
         SMMainDisconnectedCond                   /* conditional list. */
     }
-} ;
+};
 
 /***************************************************************************/
 /*                             STATE MACHINE                               */
@@ -267,10 +287,10 @@ static T_stateMachine SMMainStateMachine = {
     SMMainFinishData,               /* Finish callback */
     NUMBER_SMMAIN_STATES,           /* Number states */
     SMMainStates                    /* State list */
-} ;
+};
 
-static E_Boolean G_init = FALSE ;
-static T_stateMachineHandle G_smMainHandle = STATE_MACHINE_HANDLE_BAD ;
+static E_Boolean G_init = FALSE;
+static T_stateMachineHandle G_smMainHandle = STATE_MACHINE_HANDLE_BAD;
 
 /*-------------------------------------------------------------------------*
  * Routine:  SMMainCheckFlag
@@ -285,28 +305,29 @@ static T_stateMachineHandle G_smMainHandle = STATE_MACHINE_HANDLE_BAD ;
  *  @return State of flag
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean SMMainCheckFlag(
-              T_stateMachineHandle handle,
-              T_word32 flag)
+E_Boolean
+SMMainCheckFlag(
+    T_stateMachineHandle handle,
+    T_word32 flag)
 {
-    E_Boolean stateFlag = FALSE ;        /* Return status will default */
-                                         /* to FALSE. */
-    T_smMainData *p_data ;
+    E_Boolean stateFlag = FALSE;        /* Return status will default */
+    /* to FALSE. */
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainCheckFlag") ;
-    DebugCheck(G_smMainHandle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("SMMainCheckFlag");
+    DebugCheck(G_smMainHandle != STATE_MACHINE_HANDLE_BAD);
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
     /* If a valid flag, get the state */
-    DebugCheck(flag < SMMAIN_FLAG_UNKNOWN) ;
+    DebugCheck(flag < SMMAIN_FLAG_UNKNOWN);
     if (flag < SMMAIN_FLAG_UNKNOWN)
-        stateFlag = p_data->stateFlags[flag] ;
+        stateFlag = p_data->stateFlags[flag];
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return stateFlag ;
+    return stateFlag;
 }
 
 /*-------------------------------------------------------------------------*
@@ -320,24 +341,25 @@ E_Boolean SMMainCheckFlag(
  *  @param state -- State to set flag to
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainSetFlag(
-              T_word32 flag,
-              E_Boolean state)
+T_void
+SMMainSetFlag(
+    T_word32 flag,
+    E_Boolean state)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainSetFlag") ;
-    DebugCheck(G_smMainHandle != STATE_MACHINE_HANDLE_BAD) ;
+    DebugRoutine("SMMainSetFlag");
+    DebugCheck(G_smMainHandle != STATE_MACHINE_HANDLE_BAD);
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
     /* If a valid index, set to the new state */
-    DebugCheck(flag < SMMAIN_FLAG_UNKNOWN) ;
+    DebugCheck(flag < SMMAIN_FLAG_UNKNOWN);
     if (flag < SMMAIN_FLAG_UNKNOWN)
-        p_data->stateFlags[flag] = state ;
+        p_data->stateFlags[flag] = state;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -347,18 +369,19 @@ T_void SMMainSetFlag(
  *  SMMainInit sets up the main state machine and its data.
  *
  *<!-----------------------------------------------------------------------*/
-T_stateMachineHandle SMMainInit(T_void)
+T_stateMachineHandle
+SMMainInit(T_void)
 {
-    DebugRoutine("SMMainInit") ;
-    DebugCheck(G_init == FALSE) ;
+    DebugRoutine("SMMainInit");
+    DebugCheck(G_init == FALSE);
 
-    G_init = TRUE ;
-    G_smMainHandle = StateMachineCreate(&SMMainStateMachine) ;
-    StateMachineGotoState(G_smMainHandle, SMMAIN_INITIAL_STATE) ;
+    G_init = TRUE;
+    G_smMainHandle = StateMachineCreate(&SMMainStateMachine);
+    StateMachineGotoState(G_smMainHandle, SMMAIN_INITIAL_STATE);
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return G_smMainHandle ;
+    return G_smMainHandle;
 }
 
 /*-------------------------------------------------------------------------*
@@ -368,17 +391,18 @@ T_stateMachineHandle SMMainInit(T_void)
  *  SMMainFinish cleans up the main state machine's data.
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainFinish(T_void)
+T_void
+SMMainFinish(T_void)
 {
-    DebugRoutine("SMMainFinish") ;
-    DebugCheck(G_init == TRUE) ;
+    DebugRoutine("SMMainFinish");
+    DebugCheck(G_init == TRUE);
 
     /* Destroy the state machine. */
-    StateMachineDestroy(G_smMainHandle) ;
-    G_smMainHandle = STATE_MACHINE_HANDLE_BAD ;
+    StateMachineDestroy(G_smMainHandle);
+    G_smMainHandle = STATE_MACHINE_HANDLE_BAD;
 
-    G_init = FALSE ;
-    DebugEnd() ;
+    G_init = FALSE;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -388,13 +412,14 @@ T_void SMMainFinish(T_void)
  *  SMMainUpdate updates the main state machine.
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainUpdate(T_void)
+T_void
+SMMainUpdate(T_void)
 {
-    DebugRoutine("SMMainUpdate") ;
+    DebugRoutine("SMMainUpdate");
 
-    StateMachineUpdate(G_smMainHandle) ;
+    StateMachineUpdate(G_smMainHandle);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -407,21 +432,22 @@ T_void SMMainUpdate(T_void)
  *  @return Done if TRUE
  *
  *<!-----------------------------------------------------------------------*/
-E_Boolean SMMainIsDone(T_void)
+E_Boolean
+SMMainIsDone(T_void)
 {
     T_word16 state;
-    E_Boolean isDone = FALSE ;
+    E_Boolean isDone = FALSE;
 
-    DebugRoutine("SMMainIsDone") ;
+    DebugRoutine("SMMainIsDone");
 
-    state = StateMachineGetState(G_smMainHandle) ;
+    state = StateMachineGetState(G_smMainHandle);
 
     if (state == SMMAIN_STATE_EXIT_GAME)
-        isDone = TRUE ;
+        isDone = TRUE;
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return isDone ;
+    return isDone;
 }
 
 /*-------------------------------------------------------------------------*
@@ -434,19 +460,20 @@ E_Boolean SMMainIsDone(T_void)
  *  @param handle -- state machine
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainInitData(T_stateMachineHandle handle)
+T_void
+SMMainInitData(T_stateMachineHandle handle)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainInitData") ;
+    DebugRoutine("SMMainInitData");
 
-    p_data = MemAlloc(sizeof(T_smMainData)) ;
-    DebugCheck(p_data != NULL) ;
-    memset(p_data, 0, sizeof(T_smMainData)) ;
+    p_data = MemAlloc(sizeof(T_smMainData));
+    DebugCheck(p_data != NULL);
+    memset(p_data, 0, sizeof(T_smMainData));
 
-    StateMachineSetExtraData(handle, p_data) ;
+    StateMachineSetExtraData(handle, p_data);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -458,19 +485,20 @@ T_void SMMainInitData(T_stateMachineHandle handle)
  *  @param handle -- state machine
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainFinishData(T_stateMachineHandle handle)
+T_void
+SMMainFinishData(T_stateMachineHandle handle)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainFinishData") ;
+    DebugRoutine("SMMainFinishData");
 
     /* Destroy the extra data attached to the state machine. */
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
-    MemFree(p_data) ;
-    StateMachineSetExtraData(handle, NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
+    MemFree(p_data);
+    StateMachineSetExtraData(handle, NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -483,21 +511,23 @@ T_void SMMainFinishData(T_stateMachineHandle handle)
  *  @return SMMain's data
  *
  *<!-----------------------------------------------------------------------*/
-static T_smMainData *ISMMainGetExtraData(T_void)
+static T_smMainData *
+ISMMainGetExtraData(T_void)
 {
-    T_smMainData *p_data = NULL ;
+    T_smMainData *p_data = NULL;
 
-    DebugRoutine("ISMMainGetExtraData") ;
-    DebugCheck(G_init == TRUE) ;
+    DebugRoutine("ISMMainGetExtraData");
+    DebugCheck(G_init == TRUE);
 
-    if (G_init)  {
-        p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-        DebugCheck(p_data != NULL) ;
+    if (G_init)
+    {
+        p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+        DebugCheck(p_data != NULL);
     }
 
-    DebugEnd() ;
+    DebugEnd();
 
-    return p_data ;
+    return p_data;
 }
 
 /*-------------------------------------------------------------------------*
@@ -510,18 +540,19 @@ static T_smMainData *ISMMainGetExtraData(T_void)
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainConnectStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainConnectStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainConnectStart") ;
+    DebugRoutine("SMMainConnectStart");
 
     /* Initialize the client connect state machine. */
-    SMMainSetFlag(SMMAIN_FLAG_CONNECT_COMPLETE, TRUE) ;
+    SMMainSetFlag(SMMAIN_FLAG_CONNECT_COMPLETE, TRUE);
 
-    KeyboardBufferOn() ;
+    KeyboardBufferOn();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -535,16 +566,17 @@ T_void SMMainConnectStart(
  *  @param isDestroyed -- Flag noting if destroying
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainConnectEnd(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainConnectEnd(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    DebugRoutine("SMMainConnectEnd") ;
+    DebugRoutine("SMMainConnectEnd");
 
-    KeyboardBufferOff() ;
+    KeyboardBufferOff();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -557,18 +589,19 @@ T_void SMMainConnectEnd(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainConnectUpdate(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainConnectUpdate(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainConnectStart") ;
+    DebugRoutine("SMMainConnectStart");
 
 //    if (SMClientConnectIsDone())
-        SMMainSetFlag(
-            SMMAIN_FLAG_CONNECT_EXIT,
-            TRUE) ;
+    SMMainSetFlag(
+        SMMAIN_FLAG_CONNECT_EXIT,
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -582,25 +615,26 @@ T_void SMMainConnectUpdate(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainChooseStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainChooseStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainChooseStart") ;
+    DebugRoutine("SMMainChooseStart");
 
     SMMainSetFlag(
         SMMAIN_FLAG_BEGIN_GAME,
-        FALSE) ;
+        FALSE);
     SMMainSetFlag(
         SMMAIN_FLAG_LEAVE_SERVER,
-        FALSE) ;
+        FALSE);
 
     /* Initialize the client connect state machine. */
-    SMCChooseInitialize() ;
+    SMCChooseInitialize();
 
-    KeyboardBufferOn() ;
+    KeyboardBufferOn();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -614,20 +648,21 @@ T_void SMMainChooseStart(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainChooseCharacterIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainChooseCharacterIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainChooseCharacterIdle") ;
+    DebugRoutine("SMMainChooseCharacterIdle");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
-    SMCChooseUpdate() ;
+    SMCChooseUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -642,23 +677,24 @@ T_void SMMainChooseCharacterIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainChooseCharacterExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainChooseCharacterExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainChooseCharacterExit") ;
+    DebugRoutine("SMMainChooseCharacterExit");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
-    SMCChooseFinish() ;
+    SMCChooseFinish();
 
-    KeyboardBufferOff() ;
+    KeyboardBufferOff();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -673,18 +709,19 @@ T_void SMMainChooseCharacterExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLeaveServerStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainLeaveServerStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainLeaveServerStart") ;
+    DebugRoutine("SMMainLeaveServerStart");
 
-    SMMainSetFlag(SMMAIN_FLAG_LEAVE_SERVER_COMPLETE, FALSE) ;
+    SMMainSetFlag(SMMAIN_FLAG_LEAVE_SERVER_COMPLETE, FALSE);
 
     /* Leave as soon as possible. */
-    SMMainSetFlag(SMMAIN_FLAG_END_GAME, TRUE) ;
+    SMMainSetFlag(SMMAIN_FLAG_END_GAME, TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -698,18 +735,19 @@ T_void SMMainLeaveServerStart(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLeaveServerIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainLeaveServerIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainLeaveServerIdle") ;
+    DebugRoutine("SMMainLeaveServerIdle");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -724,19 +762,20 @@ T_void SMMainLeaveServerIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLeaveServerExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainLeaveServerExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainLeaveServerExit") ;
+    DebugRoutine("SMMainLeaveServerExit");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -751,29 +790,30 @@ T_void SMMainLeaveServerExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainPlayGameStart(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainPlayGameStart(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainPlayGameStart") ;
+    DebugRoutine("SMMainPlayGameStart");
 
     SMMainSetFlag(
         SMMAIN_FLAG_DROPPED,
-        FALSE) ;
+        FALSE);
     SMMainSetFlag(
         SMMAIN_FLAG_END_GAME,
-        FALSE) ;
+        FALSE);
 
     /* Start up the play game state. */
-    SMCPlayGameInitialize() ;
+    SMCPlayGameInitialize();
 
     MouseRelativeModeOff();
 
     /* Go to the first allowable place. */
-    ClientGotoPlace(20004, 0) ;
+    ClientGotoPlace(20004, 0);
 //    ClientGotoPlace(1, 0) ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -786,16 +826,17 @@ T_void SMMainPlayGameStart(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainPlayGameIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainPlayGameIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    DebugRoutine("SMMainPlayGameIdle") ;
+    DebugRoutine("SMMainPlayGameIdle");
 
     /* Play the game. */
-    SMCPlayGameUpdate() ;
+    SMCPlayGameUpdate();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -810,24 +851,25 @@ T_void SMMainPlayGameIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainPlayGameExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainPlayGameExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainPlayGameExit") ;
+    DebugRoutine("SMMainPlayGameExit");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 /* TESTING */
 //ControlFinish() ;
     /* Leave the play game state totally. */
-    SMCPlayGameFinish() ;
+    SMCPlayGameFinish();
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -841,27 +883,28 @@ T_void SMMainPlayGameExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLogoffEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainLogoffEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainLogoffEnter") ;
+    DebugRoutine("SMMainLogoffEnter");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCLogoffInitialize() ;
 
     SMMainSetFlag(
         SMMAIN_FLAG_DROPPED,
-        FALSE) ;
+        FALSE);
     SMMainSetFlag(
         SMMAIN_FLAG_LOGOFF_COMPLETE,
-        FALSE) ;
+        FALSE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -875,23 +918,24 @@ T_void SMMainLogoffEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLogoffIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainLogoffIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainLogoffIdle") ;
+    DebugRoutine("SMMainLogoffIdle");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCLogoffUpdate() ;
     SMMainSetFlag(
         SMMAIN_FLAG_LOGOFF_COMPLETE,
-        TRUE) ;
+        TRUE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -906,21 +950,22 @@ T_void SMMainLogoffIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainLogoffExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainLogoffExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainLogoffExit") ;
+    DebugRoutine("SMMainLogoffExit");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCLogoffFinish() ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -934,24 +979,25 @@ T_void SMMainLogoffExit(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainDisconnectedEnter(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainDisconnectedEnter(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainDisconnectedEnter") ;
+    DebugRoutine("SMMainDisconnectedEnter");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCDisconnectInitialize() ;
 
     SMMainSetFlag(
         SMMAIN_FLAG_DISCONNECT_COMPLETE,
-        FALSE) ;
+        FALSE);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -965,20 +1011,21 @@ T_void SMMainDisconnectedEnter(
  *  @param extraData -- Not used
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainDisconnectedIdle(
-           T_stateMachineHandle handle,
-           T_word32 extraData)
+T_void
+SMMainDisconnectedIdle(
+    T_stateMachineHandle handle,
+    T_word32 extraData)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainDisconnectedIdle") ;
+    DebugRoutine("SMMainDisconnectedIdle");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCDisconnectUpdate() ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
@@ -993,21 +1040,22 @@ T_void SMMainDisconnectedIdle(
  *  @param isDestroyed -- TRUE if state machine is being destroy
  *
  *<!-----------------------------------------------------------------------*/
-T_void SMMainDisconnectedExit(
-           T_stateMachineHandle handle,
-           T_word32 extraData,
-           E_Boolean isDestroyed)
+T_void
+SMMainDisconnectedExit(
+    T_stateMachineHandle handle,
+    T_word32 extraData,
+    E_Boolean isDestroyed)
 {
-    T_smMainData *p_data ;
+    T_smMainData *p_data;
 
-    DebugRoutine("SMMainDisconnectedExit") ;
+    DebugRoutine("SMMainDisconnectedExit");
 
-    p_data = (T_smMainData *)StateMachineGetExtraData(G_smMainHandle) ;
-    DebugCheck(p_data != NULL) ;
+    p_data = (T_smMainData *) StateMachineGetExtraData(G_smMainHandle);
+    DebugCheck(p_data != NULL);
 
 //    SMCDisconnectFinish() ;
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 
