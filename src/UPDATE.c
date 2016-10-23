@@ -12,27 +12,23 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include "3D_TRIG.H"
-#include "3D_VIEW.H"
 #include "BANNER.H"
 #include "CLIENT.H"
 #include "COLOR.H"
 #include "CMDQUEUE.H"
 #include "EFX.H"
-#include "INVENTOR.H"
 #include "MAP.H"
 #include "MESSAGE.H"
 #include "NOTES.H"
 #include "PEOPHERE.H"
 #include "PICS.H"
 #include "PLAYER.H"
-#include "SERVER.H"
 #include "SOUND.H"
 #include "SPELLS.H"
 #include "STATS.H"
 #include "SYNCTIME.H"
 #include "TICKER.H"
 #include "VIEW.H"
-#include "UPDATE.H"
 
 static E_Boolean G_gameBegan = FALSE ;
 static E_Boolean G_mapBegan = FALSE ;
@@ -85,6 +81,7 @@ T_void UpdateGameBegin(T_void)
 /* set sound options */
 BannerInitSoundOptions();
     TickerOn() ;
+
 /* TESTING */
 SyncTimeSet(1) ;
 
@@ -98,6 +95,7 @@ SyncTimeSet(1) ;
     MouseInitialize() ;
 //puts("Script Init") ;
 //fflush(stdout) ;
+
     ScriptInitialize() ;
 
 //printf("Largest memory block: %u\n", FreeMemory()) ;
