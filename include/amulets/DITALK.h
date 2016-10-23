@@ -8,6 +8,7 @@
 #ifndef _DITALK_H_
 #define _DITALK_H_
 
+#include <stdio.h>
 #include "GENERAL.H"
 
 typedef T_void (*T_directTalkReceiveCallback)(
