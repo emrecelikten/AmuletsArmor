@@ -189,12 +189,12 @@
 	#define COMPILE_OPTION_DIRECT_TALK_IS_DOS32
 #endif
 
-#ifdef WIN32
+#ifdef SDL
 #pragma warning(disable:4200)
 #pragma warning(disable:4100)
 //#include <windows.h>
 //#include <direct.h>
-#include <sdl.h>
+#include <SDL.h>
 // Delay in a number of milliseconds to delay
 #define delay(x) if (x < 14) { SDL_Delay(14); } else { SDL_Delay(x); }
 /* The mouse driver is handled not in the mouse calls, but in the file 'winmouse.c' */
