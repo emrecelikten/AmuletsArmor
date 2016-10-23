@@ -18,7 +18,7 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include <ctype.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include "3D_COLLI.H"
 #include "ACTIVITY.H"
 #include "AREASND.H"
@@ -570,7 +570,7 @@ T_void ClientMakeObjectGoSplat(
         if ((ObjectIsCreature(p_obj)) ||
             (ObjectIsPlayer(p_obj)))
         {
-            isTranslucent=(ObjectGetAttributes(p_obj) & OBJECT_ATTR_TRANSLUCENT);
+            isTranslucent=(E_Boolean)(ObjectGetAttributes(p_obj) & OBJECT_ATTR_TRANSLUCENT);
 
             x=ObjectGetX(p_obj);
             y=ObjectGetY(p_obj);
@@ -1729,7 +1729,7 @@ T_void ClientHandleKeyboard(E_keyboardEvent event, T_word16 scankey)
                             } else if (strncmp(G_message, "@freemem", 8) == 0) {
                                 T_byte8 buf[50];
 
-#if (WIN32)
+#ifdef SDL
                                 sprintf(buf,
                                         "Free memory = <unknown for windows>");
                                 MessageAdd(buf);
