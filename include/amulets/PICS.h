@@ -8,7 +8,7 @@
 #include "GRAPHICS.H"
 #include "RESOURCE.H"
 
-#define PICTURE_RESOURCE_FILENAME "PICS.RES"
+#define PICTURE_RESOURCE_FILENAME "res/PICS.RES"
 
 T_void PicturesInitialize(T_void) ;
 
