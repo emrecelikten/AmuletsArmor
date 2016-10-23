@@ -456,7 +456,7 @@ MathInitialize(T_word32 screenWidth)
     MathInitializeInvDistTable(screenWidth);
 
 //    G_arcTanTable = FileLoad("mdat.res", &size) ;
-    fh = FileOpen("res/MDAT.RES", FILE_MODE_READ);
+    fh = FileOpen(MDAT_RESOURCE_FILENAME, FILE_MODE_READ);
     if (fh == FILE_BAD)
     {
         puts("Cannot load MDAT.RES!");

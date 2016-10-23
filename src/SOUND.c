@@ -228,9 +228,9 @@ T_void SoundInitialize(T_void)
 
         /* Choose the resource file based on 16 or 8 bit sound. */
         if (G_is16BitSound)  {
-            G_soundsFile = ResourceOpen("sounds16.res") ;
+            G_soundsFile = ResourceOpen(SOUNDS16_RESOURCE_FILENAME) ;
         } else {
-            G_soundsFile = ResourceOpen("sounds.res") ;
+            G_soundsFile = ResourceOpen(SOUNDS_RESOURCE_FILENAME) ;
         }
 
         /* retrieve configuration information from .cfg file */
@@ -1153,6 +1153,7 @@ T_sword16 SoundPlayByNameWithDetails(
 }
 
 #else
+static SDL_AudioDeviceID audioDevice;
 
 #define SOUND_STREAM_NUM_SAMPLES      1024
 SDL_AudioSpec G_audioSpec;
@@ -1363,12 +1364,14 @@ SoundInitialize(T_void)
         /* Choose the resource file based on 16 or 8 bit sound. */
         if (G_is16BitSound)
         {
-            G_soundsFile = ResourceOpen("res/SOUNDS16.RES");
+            G_soundsFile = ResourceOpen(SOUNDS16_RESOURCE_FILENAME);
         }
         else
         {
-            G_soundsFile = ResourceOpen("res/SOUNDS.res");
+            G_soundsFile = ResourceOpen(SOUNDS_RESOURCE_FILENAME);
         }
+
+        SDL_zero(desired); // Initialize
 
         // 44KHz, let's go high fidelity
         desired.freq = 44100;
@@ -1380,9 +1383,10 @@ SoundInitialize(T_void)
         desired.samples = 2048;
         // Our callback function
         desired.callback = IMixer;
-        desired.userdata = 0;
+//        desired.userdata = 0;
         // Open the audio device
-        if (SDL_OpenAudio(&desired, &G_audioSpec) < 0)
+        audioDevice = SDL_OpenAudioDevice(NULL, 0, &desired, &G_audioSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+        if (audioDevice == 0)
         {
             printf("Couldn't open audio: %s\n", SDL_GetError());
             exit(-1);
@@ -1415,7 +1419,7 @@ T_void
 SoundFinish(T_void)
 {
     G_soundsInit = FALSE;
-    SDL_CloseAudio();
+    SDL_CloseAudioDevice(audioDevice);
 }
 
 static T_void

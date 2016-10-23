@@ -12,6 +12,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "KEYSCAN.H"
 #include "MEMORY.H"
 #include "TXTFLD.H"
@@ -75,7 +76,7 @@ TxtfldCreate(T_word16 x1,
                 /* set the default fore and background colors */
                 p_Txtfld->fcolor = 31;
                 p_Txtfld->bcolor = 10;
-                res = ResourceOpen("sample.res");
+                res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
                 /* make sure a font name was passed in */
                 DebugCheck (fontname != NULL);
                 /* open the selected font */
@@ -170,7 +171,7 @@ TxtfldCleanUp(T_void)
             MemFree(p_Txtfld);  /* see ya! */
             G_TxtfldArray[i] = NULL;
         }
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     ResourceClose(res);
     DebugEnd();
 }

@@ -14,6 +14,7 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include <stdlib.h>
+#include <FILE.h>
 #include "BUTTON.H"
 #include "KEYSCAN.H"
 #include "MEMORY.H"
@@ -898,7 +899,7 @@ ButtonDrawTextCallback(T_graphicID graphicID, T_word16 info)
     p_text = (T_textStruct *) p_button->textID;
     p_textgraphic = (T_graphicStruct *) p_text->p_graphicID;
 
-    res = ResourceOpen((T_byte8 *) "sample.res");
+    res = ResourceOpen((T_byte8 *) SAMPLE_RESOURCE_FILENAME);
     p_font = (T_bitfont *) ResourceLock(p_text->font);
 
     GrSetBitFont(p_font);
@@ -993,7 +994,7 @@ ButtonSetFont(T_buttonID buttonID, T_byte8 *fntname)
         p_text = malloc(sizeof(*p_text));
         p_button->textID = p_text;
     }
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     p_text->font = ResourceFind(res, fntname);
     ResourceClose(res);
 

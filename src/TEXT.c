@@ -10,6 +10,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "GRAPHICS.H"
 #include "MEMORY.H"
 #include "MOUSEMOD.H"
@@ -92,7 +93,7 @@ TextInit(T_word16 lx,
         DebugCheck (myID->p_graphicID != NULL);
         myID->fcolor = 31;
         myID->bcolor = 0;
-        res = ResourceOpen("sample.res");
+        res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
         if (myID->font != RESOURCE_BAD)
             ResourceUnfind(myID->font);
         myID->font = ResourceFind(res, "FontNormal");
@@ -166,7 +167,7 @@ TextCleanUp(T_void)
             MemCheck (503);
             G_textarray[i] = NULL;
         }
-//	res=ResourceOpen ("sample.res");
+//	res=ResourceOpen (SAMPLE_RESOURCE_FILENAME);
 //	ResourceClose (res);
     DebugEnd();
 }
@@ -180,7 +181,7 @@ TextSetFont(T_textID textID, T_byte8 *fontname)
     DebugCheck (fontname != NULL);
 
     p_text = (T_textStruct *) textID;
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     if (p_text->font != RESOURCE_BAD)
         ResourceUnfind(p_text->font);
     p_text->font = ResourceFind(res, fontname);
@@ -211,7 +212,7 @@ TextDrawCallBack(T_graphicID graphicID, T_word16 index)
     p_graphic = (T_graphicStruct *) graphicID;
     p_text = (T_textStruct *) G_textarray[index];
 
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     p_font = ResourceLock(p_text->font);
 
     GrSetBitFont(p_font);

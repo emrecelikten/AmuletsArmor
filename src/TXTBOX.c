@@ -12,6 +12,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "FORM.H"
 #include "MEMORY.H"
 #include "MESSAGE.H"
@@ -193,7 +194,7 @@ TxtboxCreate(T_word16 x1,
             p_Txtbox->windowstartline = 0;
             p_Txtbox->totalrows = 1;
 
-            res = ResourceOpen("sample.res");
+            res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
             /* open up the selected font */
             p_Txtbox->font = ResourceFind(res, fontname);
             p_font = ResourceLock(p_Txtbox->font);
@@ -301,7 +302,7 @@ TxtboxCleanUp(T_void)
         /* not efficient, but it works */
     }
     G_currentTextBox = 0;
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     ResourceClose(res);
 
     DebugEnd();

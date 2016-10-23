@@ -12,6 +12,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "PICS.H"
 
 static T_resourceFile G_pictureResFile;

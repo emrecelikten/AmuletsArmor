@@ -13,6 +13,7 @@
  *<!-----------------------------------------------------------------------*/
 //#include "standard.h"
 #include <stdarg.h>
+#include <FILE.h>
 #include "DEBUG.H"
 #include "MESSAGE.H"
 #include "MEMORY.H"
@@ -208,7 +209,7 @@ MessageDraw(
     DebugRoutine("MessageDraw");
 
     /* lock in font */
-    res = ResourceOpen("sample.res");
+    res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     font = ResourceFind(res, "FontTiny");
     p_font = ResourceLock(font);
     GrSetBitFont(p_font);

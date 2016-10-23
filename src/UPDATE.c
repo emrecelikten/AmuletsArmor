@@ -11,6 +11,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "3D_TRIG.H"
 #include "BANNER.H"
 #include "CLIENT.H"
@@ -112,7 +113,7 @@ UpdateGameBegin(T_void)
 //puts("CmdQ Init") ;  fflush(stdout) ;
     CmdQInitialize();
 
-    G_res = ResourceOpen("res/SAMPLE.res");
+    G_res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     DebugCheck(G_res != RESOURCE_FILE_BAD);
 
     GrGraphicsOn();

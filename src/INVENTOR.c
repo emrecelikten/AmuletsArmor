@@ -10,6 +10,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "3D_COLLI.H"
 #include "BANNER.H"
 #include "CLIENT.H"
@@ -2352,7 +2353,7 @@ InventoryDrawElement(T_doubleLinkListElement element)
         if (p_inv->numitems > 1)
         {
             /* open the font for drawing number of objects */
-            res = ResourceOpen("sample.res");
+            res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
             font = ResourceFind(res, "FontTiny");
             p_font = ResourceLock(font);
             GrSetBitFont(p_font);
