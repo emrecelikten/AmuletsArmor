@@ -354,7 +354,7 @@ T_void TickerInc(T_void)
 #endif
 
 
-#ifdef WIN32
+#ifdef SDL
 //#include <time.h>
 #include <SDL.h>
 static T_word32 G_lastMillisecondCount ;
