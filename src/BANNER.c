@@ -12,6 +12,8 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <string.h>
+#include <stdlib.h>
 #include "BANNER.H"
 #include "CLIENT.H"
 #include "COLOR.H"
@@ -286,7 +288,7 @@ T_void BannerOpenForm(E_bannerFormType formtype)
     }
 
     /* load the form file */
-    sprintf(stmp, "BAN%5.5d.FRM", formtype);
+    sprintf(stmp, "frm/BAN%5.5d.FRM", formtype);
     FormLoadFromFile(stmp);
 //    MessageAdd ("form loaded\n");
     /* set the form callback routine */
