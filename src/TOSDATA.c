@@ -11,7 +11,7 @@
 unsigned char stances[MAX_STANCES][MAX_ANGLES][MAX_LAYERS+1][2] ;
 unsigned char table[MAX_PARTS][MAX_SUB_PARTS][5] ;
 
-void main(void)
+int main(void)
 {
     FILE *fp ;
     int mode=0 ;
@@ -139,4 +139,6 @@ void main(void)
     fwrite(table, sizeof(table), 1, fp) ;
     fclose(fp) ;
     puts("Done.") ;
+
+    return 0;
 }
