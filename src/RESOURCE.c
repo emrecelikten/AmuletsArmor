@@ -18,6 +18,7 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include <IRESOURC.H>
+#include <stdlib.h>
 #include "MEMORY.H"
 #include "PICS.H"
 #include "TICKER.H"
@@ -174,7 +175,7 @@ ResourceOpen(T_byte8 *filename)
         DebugCheck(resourceHeader.uniqueID == RESOURCE_FILE_UNIQUE_ID);
 
         /* Now allocate enough memory for the index. */
-        p_index = MemAlloc(resourceHeader.indexSize);
+        p_index = MemAlloc(resourceHeader.numEntries * sizeof(T_resourceEntry));
         DebugCheck(p_index != NULL);
 
         /* Read in the index after positioning the read position. */
@@ -838,14 +839,14 @@ IDirLock(T_resource dir)
                     p_dir->nextResource = -1;
 
                     /* Allocate space for this directory. */
-                    p_dir->p_entries = MemAlloc(header.indexSize);
+                    p_dir->p_entries = MemAlloc(header.numEntries * sizeof(T_resourceEntry));
                     DebugCheck(p_dir->p_entries != NULL);
 
                     /* Find the file/directory's directory listing. */
                     FileSeek(file, header.indexOffset);
 
                     /* Read in the directory. */
-                    LoadResourceEntries(file, p_dir->p_entries, header.indexSize);
+                    LoadResourceEntries(file, p_dir->p_entries, header.numEntries);
 
                     /* Ok, fix up the directory entries so that */
                     /* when we unlock the items, we have something to */
