@@ -13,11 +13,10 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "COLOR.H"
 #include "CONFIG.H"
-#include "GENERAL.H"
 #include "GRAPHICS.H"
-#include "INIFILE.H"
 #include "SOUND.H"
 #include "TICKER.H"
 
