@@ -564,16 +564,16 @@ FormLoadFromFile(T_byte8 *filename)
         /* ignore comments and blank lines */
         if (tempstr[0] != '#' && tempstr[0] != ' ')
         {
-            sscanf(tempstr, "%d", &objtype);
+            sscanf(tempstr, "%hd", &objtype);
             if (objtype == 1) /* add a graphic */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%s", &objtype, &objid, &x1, &y1,
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%s", &objtype, &objid, &x1, &y1,
                        picname);
                 FormAddGraphic(x1, y1, picname, objid);
             }
             else if (objtype == 2) /* add a text */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%hd,%hd", &objtype, &objid, &x1, &y1,
                        &fcolor, &bcolor);
                 /* get font name */
                 fgets(tempstr, 128, fp);
@@ -588,14 +588,14 @@ FormLoadFromFile(T_byte8 *filename)
             }
             else if (objtype == 3) /* add a button */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%s", &objtype, &objid, &x1,
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%hd,%hd,%s", &objtype, &objid, &x1,
                        &y1, &toggletype, &hotkey, picname);
                 FormAddButton(x1, y1, picname, (E_Boolean) toggletype, hotkey,
                               objid);
             }
             else if (objtype == 4) /* add a text button */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%hd,%hd,%hd", &objtype, &objid, &x1, &y1,
                        &fcolor, &toggletype, &hotkey);
                 /* get picture name */
                 fgets(tempstr, 128, fp);
@@ -614,7 +614,7 @@ FormLoadFromFile(T_byte8 *filename)
             }
             else if (objtype == 5) /* add a text box */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%hd,%hd,%d,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%s",
                        &objtype, &objid, &x1, &y1, &x2, &y2, &maxlength,
                        &numericonly, &justify, &fieldtype, &hotkey, &sbupID,
                        &sbdnID, &sbgrID, fontname);
@@ -665,7 +665,7 @@ FormLoadFromFile(T_byte8 *filename)
             }
             else if (objtype == 6) /* add a slider */
             {
-                sscanf(tempstr, "%d,%d,%d,%d,%d", &objtype, &objid, &x1, &y1,
+                sscanf(tempstr, "%hd,%hd,%hd,%hd,%hd", &objtype, &objid, &x1, &y1,
                        &x2);
                 objID = FormAddSlider(x1, y1, x2, objid);
                 DebugCheck(objID != NULL);
