@@ -108,7 +108,8 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
             }
         }
 
-        if (SDL_UpdateTexture(texture, NULL, pixels, 320 * sizeof(char))) {
+        if (SDL_UpdateTexture(texture, NULL, pixels, 320 * sizeof(char)))
+        {
             std::cout << "Failed update: " << SDL_GetError() << std::endl;
         }
 
