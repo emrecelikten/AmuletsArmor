@@ -4,6 +4,7 @@
 #ifndef _OBJMOVE_H_
 #define _OBJMOVE_H_
 
+#include <stdio.h>
 #include "GENERAL.H"
 
 #define FAST_OBJMOVE        /* define flag that turns on faster objmove */
