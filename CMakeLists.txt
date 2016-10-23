@@ -20,7 +20,6 @@ project(AmuletsArmor)
 enable_language(C CXX)
 
 include_directories(include/amulets)
-set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 
 # SDL2
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
@@ -134,6 +133,12 @@ set(SOURCES
 add_executable(AmuletsArmor ${SOURCES})
 target_link_libraries(AmuletsArmor "${SDL2_LIBRARY} ${SDL2_NET_LIBRARY}")
 set_target_properties(AmuletsArmor PROPERTIES RUNTIME_OUTPUT_DIRECTORY /tmp/aa/)
+set_target_properties(AmuletsArmor
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
 
 message(${SDL2_INCLUDE_DIR})
 message(${SDL2_NET_INCLUDE_DIR})
