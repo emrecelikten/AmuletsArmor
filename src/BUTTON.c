@@ -13,6 +13,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "BUTTON.H"
 #include "GENERAL.H"
 #include "KEYSCAN.H"
@@ -93,7 +94,7 @@ static T_buttonID ButtonInit(
     DebugCheck(bmname!=NULL);
 
     size = sizeof(T_buttonStruct);
-    myID = (T_buttonID)MemAlloc(size);
+    myID = (T_buttonStruct*)MemAlloc(size);
 
     DebugCheck(myID!=NULL);
     if (myID != NULL ) {
@@ -135,7 +136,7 @@ T_void ButtonSetSelectPic(T_buttonID buttonID, char *picname)
         PictureUnfind(p_button->selectpic);
     }
 
-    p_button->selectpic = PictureFind(picname);
+    p_button->selectpic = PictureFind((T_byte8*)picname);
 
     DebugEnd();
 }
