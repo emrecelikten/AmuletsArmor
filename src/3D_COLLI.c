@@ -212,6 +212,7 @@ static E_Boolean ICanSqueezeThroughWithClimb(
 #endif
 #endif
 
+#ifndef NO_ASSEMBLY
 #ifdef TARGET_NT
 /** Windows NT **/
 
@@ -318,6 +319,7 @@ T_sword32 Mult32By32AndDiv32 (T_sword32 _eax, T_sword32 _ebx,
             } )
 
 #endif /** TARGET_UNIX **/
+#endif /* NO_ASSEMBLY */
 
 /*-------------------------------------------------------------------------*
  * Routine:  IAddSurroundingSector
