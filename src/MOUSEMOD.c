@@ -669,10 +669,12 @@ static T_buttonClick IMouseGetButtonStatus(T_void)
 
     DebugEnd() ;
     return buttonStatus ;
-#else
-	extern T_buttonClick DirectMouseGetButton(T_void) ;
+#elif SDL
+	extern T_buttonClick MouseGetButton(T_void);
 
-    return DirectMouseGetButton() ;
+    return MouseGetButton();
+#else
+    UNDEFINED TARGET /* Fail to compile - Emre */
 #endif
 }
 
