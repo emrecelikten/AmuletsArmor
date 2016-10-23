@@ -22,7 +22,7 @@
 #endif
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "GRAPHICS.H"
 #include "MEMORY.H"
@@ -127,7 +127,7 @@ printf("!A %d %s:%s ", size, DebugGetCallerFile(), DebugGetCallerName()) ;
     /* Allocate memory and room for our tag. */
     do {
 //DebugCheck(_heapchk() == _HEAPOK) ;
-        p_memory = malloc(sizeof(T_memBlockHeader)+size) ;
+        p_memory = (T_byte8*) malloc(sizeof(T_memBlockHeader)+size) ;
 //DebugCheck(_heapchk() == _HEAPOK) ;
 
         /* If the memory was not allocated, check to see if */

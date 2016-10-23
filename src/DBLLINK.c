@@ -14,8 +14,8 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "DBLLINK.H"
-#include "GENERAL.H"
 #include "GRAPHICS.H"
 #include "MEMORY.H"
 
