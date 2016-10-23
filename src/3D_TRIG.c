@@ -455,7 +455,7 @@ MathInitialize(T_word32 screenWidth)
     /* Set up an inverse distance table (pretty much a 1/Z table). */
     MathInitializeInvDistTable(screenWidth);
 
-//    G_arcTanTable = FileLoad("mdat.res", &size) ;
+//    G_arcTanTable = FileLoad(MDAT_RESOURCE_FILENAME, &size) ;
     fh = FileOpen(MDAT_RESOURCE_FILENAME, FILE_MODE_READ);
     if (fh == FILE_BAD)
     {
