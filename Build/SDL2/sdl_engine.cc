@@ -3,14 +3,15 @@
 #include "sdl_engine.h"
 #include "sdl_extern.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 400
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 800
 
 static SDL_Renderer *renderer;
-static unsigned char *pixels;
-static unsigned char *large_pixels;
+static uint8_t *pixels;
+static uint32_t *large_pixels;
 static SDL_Texture *texture;
-
+static SDL_Surface *screen;
+static SDL_PixelFormat *format;
 void
 UpdateMouse(void)
 {
@@ -61,10 +62,9 @@ HandleSDLEvents()
 void
 SDLEngineUpdate(char *p_screen, unsigned char *palette)
 {
-    SDL_Color colors[256];
     int i;
     unsigned char *src = pixels;
-    unsigned char *dst = large_pixels;
+    uint32_t *dst = large_pixels;
     unsigned char *line;
     static int lastFPS = 0;
     static int fps = 0;
@@ -86,29 +86,44 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
     {
         lastTick = tick;
 
+        SDL_Color *colors = screen->format->palette->colors;
         // Setup the color palette for this update
         for (i = 0; i < 256; i++)
         {
-            colors[i].r = ((((unsigned int) *(palette++)) & 0x3F) << 2);
-            colors[i].g = ((((unsigned int) *(palette++)) & 0x3F) << 2);
-            colors[i].b = ((((unsigned int) *(palette++)) & 0x3F) << 2);
+            colors[i].r = (uint8_t) (((*(palette++)) & 0x3F) << 2);
+            colors[i].g = (uint8_t) (((*(palette++)) & 0x3F) << 2);
+            colors[i].b = (uint8_t) (((*(palette++)) & 0x3F) << 2);
         }
-        //SDL_SetColors(surface, colors, 0, 256);
-        //SDL_SetColors(largesurface, colors, 0, 256);
+
+//        SDL_Surface *newSurface = screen;
+//        SDL_Surface *newSurface = SDL_ConvertSurfaceFormat(screen, SDL_PIXELFORMAT_RGB888, 0);
+//        if (newSurface == nullptr)
+//        {
+//            std::cout << "Failed SDL_ConvertSurfaceFormat: " << SDL_GetError() << std::endl;
+//        }
+
 
         // Blit the current surface from 320x200 to 640x480
         line = src;
-        for (y = 0, frac = 0; y < 200; y++, line += 320)
+        for (y = 0; y < 200; y++)
         {
 #pragma unroll
             for (x = 0; x < 320; x++)
             {
-                *(dst++) = *src;
-                *(dst++) = *(src++);
+
+//                *(dst++) = *src;
+
+                uint32_t val = SDL_MapRGB(format, colors[*src].r, colors[*src].g, colors[*src].b);
+                *(dst++) = val;
+//                *(dst++) = val;
+//                *(dst++) = val;
+//                *(dst++) = val;
+                src++;
+//                *(dst++) = *(src++);
             }
         }
 
-        if (SDL_UpdateTexture(texture, NULL, pixels, 320 * sizeof(char)))
+        if (SDL_UpdateTexture(texture, NULL, large_pixels, 320 * sizeof(uint32_t)))
         {
             std::cout << "Failed update: " << SDL_GetError() << std::endl;
         }
@@ -156,6 +171,7 @@ InitSDLGraphics()
                                        SDL_WINDOWPOS_UNDEFINED,
                                        SCREEN_WIDTH,
                                        SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+
     if (win == nullptr)
     {
         std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
@@ -172,19 +188,41 @@ InitSDLGraphics()
         return 1;
     }
 
+    screen = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 8, 0, 0, 0, 0);
+    if (screen == nullptr)
+    {
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(win);
+        std::cout << "SDL_CreateRGBSurface Error: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    // TODO: HACK FOR GETTING A 32BIT PIXELFORMAT, FIX
+    SDL_Surface *screen2 = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32, 0, 0, 0, 0);
+    if (screen2 == nullptr)
+    {
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(win);
+        std::cout << "SDL_CreateRGBSurface Error: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    format = screen2->format;
+
     texture = SDL_CreateTexture(renderer,
                                 SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING,
-                                640, 480);
-
+                                320, 200);
     if (texture == nullptr)
     {
         std::cout << "SDL_CreateTexture Error for texture: " << SDL_GetError() << std::endl;
         return 1;
     }
 
-    pixels = (unsigned char *) malloc(320 * 240 * sizeof(char));
-    large_pixels = (unsigned char *) malloc(640 * 480 * sizeof(char));
+    pixels = (uint8_t *) screen->pixels;
+    large_pixels = (uint32_t *) malloc(320 * 240 * sizeof(uint32_t));
     GRAPHICS_ACTUAL_SCREEN = (T_screen) pixels;
 
     game_main(NULL, NULL);
