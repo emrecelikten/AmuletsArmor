@@ -193,7 +193,7 @@ E_Boolean PromptForBoolean (T_byte8 *prompt, E_Boolean defaultvalue)
     GrShadeRectangle (36,88,302,124,125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTBOOL.FRM");
+	FormLoadFromFile ("frm/PMPTBOOL.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -233,7 +233,7 @@ T_void PromptNotify (T_byte8 *prompt)
     G_exit=FALSE;
     G_action=PROMPT_ACTION_NO_ACTION;
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTNTFY.FRM");
+	FormLoadFromFile ("frm/PMPTNTFY.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -274,7 +274,7 @@ T_word16 PromptForInteger  (T_byte8 *prompt,
     G_exit=FALSE;
     G_action=PROMPT_ACTION_NO_ACTION;
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTINTG.FRM");
+	FormLoadFromFile ("frm/PMPTINTG.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -374,7 +374,7 @@ T_void PromptDisplayMessage (T_byte8 *prompt)
     GrShadeRectangle (36,88,302,124,125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTMESG.FRM");
+	FormLoadFromFile ("frm/PMPTMESG.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -412,7 +412,7 @@ T_void PromptDisplayBulletin (T_byte8 *prompt)
     GrShadeRectangle (36,58,302,155,125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTBULL.FRM");
+	FormLoadFromFile ("frm/PMPTBULL.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -449,7 +449,7 @@ E_Boolean PromptDisplayDialogue (T_byte8 *prompt)
     GrShadeRectangle (37,27,301,155,124);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTDLG.FRM");
+	FormLoadFromFile ("frm/PMPTDLG.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -490,7 +490,7 @@ E_Boolean PromptDisplayContinue (T_byte8 *prompt)
     GrShadeRectangle (38,60,300,154,124);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTCONT.FRM");
+	FormLoadFromFile ("frm/PMPTCONT.FRM");
 
     /* set up windows */
     TxtboxID=FormGetObjID (500);
@@ -547,7 +547,7 @@ E_Boolean PromptForString  (T_byte8 *prompt,
     GrShadeRectangle (36,80,302,134,125);
 
     /* load the prompt ui form */
-	FormLoadFromFile ("PMPTSTRN.FRM");
+	FormLoadFromFile ("frm/PMPTSTRN.FRM");
 
     /* display the prompt */
     TxtboxID=FormGetObjID(500);

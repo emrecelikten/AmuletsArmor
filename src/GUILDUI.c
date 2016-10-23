@@ -291,7 +291,7 @@ static T_void GuildUIBuildMapList (T_void)
 
     G_mapList=DoubleLinkListCreate();
     listcount=0;
-    sprintf (stmp,"MAPDESC/DES%05d",listcount++);
+    sprintf (stmp,"quests/DES%05d",listcount++);
     while (PictureExist(stmp))
     {
         /* alloc space for new map description block */
@@ -389,7 +389,7 @@ static T_void GuildUIBuildMapList (T_void)
         listdata[strlen(listdata)]='\0';
 
         /* increment map description file name */
-        sprintf (stmp,"MAPDESC/DES%05d",listcount++);
+        sprintf (stmp,"quests/DES%05d",listcount++);
     }
 
     TxtboxSetData (G_displayBoxes[GUILD_MAPS_LIST],listdata);

@@ -325,7 +325,7 @@ T_void MainUIInit (T_void)
     DebugRoutine ("MainUIInit");
 
  	/* load the form for this page */
-	FormLoadFromFile ("MAINUI.FRM");
+	FormLoadFromFile ("frm/MAINUI.FRM");
 
 	/* set the form callback routine to MainUIControl */
 	FormSetCallbackRoutine (MainUIControl);

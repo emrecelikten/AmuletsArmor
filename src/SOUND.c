@@ -70,7 +70,7 @@ static T_word32 G_musicPos = 0 ;
 static E_Boolean G_musicNeedsUpdate = FALSE ;
 #endif
 
-#ifdef WIN32
+#ifdef SDL
 #define MAX_SOUND_CHANNELS 32
 #define BUFFER_ID_BAD ((T_word16)0xFFFF)
 #endif
@@ -1332,9 +1332,9 @@ T_void SoundInitialize(T_void)
 
         /* Choose the resource file based on 16 or 8 bit sound. */
         if (G_is16BitSound)  {
-            G_soundsFile = ResourceOpen("sounds16.res") ;
+            G_soundsFile = ResourceOpen("res/SOUNDS16.RES") ;
         } else {
-            G_soundsFile = ResourceOpen("sounds.res") ;
+            G_soundsFile = ResourceOpen("res/SOUNDS.res") ;
         }
 
         // 44KHz, let's go high fidelity

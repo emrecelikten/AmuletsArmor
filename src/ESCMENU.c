@@ -637,7 +637,7 @@ void EscapeMenuLoadState(void)
     DebugRoutine("EscapeMenuLoadState");
 
     // Setup the form
-    sprintf(form, "ESCMENU%d.FRM", G_escMenuState);
+    sprintf(form, "frm/ESCMENU%d.FRM", G_escMenuState);
     FormLoadFromFile(form);
     FormSetCallbackRoutine(EscapeMenuFormControl);
 

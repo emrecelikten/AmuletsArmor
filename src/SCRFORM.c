@@ -66,7 +66,7 @@ T_void ScriptFormStart(T_word32 uiFormNumber)
         /* This module is now active. */
         G_scriptCommActive = TRUE ;
 
-        sprintf(formName, "UI%06ld.FRM", uiFormNumber) ;
+        sprintf(formName, "frm/UI%06ld.FRM", uiFormNumber) ;
 
         /* load the form for this page */
         FormLoadFromFile (formName);
