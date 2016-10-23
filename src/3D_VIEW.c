@@ -12,6 +12,9 @@
  *<!-----------------------------------------------------------------------*/
 //#define NDEBUG
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#undef M_PI
 #define M_PI        3.14159265358979323846
 #include "3D_IO.H"
 #include "3D_TRIG.H"
@@ -48,7 +51,7 @@ static T_sword16 G_mouseAtY ;
 static T_word16 G_textureSideNum ;
 #endif
 
-#if defined(WIN32)
+#ifdef SDL
 /*
 T_sword32 MultAndShift4(
            T_sword32 a,
