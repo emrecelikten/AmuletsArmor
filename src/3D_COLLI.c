@@ -8,6 +8,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <stdio.h>
 #include "3D_COLLI.H"
 #include "3D_IO.H"
 #include "3D_TRIG.H"
