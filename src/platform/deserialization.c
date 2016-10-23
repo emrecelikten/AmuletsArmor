@@ -55,7 +55,7 @@ LoadResourceFileHeader(T_file file, T_resourceFileHeader *resourceFileHeader)
 }
 
 T_sword32
-LoadResourceEntries(T_file file, T_resourceEntry *resourceEntry, T_word16 numEntries)
+LoadResourceEntries(T_file file, T_resourceEntry *resourceEntry, T_word32 numEntries)
 {
     T_sword32 result;
     char *buf;

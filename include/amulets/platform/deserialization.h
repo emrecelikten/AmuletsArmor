@@ -10,6 +10,6 @@ T_sword32
 LoadResourceFileHeader(T_file file, T_resourceFileHeader *resourceFileHeader);
 
 T_sword32
-LoadResourceEntries(T_file file, T_resourceEntry *resourceEntry, T_word16 numEntries);
+LoadResourceEntries(T_file file, T_resourceEntry *resourceEntry, T_word32 numEntries);
 
 #endif //AMULETSARMOR_SERIALIZATION_H
