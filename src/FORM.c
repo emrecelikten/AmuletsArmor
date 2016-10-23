@@ -516,6 +516,9 @@ FormLoadFromFile(T_byte8 *filename)
         if (tempstr[strlen(tempstr) - 1] == '\n')
             tempstr[strlen(tempstr) - 1] = '\0';
 
+        if (tempstr[strlen(tempstr) - 1] == '\r') // Windows
+            tempstr[strlen(tempstr) - 1] = '\0';
+
         /* append text to current object if flag is set */
         if (appendtext == TRUE)
         {
@@ -562,7 +565,7 @@ FormLoadFromFile(T_byte8 *filename)
         }
 
         /* ignore comments and blank lines */
-        if (tempstr[0] != '#' && tempstr[0] != ' ')
+        if (tempstr[0] != '#' && tempstr[0] != ' ' && strlen(tempstr) > 0)
         {
             sscanf(tempstr, "%hd", &objtype);
             if (objtype == 1) /* add a graphic */
