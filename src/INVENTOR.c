@@ -3641,7 +3641,7 @@ static T_void InventorySortByType(E_inventoryType which)
     T_doubleLinkList list1,list2;
     T_doubleLinkListElement element,nextelement;
     T_inventoryItemStruct *p_inv;
-    E_equipObjectTypes comparetype=EQUIP_OBJECT_TYPE_WEAPON;
+    int comparetype=EQUIP_OBJECT_TYPE_WEAPON;
     DebugRoutine ("InventorySortByType");
     /* simple 'apple-pick' sort */
     /* get list to sort handle */
@@ -3758,7 +3758,7 @@ static T_void InventoryClearCurrentLocations(E_inventoryType which)
 /* on a character. */
 T_void InventoryUpdatePlayerEquipmentBodyParts(T_void)
 {
-    E_equipLocations location ;
+    int location ;
 
     /* Update the color/body part per location of the character */
     /* from hand position (first) to shield position (last). */
