@@ -5,6 +5,7 @@
 #ifndef _CMDQUEUE_H_
 #define _CMDQUEUE_H_
 
+#include <limits.h>
 #include "GENERAL.H"
 #include "PACKET.H"
 #include "DITALK.H"
