@@ -11,8 +11,8 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "CONFIG.H"
-#include "GENERAL.H"
 #include "KEYMAP.H"
 #include "MEMORY.H"
 
