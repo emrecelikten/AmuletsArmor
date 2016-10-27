@@ -137,13 +137,13 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
 
         fps++;
 
-        if ((tick - lastFPS) >= 1000)
+        if ((tick - lastFPS) >= 100000)
         {
             if (movingAverage < 1.0)
                 movingAverage = fps;
             movingAverage = ((double) fps) * 0.05 + movingAverage * 0.95;
-            lastFPS += 1000;
-            //printf("%02d:%02d:%02d.%03d FPS: %d, %f\n", tick/3600000, (tick/60000) % 60, (tick/1000) % 60, tick%1000, fps, movingAverage);
+            lastFPS += 100000;
+//            printf("%02d:%02d:%02d.%03d FPS: %d, %f\n", tick/3600000, (tick/60000) % 60, (tick/1000) % 60, tick%1000, fps, movingAverage);
             fps = 0;
         }
 
