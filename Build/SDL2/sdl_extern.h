@@ -10,7 +10,7 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette);
 void
 OutsideMouseDriverGet(T_word16 *xPos, T_word16 *yPos);
 T_void
-MouseSet(T_word16 newX, T_word16 newY);
+MouseSet(int newX, int newY);
 T_buttonClick
 MouseGetButton(T_void);
 T_void

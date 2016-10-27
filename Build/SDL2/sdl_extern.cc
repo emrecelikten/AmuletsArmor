@@ -7,7 +7,7 @@ static T_word16 G_mouseX = 0;
 static T_word16 G_mouseY = 0;
 
 T_void
-MouseSet(T_word16 newX, T_word16 newY)
+MouseSet(int newX, int newY)
 {
     newX >>= 1;
     newY >>= 1; // scale for large screen
@@ -15,8 +15,8 @@ MouseSet(T_word16 newX, T_word16 newY)
         newX = 319;
     if (newY > 199)
         newY = 199;
-    G_mouseX = newX;
-    G_mouseY = newY;
+    G_mouseX = (T_word16) newX;
+    G_mouseY = (T_word16) newY;
 }
 
 void

@@ -3,8 +3,8 @@
 #include "sdl_engine.h"
 #include "sdl_extern.h"
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 800
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 400
 
 static SDL_Renderer *renderer;
 static uint8_t *pixels;
@@ -17,9 +17,10 @@ UpdateMouse(void)
 {
     int flags = 0;
     int x, y;
-    Uint8 state;
+    Uint32 state;
 
     state = SDL_GetMouseState(&x, &y);
+
     MouseSet(x, y);
     if (state & SDL_BUTTON_LMASK)
         flags |= MOUSE_BUTTON_LEFT;
@@ -62,6 +63,7 @@ HandleSDLEvents()
 void
 SDLEngineUpdate(char *p_screen, unsigned char *palette)
 {
+    SDL_Color colors[256];
     int i;
     unsigned char *src = pixels;
     uint32_t *dst = large_pixels;
@@ -86,7 +88,6 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
     {
         lastTick = tick;
 
-        SDL_Color *colors = screen->format->palette->colors;
         // Setup the color palette for this update
         for (i = 0; i < 256; i++)
         {
@@ -94,6 +95,8 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
             colors[i].g = (uint8_t) (((*(palette++)) & 0x3F) << 2);
             colors[i].b = (uint8_t) (((*(palette++)) & 0x3F) << 2);
         }
+
+        SDL_SetPaletteColors(screen->format->palette, colors, 0, 256);
 
 //        SDL_Surface *newSurface = screen;
 //        SDL_Surface *newSurface = SDL_ConvertSurfaceFormat(screen, SDL_PIXELFORMAT_RGB888, 0);
