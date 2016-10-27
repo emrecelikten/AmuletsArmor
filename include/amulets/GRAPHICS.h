@@ -28,14 +28,7 @@ typedef struct
 {
     T_word16 sizex;
     T_word16 sizey;
-
-/** Due to the parser of GCC, we must gracefully make this kludge. **/
-#ifdef __GNUC__
-    T_byte8 data[1];
-#else
     T_byte8 data[];
-#endif
-
 } T_bitmap;
 
 typedef T_byte8 T_palette[256][3];
@@ -45,13 +38,7 @@ typedef struct
     T_byte8 fontID[4];
     T_byte8 height;
     T_byte8 widths[256];
-
-/** Again, GCC will not take subscriptless values. **/
-#ifdef __GNUC__
-    T_byte8 p_data[1];
-#else
     T_byte8 p_data[];
-#endif
 } T_bitfont;
 
 #ifndef SERVER_ONLY
