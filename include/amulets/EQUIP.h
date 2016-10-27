@@ -175,7 +175,7 @@ typedef struct
 
     /* unique flag */
     T_byte8 unique;
-} T_equipItemDescription;
+} PACK T_equipItemDescription;
 
 typedef struct
 {
