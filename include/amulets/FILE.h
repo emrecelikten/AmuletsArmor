@@ -59,6 +59,12 @@ FileFindNext(T_byte8 *filename);
 E_Boolean
 FileExist(T_byte8 *p_filename);
 
+#if defined(TARGET_UNIX)
+#define ConcatenatePaths(parent, sub) parent "/" sub
+#elif defined(TARGET_DOS) || defined(TARGET_WIN32)
+#define ConcatenatePaths(parent, sub) parent "\" sub
+#endif
+
 #endif
 
 /****************************************************************************/
