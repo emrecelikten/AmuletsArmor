@@ -190,8 +190,6 @@
 #endif
 
 #ifdef SDL
-#pragma warning(disable:4200)
-#pragma warning(disable:4100)
 //#include <windows.h>
 //#include <direct.h>
 #include <SDL.h>
