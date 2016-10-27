@@ -149,7 +149,6 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
 
         // Handle IO updates
         HandleSDLEvents();
-//        UpdateMouse();
         KeyboardUpdate(TRUE);
 #if CAP_SPEED_TO_100_FPS
         Sleep(1);
