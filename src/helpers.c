@@ -43,32 +43,3 @@ itoa(int value, char *result, int base)
     }
     return result;
 }
-
-/* Platform specific string comparison functions */
-#ifdef TARGET_UNIX
-// Unsafe hacky implementation of a case insensitive string comparison, found from stack overflow and modified
-int
-strnicmp(char const *a, char const *b, int num)
-{
-    int i;
-    int d;
-    for (i = 0; i < num; a++, b++)
-    {
-        d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
-            return d;
-    }
-}
-
-int
-stricmp(char const *a, char const *b)
-{
-    int d;
-    for (;; a++, b++)
-    {
-        d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
-            return d;
-    }
-}
-#endif

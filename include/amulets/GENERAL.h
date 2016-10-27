@@ -9,7 +9,9 @@
 
 /** If I'm on a unix box, grab some system typedefs as well. **/
 #ifdef TARGET_UNIX
-#  include <sys/types.h>
+#include <sys/types.h>
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
 
 typedef time_t T_time;
 
