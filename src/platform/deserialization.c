@@ -216,8 +216,6 @@ DeserializeObjectType(T_file file, T_resourceEntry *p_resourceEntry)
         }
     }
 
-    printf("ASSERT_SIZE: %ld", (p_dst - (p_resourceEntry->p_data - sizeof(T_resourceEntry *))));
-
     MemFree(buf);
 }
 
