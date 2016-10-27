@@ -123,7 +123,7 @@ MemAlloc(T_word32 size)
     DebugRoutine("MemAlloc");
 
     DebugGetCaller(&p_name, &line);
-//printf("|%s,%ld\.0\n", p_name, size) ;
+//    printf("|%s,%ld\.0\n", p_name, size) ;
 #ifdef COMPILE_OPTION_OUTPUT_ALLOCATION
     //printf("!A %d %s\n", size, DebugGetCallerFile()) ;
     printf("!A %d %s:%s ", size, DebugGetCallerFile(), DebugGetCallerName()) ;
@@ -654,7 +654,7 @@ printf("End of list\n\n") ;
     return answer;
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(WIN32)
 
 /*-------------------------------------------------------------------------*
  * Routine:  MemDumpDiscarded

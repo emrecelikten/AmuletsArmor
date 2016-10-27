@@ -28,7 +28,7 @@ MemFlushDiscardable(T_void);
 T_word32
 FreeMemory(T_void);
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(WIN32)
 T_void MemDumpDiscarded(T_void) ;
 T_void MemCheck(T_word16 num) ;
 T_void MemCheckData(T_void *p_data) ;
