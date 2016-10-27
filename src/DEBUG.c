@@ -202,8 +202,9 @@ T_void DebugRemoveRoutine(T_void)
         } else {
             lessOften = HEAP_CHECK_LESS_OFTEN;
 #endif
-        MemCheck(999) ;
+
 #if defined(_DEBUG) && defined(WIN32)
+        MemCheck(999) ;
         _ASSERTE( _CrtCheckMemory( ) );
 #endif
 #if HEAP_CHECK_LESS_OFTEN
