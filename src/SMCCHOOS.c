@@ -1312,7 +1312,7 @@ SMCChooseCheckPasswordForLoadEnter(
     DebugCheck(p_data != NULL);
 
     StatsGetPassword(StatsGetActive(), password);
-    if (strncasecmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)
+    if (strnicmp(password, p_data->attemptPassword, MAX_SIZE_PASSWORD) == 0)
     {
         ClientSetCheckPasswordStatus(CHECK_PASSWORD_STATUS_OK);
     }
@@ -1419,7 +1419,7 @@ SMCChooseChangePasswordEnter(
         MAX_SIZE_PASSWORD,
         password) == TRUE))
     {
-        if (strncasecmp(oldPassword, password, 12) != 0)
+        if (strnicmp(oldPassword, password, 12) != 0)
         {
             /* passwords don't match up.  Bad password status */
             ClientSetChangePasswordStatus(CHANGE_PASSWORD_STATUS_WRONG);
