@@ -88,7 +88,7 @@ T_void
 TownUIStart(T_word32 formNum)
 {
     T_word16 i;
-    T_byte8 stmp[32];
+    T_byte8 stmp[50];
     E_Boolean iSucceeded;
 
     const T_word16 menuX[4] = {6, 57, 107, 157};
@@ -244,7 +244,7 @@ TownUIStart(T_word32 formNum)
         {
             do
             {
-                sprintf(stmp, "quests\\QUEST%d.ini", G_numQuestsAvailable++);
+                sprintf(stmp, ConcatenatePaths("quests", "QUEST%d.INI"), G_numQuestsAvailable++);
             }
             while (FileExist(stmp));
             G_numQuestsAvailable--;
@@ -457,7 +457,7 @@ TownUIGotoPlace(T_buttonID buttonID)
         {
             /* show dialogue information */
             currentQuest = StatsGetCurrentQuestNumber();
-            sprintf(stmp, "quests\\QUEST%d.INI", currentQuest);
+            sprintf(stmp, ConcatenatePaths("quests","QUEST%d.INI"), currentQuest);
             idata = INIFileOpen(stmp);
 
             /* read in data and set fields */
@@ -770,7 +770,7 @@ TownUIUpdateQuestInfo(T_void)
 
     /* get the current quest number */
     currentQuest = StatsGetCurrentQuestNumber();
-    sprintf(stmp, "quests\\QUEST%d.INI", currentQuest);
+    sprintf(stmp, ConcatenatePaths("quests", "QUEST%d.INI"), currentQuest);
     idata = INIFileOpen(stmp);
 
     /* read in data and set fields */
@@ -941,7 +941,7 @@ TownUIFinishedQuest(T_word16 multiplayerStatus, T_byte8 numPlayers, T_word16 cur
     /* determine success or failure for this quest */
 
     /* open ini file */
-    sprintf(stmp, "quests\\QUEST%d.INI", currentQuest);
+    sprintf(stmp, ConcatenatePaths("quests","QUEST%d.INI"), currentQuest);
     idata = INIFileOpen(stmp);
 
     /* get quest item */
@@ -1174,7 +1174,7 @@ TownUICompletedMapLevel(T_word16 mapLevel)
     /* determine success or failure for this quest */
 
     /* open ini file */
-    sprintf(stmp, "quests\\QUEST%d.INI", currentQuest);
+    sprintf(stmp, ConcatenatePaths("quests","QUEST%d.INI"), currentQuest);
     /* If one player, put up a message explaining your end. */
     if (G_isOnePlayer)
     {
