@@ -122,9 +122,9 @@ UpdateGameBegin(T_void)
 
 //puts("Locking in fonts") ; fflush(stdout) ;
     G_r_font = ResourceFind(G_res, "FontNormal");
-    G_p_font = ResourceLock(G_r_font);
+    G_p_font = ResourceLock(G_r_font, RESOURCE_GENERIC);
     G_r_font2 = ResourceFind(G_res, "FontEngl");
-    G_p_font2 = ResourceLock(G_r_font2);
+    G_p_font2 = ResourceLock(G_r_font2, RESOURCE_GENERIC);
     GrSetBitFont(G_p_font);
 
 /*

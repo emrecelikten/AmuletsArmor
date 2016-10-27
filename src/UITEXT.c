@@ -252,7 +252,7 @@ UITextCreate(
 
             /* Determine how many lines can be displayed given the particular, */
             /* font and height of the ui text area. */
-            p_font = ResourceLock(font);
+            p_font = ResourceLock(font, RESOURCE_GENERIC);
 
             /* Also, record the font height so we don't have to keep locking */
             /* the resource to get a the font height. */
@@ -721,7 +721,7 @@ IUITextDrawLine(T_UIText uiText, T_byte8 lineIndex)
     {
         /* If the line is on the screen, we need to draw it. */
         /* Lock in the font. */
-        p_font = ResourceLock(p_text->font);
+        p_font = ResourceLock(p_text->font, RESOURCE_GENERIC);
 
         /* Declare this font to be the active font. */
         GrSetBitFont(p_font);

@@ -1462,7 +1462,7 @@ SoundSetBackgroundMusic(T_byte8 *filename)
             }
 
             // Load the new music (even if we are not going to play it yet)
-            sprintf(realFilename, "AAMUSIC\\%s.MUS", filename);
+            sprintf(realFilename, ConcatenatePaths("AAMUSIC", "%s.MUS"), filename);
             file = FileOpen(realFilename, FILE_MODE_READ);
             if (file != FILE_BAD)
             {
@@ -2034,7 +2034,7 @@ IAllocateBuffer(T_resource res)
         G_playingList = bufferId;
 
         p_buffer->resource = res;
-        p_buffer->p_sample = ResourceLock(res);
+        p_buffer->p_sample = ResourceLock(res, RESOURCE_GENERIC);
         p_buffer->size = ResourceGetSize(res);
 
         G_numSoundsPlaying++;

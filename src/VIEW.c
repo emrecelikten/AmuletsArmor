@@ -746,7 +746,7 @@ ViewSetPalette(T_viewPalette viewPalette)
     DebugCheck(viewPalette < VIEW_PALETTE_UNKNOWN);
 
     sprintf(name, "VIEW%02d.PAL", viewPalette);
-    p_palette = (T_palette *) PictureLockData(name, &res);
+    p_palette = (T_palette *) PictureLockData(name, &res, RESOURCE_GENERIC);
 
 #ifdef OPTIONS_DARKCOLOR
     /* Darken the palette some. */

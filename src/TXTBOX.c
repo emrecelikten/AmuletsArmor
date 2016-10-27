@@ -197,7 +197,7 @@ TxtboxCreate(T_word16 x1,
             res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
             /* open up the selected font */
             p_Txtbox->font = ResourceFind(res, fontname);
-            p_font = ResourceLock(p_Txtbox->font);
+            p_font = ResourceLock(p_Txtbox->font, RESOURCE_GENERIC);
             GrSetBitFont(p_font);
 
             /* determine the height of the font */
@@ -776,7 +776,7 @@ TxtboxScanRow(T_TxtboxID TxtboxID, T_word16 rowinc, T_word16 ox)
     p_Txtbox = (T_TxtboxStruct *) TxtboxID;
 
     /* open the font */
-    p_font = ResourceLock(p_Txtbox->font);
+    p_font = ResourceLock(p_Txtbox->font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     wsize = GrGetCharacterWidth('W');
@@ -1913,7 +1913,7 @@ TxtboxDrawCallBack(T_graphicID graphicID, T_word16 index)
                        bcolor2);
 
     /* open the font */
-    p_font = ResourceLock(p_Txtbox->font);
+    p_font = ResourceLock(p_Txtbox->font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     wsize = GrGetCharacterWidth('W');
@@ -2143,7 +2143,7 @@ TxtboxRepaginate(T_TxtboxID TxtboxID)
     p_Txtbox = (T_TxtboxStruct *) TxtboxID;
 
     /* open the font */
-    p_font = ResourceLock(p_Txtbox->font);
+    p_font = ResourceLock(p_Txtbox->font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     /* set the tab size using the character 'w' */

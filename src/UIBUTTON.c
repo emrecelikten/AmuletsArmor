@@ -98,7 +98,7 @@ UIButtonCreate(
     p_button = button = UIObjectCreate(sizeof(T_UIButtonStruct));
 
     /* Lock in the normally (not focusted) bitmap into memory. */
-    bitmap = ResourceLock(notFocusPic);
+    bitmap = ResourceLock(notFocusPic, RESOURCE_GENERIC);
 
     /* Set up the area that the button will occupy. */
     UIObjectSetArea(button, x, y, x + bitmap->sizex - 1, y + bitmap->sizey - 1);
@@ -312,7 +312,7 @@ IUIButtonDraw(T_UIButtonStruct *p_button)
     if (r_pic != p_button->lastPic)
     {
         /* Yes, it is.  Ok, let's lock in the bitmap and draw it. */
-        p_bitmap = ResourceLock(r_pic);
+        p_bitmap = ResourceLock(r_pic, RESOURCE_GENERIC);
         DebugCheck(p_bitmap != NULL);
 
         MouseHide();

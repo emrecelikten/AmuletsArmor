@@ -211,7 +211,7 @@ MessageDraw(
     /* lock in font */
     res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
     font = ResourceFind(res, "FontTiny");
-    p_font = ResourceLock(font);
+    p_font = ResourceLock(font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     /* Loop through up to MAX_VIEWED_MESSAGES, but stop if we reach the */
@@ -364,7 +364,7 @@ MessageDisplayMessage(T_word16 messagenum)
     if (PictureExist(stmp))
     {
         /* show description file */
-        desc1 = PictureLockData(stmp, &res);
+        desc1 = PictureLockData(stmp, &res, RESOURCE_GENERIC);
         size = ResourceGetSize(res);
         desc2 = (T_byte8 *) MemAlloc(size + 2);
         memcpy (desc2, desc1, size);

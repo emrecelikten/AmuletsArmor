@@ -900,7 +900,7 @@ ButtonDrawTextCallback(T_graphicID graphicID, T_word16 info)
     p_textgraphic = (T_graphicStruct *) p_text->p_graphicID;
 
     res = ResourceOpen((T_byte8 *) SAMPLE_RESOURCE_FILENAME);
-    p_font = (T_bitfont *) ResourceLock(p_text->font);
+    p_font = (T_bitfont *) ResourceLock(p_text->font, RESOURCE_GENERIC);
 
     GrSetBitFont(p_font);
     GrSetCursorPosition(p_textgraphic->locx + p_graphic->xoff,

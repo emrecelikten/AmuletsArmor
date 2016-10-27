@@ -116,7 +116,7 @@ BannerInit(T_void)
     DebugRoutine("BannerInit");
 
     /* Draw the boundaries of the screen. */
-    b1 = (T_bitmap *) PictureLockData("UI/3DUI/MAINBACK", &r1);
+    b1 = (T_bitmap *) PictureLockData("UI/3DUI/MAINBACK", &r1, RESOURCE_GENERIC);
     GrDrawBitmap(b1, 0, 0);
     PictureUnlock(r1);
     PictureUnfind(r1);

@@ -8,7 +8,6 @@
 #include "GRAPHICS.H"
 #include "RESOURCE.H"
 
-
 T_void
 PicturesInitialize(T_void);
 
@@ -19,7 +18,7 @@ T_byte8 *
 PictureLock(T_byte8 *name, T_resource *res);
 
 T_byte8 *
-PictureLockData(T_byte8 *name, T_resource *res);
+PictureLockData(T_byte8 *name, T_resource *res, T_resourceFormat resourceFormat);
 
 T_void
 PictureUnlock(T_resource res);
@@ -42,7 +41,7 @@ T_void
 PictureUnlockAndUnfind(T_resource res);
 
 T_byte8 *
-PictureLockDataQuick(T_resource res);
+PictureLockDataQuick(T_resource res, T_resourceFormat resourceFormat);
 
 T_byte8 *
 PictureLockQuick(T_resource res);
@@ -60,9 +59,12 @@ T_byte8 *
 PictureGetName(T_void *p_picture);
 
 #ifndef NDEBUG
-T_void PicturePrint(FILE *fp, T_void *p_pic) ;
-T_void PicturesDump(T_void) ;
-T_void PictureCheck(T_void *p_picture) ;
+T_void
+PicturePrint(FILE *fp, T_void *p_pic);
+T_void
+PicturesDump(T_void);
+T_void
+PictureCheck(T_void *p_picture);
 #else
 #define PicturePrint(fp, p_pic)
 #define PicturesDump()

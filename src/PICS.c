@@ -119,7 +119,7 @@ PictureLock(T_byte8 *name, T_resource *res)
 
     /* If we found it, we need to lock it in memory. */
     if (found != RESOURCE_BAD)
-        where = ResourceLock(found);
+        where = ResourceLock(found, RESOURCE_GENERIC);
 
     /* Record the resource we got the data from.  Needed for unlocking. */
     *res = found;
@@ -147,7 +147,7 @@ PictureLock(T_byte8 *name, T_resource *res)
  *
  *<!-----------------------------------------------------------------------*/
 T_byte8 *
-PictureLockData(T_byte8 *name, T_resource *res)
+PictureLockData(T_byte8 *name, T_resource *res, T_resourceFormat resourceFormat)
 {
     T_resource found;
     T_byte8 *where = NULL;
@@ -169,7 +169,7 @@ PictureLockData(T_byte8 *name, T_resource *res)
     DebugCheck(found != RESOURCE_BAD);
     /* If we found it, we need to lock it in memory. */
     if (found != RESOURCE_BAD)
-        where = ResourceLock(found);
+        where = ResourceLock(found, resourceFormat);
 
     /* Record the resource we got the data from.  Needed for unlocking. */
     *res = found;
@@ -372,7 +372,7 @@ PictureLockQuick(T_resource res)
 
     /* If we found it, we need to lock it in memory. */
     if (res != RESOURCE_BAD)
-        p_where = ResourceLock(res);
+        p_where = ResourceLock(res, RESOURCE_GENERIC);
 
     DebugEnd();
 
@@ -554,7 +554,7 @@ T_void PictureCheck(T_void *p_picture)
  *
  *<!-----------------------------------------------------------------------*/
 T_byte8 *
-PictureLockDataQuick(T_resource res)
+PictureLockDataQuick(T_resource res, T_resourceFormat resourceFormat)
 {
     T_byte8 *p_where;
 
@@ -563,7 +563,7 @@ PictureLockDataQuick(T_resource res)
 
     /* If we found it, we need to lock it in memory. */
     if (res != RESOURCE_BAD)
-        p_where = ResourceLock(res);
+        p_where = ResourceLock(res, resourceFormat);
 
     DebugEnd();
 

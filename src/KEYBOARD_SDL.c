@@ -1051,7 +1051,6 @@ KeyboardUpdate(E_Boolean updateBuffers)
     E_Boolean newValue;
 
     DebugRoutine("KeyboardUpdate");
-    DebugCheck(sizeof(G_sdlToScancode) == SDLK_LAST);
     time = TickerGet();
     //GetKeyboardState(keys) ;
     keys = SDL_GetKeyboardState(NULL);
@@ -1080,7 +1079,7 @@ KeyboardUpdate(E_Boolean updateBuffers)
             /* Find keys that have changed */
             if (changed)
             {
-//printf("scancode %d = %d\n", scanCode, newValue);
+/*printf("scancode %d = %d\n", scanCode, newValue);*/
                 G_keyTable[scanCode] = newValue;
                 /* Store the key in the scan key buffer */
                 G_scanKeyBuffer[G_scanKeyEnd] = scanCode | ((G_keyTable[scanCode]) ? 0 : 0x100);

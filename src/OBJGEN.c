@@ -12,6 +12,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <FILE.h>
 #include "EFX.H"
 #include "MAP.H"
 #include "MEMORY.H"
@@ -121,7 +122,7 @@ ObjectGeneratorLoad(T_word32 mapNumber)
     DebugCheck(G_loaded == FALSE);
 
     /* Form the name of the generator file. */
-    sprintf(filename, "L%ld.GEN", mapNumber);
+    sprintf(filename, ConcatenatePaths("levels", "L%ld.GEN"), mapNumber);
 
     /* Open up the file. */
     fp = fopen(filename, "r");

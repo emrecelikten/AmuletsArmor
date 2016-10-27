@@ -18,7 +18,6 @@
  *
  *<!-----------------------------------------------------------------------*/
 #include <IRESOURC.H>
-#include <stdlib.h>
 #include "MEMORY.H"
 #include "PICS.H"
 #include "TICKER.H"
@@ -437,7 +436,7 @@ ResourceFind(
  *
  *<!-----------------------------------------------------------------------*/
 T_void *
-ResourceLock(T_resource resource)
+ResourceLock(T_resource resource, T_resourceFormat resourceFormat)
 {
     T_resourceEntry *p_resource;
     T_file file;
@@ -461,35 +460,47 @@ ResourceLock(T_resource resource)
             DebugCheck(p_resource->lockCount != 0);
             break;
         case RESOURCE_ENTRY_TYPE_DISK:TickerPause();
-//printf("  readding off the resource file\n") ;
-            /* Resource is not loaded.  We will need to load it */
-            /* into memory. */
 
-            /* Start by allocating a spot for this resource. */
-            p_resource->p_data = MemAlloc(p_resource->size + sizeof(T_resourceEntry *));
-            DebugCheck(p_resource->p_data);
-
-            /* So we can have a backward reference to the resource handle */
-            /* when given the data, we will store a prefix pointer back */
-            /* to the reference handle.  However, we will return only a */
-            /* pointer to the actual data. */
-            *((T_resourceEntry **) (p_resource->p_data)) = p_resource;
-//printf("Reading in resource entry '%s'\n", p_resource->p_resourceName) ;
-#ifdef RESOURCE_OUTPUT
-            printf("!A %ld lock_%s\n", p_resource->size, p_resource->p_resourceName) ;
-#endif
-            /* skip past the entry reference. */
-            p_resource->p_data += sizeof(T_resourceEntry *);
-
-            /* Then get the file location of where the resource is */
-            /* stored. */
+            /* Get the file location of where the resource is stored. */
             file = G_resources[p_resource->resourceFile].fileHandle;
             DebugCheck(file != FILE_BAD);
 
-            FileSeek(file, p_resource->fileOffset);
+            /* We have to handle cases where the data has serialized pointers. Call relevant deserialization function */
+            switch (resourceFormat)
+            {
+                case RESOURCE_OBJECTTYPE:
+                    DeserializeObjectType(file, p_resource);
+                    break;
+                case RESOURCE_MAPANIMSTATES:
+                    printf("MAPANIMSTATES DETECTED!\n");
+                    break;
+                case RESOURCE_GENERIC:
+//printf("  reading off the resource file\n") ;
+                    /* Resource is not loaded.  We will need to load it into memory. */
 
-            /* Read it in. */
-            FileRead(file, p_resource->p_data, p_resource->size);
+                    /* Start by allocating a spot for this resource. */
+                    p_resource->p_data = MemAlloc(p_resource->size + sizeof(T_resourceEntry *));
+                    DebugCheck(p_resource->p_data);
+
+                    /* So we can have a backward reference to the resource handle */
+                    /* when given the data, we will store a prefix pointer back */
+                    /* to the reference handle.  However, we will return only a */
+                    /* pointer to the actual data. */
+                    *((T_resourceEntry **) (p_resource->p_data)) = p_resource;
+//printf("Reading in resource entry '%s'\n", p_resource->p_resourceName) ;
+#ifdef RESOURCE_OUTPUT
+                    printf("!A %ld lock_%s\n", p_resource->size, p_resource->p_resourceName) ;
+#endif
+                    /* skip past the entry reference. */
+                    p_resource->p_data += sizeof(T_resourceEntry *);
+
+                    FileSeek(file, p_resource->fileOffset);
+
+                    /* Read it in. */
+                    FileRead(file, p_resource->p_data, p_resource->size);
+                    break;
+            }
+
             /* Viola! Done.  Mark it now as being in memory. */
             p_resource->resourceType &= (~RESOURCE_ENTRY_TYPE_MASK_WHERE);
             p_resource->resourceType |= RESOURCE_ENTRY_TYPE_MEMORY;
@@ -892,98 +903,108 @@ IDirLock(T_resource dir)
  *  @param p_entry -- Starting entry in resource
  *
  *<!-----------------------------------------------------------------------*/
-T_void ResourceDumpDir(FILE *fp, T_resourceEntry *p_entry)
+T_void
+ResourceDumpDir(FILE *fp, T_resourceEntry *p_entry)
 {
-    T_resourceEntry *p_index ;
-    T_word16 i ;
-    T_resourceDirInfo *p_dir = NULL ;
-    T_word16 num ;
+    T_resourceEntry *p_index;
+    T_word16 i;
+    T_resourceDirInfo *p_dir = NULL;
+    T_word16 num;
 
-    p_dir = (T_resourceDirInfo *)p_entry->p_data ;
-    p_index = p_dir->p_entries ;
-    num = p_dir->numberEntries ;
+    p_dir = (T_resourceDirInfo *) p_entry->p_data;
+    p_index = p_dir->p_entries;
+    num = p_dir->numberEntries;
 
-    fprintf(fp, "\n\nResource dump for %s:\n------------\n", p_entry->p_resourceName) ;
+    fprintf(fp, "\n\nResource dump for %s:\n------------\n", p_entry->p_resourceName);
     fprintf(fp, "id:  Name:          Offset:  Size:    Lck T Pointer: File:\n");
-    fprintf(fp, "---- -------------- -------- -------- --- - -------- -----\n") ;
-    for (i=0; i<num; i++)  {
+    fprintf(fp, "---- -------------- -------- -------- --- - -------- -----\n");
+    for (i = 0; i < num; i++)
+    {
         fprintf(fp, "%-4s %-14s %8d %8d %3d %c %p %d\n",
-            p_index[i].resID,
-            p_index[i].p_resourceName,
-            p_index[i].fileOffset,
-            p_index[i].size,
-            p_index[i].lockCount,
-            ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                     == RESOURCE_ENTRY_TYPE_MEMORY)?'M':
+                p_index[i].resID,
+                p_index[i].p_resourceName,
+                p_index[i].fileOffset,
+                p_index[i].size,
+                p_index[i].lockCount,
+                ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
+                    == RESOURCE_ENTRY_TYPE_MEMORY) ? 'M' :
                 (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                         ==RESOURCE_ENTRY_TYPE_DISK)?'D':
-                    (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                          ==RESOURCE_ENTRY_TYPE_DISCARDED)?'d':'?')),
-            p_index[i].p_data,
-            p_index[i].resourceFile) ;
+                    == RESOURCE_ENTRY_TYPE_DISK) ? 'D' :
+                 (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
+                     == RESOURCE_ENTRY_TYPE_DISCARDED) ? 'd' : '?')),
+                p_index[i].p_data,
+                p_index[i].resourceFile);
     }
 
     /* Print out each subdir for each directory loaded in memory */
-    for (i=0; i<num; i++)  {
+    for (i = 0; i < num; i++)
+    {
         if ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE) ==
-                RESOURCE_ENTRY_TYPE_MEMORY)  {
+            RESOURCE_ENTRY_TYPE_MEMORY)
+        {
             if ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_TYPE) ==
-                RESOURCE_ENTRY_TYPE_DIRECTORY)  {
-                ResourceDumpDir(fp, &p_index[i]) ;
+                RESOURCE_ENTRY_TYPE_DIRECTORY)
+            {
+                ResourceDumpDir(fp, &p_index[i]);
             }
         }
     }
 }
 
-T_void ResourceDumpIndex(T_resourceFile resourceFile)
+T_void
+ResourceDumpIndex(T_resourceFile resourceFile)
 {
-    T_resourceEntry *p_index ;
-    T_word16 i ;
-    FILE *fp ;
+    T_resourceEntry *p_index;
+    T_word16 i;
+    FILE *fp;
 
-    DebugRoutine("ResourceDumpIndex") ;
-    DebugCheck(resourceFile < MAX_RESOURCE_FILES) ;
+    DebugRoutine("ResourceDumpIndex");
+    DebugCheck(resourceFile < MAX_RESOURCE_FILES);
 
-    p_index = G_resources[resourceFile].p_entries ;
-    DebugCheck(p_index != NULL) ;
+    p_index = G_resources[resourceFile].p_entries;
+    DebugCheck(p_index != NULL);
 
-    fp = fopen("resourdb.txt", "w") ;
-    DebugCheck(fp != NULL) ;
+    fp = fopen("resourdb.txt", "w");
+    DebugCheck(fp != NULL);
 
-    fprintf(fp, "Resource dump:\n------------\n") ;
+    fprintf(fp, "Resource dump:\n------------\n");
     fprintf(fp, "id:  Name:          Offset:  Size:    Lck T Pointer: File:\n");
-    fprintf(fp, "---- -------------- -------- -------- --- - -------- -----\n") ;
-    for (i=0; i<G_resources[resourceFile].numberEntries; i++)  {
+    fprintf(fp, "---- -------------- -------- -------- --- - -------- -----\n");
+    for (i = 0; i < G_resources[resourceFile].numberEntries; i++)
+    {
         fprintf(fp, "%-4s %-14s %8d %8d %3d %c %p %d\n",
-            p_index[i].resID,
-            p_index[i].p_resourceName,
-            p_index[i].fileOffset,
-            p_index[i].size,
-            p_index[i].lockCount,
-            ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                     == RESOURCE_ENTRY_TYPE_MEMORY)?'M':
+                p_index[i].resID,
+                p_index[i].p_resourceName,
+                p_index[i].fileOffset,
+                p_index[i].size,
+                p_index[i].lockCount,
+                ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
+                    == RESOURCE_ENTRY_TYPE_MEMORY) ? 'M' :
                 (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                         ==RESOURCE_ENTRY_TYPE_DISK)?'D':
-                    (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
-                          ==RESOURCE_ENTRY_TYPE_DISCARDED)?'d':'?')),
-            p_index[i].p_data,
-            p_index[i].resourceFile) ;
+                    == RESOURCE_ENTRY_TYPE_DISK) ? 'D' :
+                 (((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE)
+                     == RESOURCE_ENTRY_TYPE_DISCARDED) ? 'd' : '?')),
+                p_index[i].p_data,
+                p_index[i].resourceFile);
     }
 
     /* Print out each subdir for each directory loaded in memory */
-    for (i=0; i<G_resources[resourceFile].numberEntries; i++)  {
+    for (i = 0; i < G_resources[resourceFile].numberEntries; i++)
+    {
         if ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_WHERE) ==
-                RESOURCE_ENTRY_TYPE_MEMORY)  {
+            RESOURCE_ENTRY_TYPE_MEMORY)
+        {
             if ((p_index[i].resourceType & RESOURCE_ENTRY_TYPE_MASK_TYPE) ==
-                RESOURCE_ENTRY_TYPE_DIRECTORY)  {
-                ResourceDumpDir(fp, &p_index[i]) ;
+                RESOURCE_ENTRY_TYPE_DIRECTORY)
+            {
+                ResourceDumpDir(fp, &p_index[i]);
             }
         }
     }
 
-    fclose(fp) ;
+    fclose(fp);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #endif
@@ -1426,40 +1447,44 @@ IFindOpenResource(T_byte8 *p_filename)
  *  @param res -- Resource to print
  *
  *<!-----------------------------------------------------------------------*/
-T_void ResourcePrint(FILE *fp, T_resource res)
+T_void
+ResourcePrint(FILE *fp, T_resource res)
 {
-    T_resourceEntry *p_resource ;
+    T_resourceEntry *p_resource;
 
-    DebugRoutine("ResourcePrint") ;
+    DebugRoutine("ResourcePrint");
 
 //    DebugCheck(res != RESOURCE_BAD) ;
-    p_resource = res ;
-    if (strcmp(p_resource->resID, "ReS") == 0)  {
+    p_resource = res;
+    if (strcmp(p_resource->resID, "ReS") == 0)
+    {
 //    DebugCheck(strcmp(p_resource->resID, "ReS")==0) ;
 //    DebugCheck(p_resource->resourceType < RESOURCE_ENTRY_TYPE_UNKNOWN) ;
 
-        fprintf(fp, "Resource: %p\n", p_resource) ;
-        fprintf(fp, "  id    : %4.4s\n", p_resource->resID) ;
-        fprintf(fp, "  name  : %14.14s\n", p_resource->p_resourceName) ;
-        fprintf(fp, "  offset: %ld\n", p_resource->fileOffset) ;
-        fprintf(fp, "  size  : %ld\n", p_resource->size) ;
-        fprintf(fp, "  lockCo: %d\n", p_resource->lockCount) ;
-        fprintf(fp, "  resTyp: 0x%02X\n", p_resource->resourceType) ;
-        fprintf(fp, "  p_data: %p\n", p_resource->p_data) ;
-        fprintf(fp, "  Rfile : %d\n", p_resource->resourceFile) ;
-        fprintf(fp, "  ownDir: %p\n", p_resource->ownerDir) ;
-    } else {
-        fprintf(fp, "RESOURCE %p IS BAD!!!\n", p_resource) ;
-        fprintf(fp, "Tag: %-4s (%02X %02X %02X %02X)\n",
-            p_resource->resID,
-            p_resource->resID[0],
-            p_resource->resID[1],
-            p_resource->resID[2],
-            p_resource->resID[3]) ;
+        fprintf(fp, "Resource: %p\n", p_resource);
+        fprintf(fp, "  id    : %4.4s\n", p_resource->resID);
+        fprintf(fp, "  name  : %14.14s\n", p_resource->p_resourceName);
+        fprintf(fp, "  offset: %ld\n", p_resource->fileOffset);
+        fprintf(fp, "  size  : %ld\n", p_resource->size);
+        fprintf(fp, "  lockCo: %d\n", p_resource->lockCount);
+        fprintf(fp, "  resTyp: 0x%02X\n", p_resource->resourceType);
+        fprintf(fp, "  p_data: %p\n", p_resource->p_data);
+        fprintf(fp, "  Rfile : %d\n", p_resource->resourceFile);
+        fprintf(fp, "  ownDir: %p\n", p_resource->ownerDir);
     }
-    fflush(fp) ;
+    else
+    {
+        fprintf(fp, "RESOURCE %p IS BAD!!!\n", p_resource);
+        fprintf(fp, "Tag: %-4s (%02X %02X %02X %02X)\n",
+                p_resource->resID,
+                p_resource->resID[0],
+                p_resource->resID[1],
+                p_resource->resID[2],
+                p_resource->resID[3]);
+    }
+    fflush(fp);
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 /*-------------------------------------------------------------------------*
@@ -1472,14 +1497,15 @@ T_void ResourcePrint(FILE *fp, T_resource res)
  *  @param p_resData -- Pointer to res data (not res handle)
  *
  *<!-----------------------------------------------------------------------*/
-T_void ResourceCheckByPtr(T_byte8 *p_resData)
+T_void
+ResourceCheckByPtr(T_byte8 *p_resData)
 {
-    DebugRoutine("ResourceCheckByPtr") ;
-    DebugCheck(p_resData != NULL) ;
+    DebugRoutine("ResourceCheckByPtr");
+    DebugCheck(p_resData != NULL);
 
-    MemCheckData(p_resData - sizeof(T_resourceEntry *)) ;
+    MemCheckData(p_resData - sizeof(T_resourceEntry *));
 
-    DebugEnd() ;
+    DebugEnd();
 }
 
 #endif
@@ -1610,9 +1636,10 @@ IDiscardEntries(T_resourceEntry *p_entry, T_word16 number)
                 /* has a lock count of zero and has a null pointer. */
 #ifndef NDEBUG
 #ifndef WAS_NDEBUG
-                if (p_entry->lockCount != 0)  {
-                    puts("Following resource is still locked!") ;
-                    ResourcePrint(stdout, p_entry) ;
+                if (p_entry->lockCount != 0)
+                {
+                    puts("Following resource is still locked!");
+                    ResourcePrint(stdout, p_entry);
                 }
 #endif
 #endif

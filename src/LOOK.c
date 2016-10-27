@@ -63,7 +63,7 @@ LookUpdateCreatureInfo(T_3dObject *p_obj)
         if (PictureExist(stmp))
         {
             /* lock in data structure 'text file' */
-            dataIn = (T_byte8 *) PictureLockData(stmp, &res);
+            dataIn = (T_byte8 *) PictureLockData(stmp, &res, RESOURCE_GENERIC);
             size = ResourceGetSize(res);
 
             /* scan data 'text file' and place into temporary field for */

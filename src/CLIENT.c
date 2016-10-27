@@ -218,7 +218,7 @@ OutputItemDesc(void)
         sprintf((char *) name, "OBJDESC2/DES%05d.TXT", i);
         if (PictureExist(name))
         {
-            p = PictureLockData(name, &res);
+            p = PictureLockData(name, &res, RESOURCE_GENERIC);
             len = ResourceGetSize(res);
             memcpy(string, p, len);
             string[len] = '\0';
@@ -236,7 +236,7 @@ OutputItemDesc(void)
             sprintf((char *) name, "OBJDESC/DES%05d.TXT", i);
             if (PictureExist(name))
             {
-                p = PictureLockData(name, &res);
+                p = PictureLockData(name, &res, RESOURCE_GENERIC);
                 len = ResourceGetSize(res);
                 memcpy(string, p, len);
                 string[len] = '\0';
@@ -276,7 +276,7 @@ OutputItems(void)
         if (PictureExist(name))
         {
             fprintf(fp, "|-\n| %d\n", i);
-            p = PictureLockData(name, &res);
+            p = PictureLockData(name, &res, RESOURCE_GENERIC);
             len = ResourceGetSize(res);
             memcpy(string, p, len);
             string[len] = '\0';
@@ -294,7 +294,7 @@ OutputItems(void)
             sprintf((char *) name, "OBJDESC/DES%05d.TXT", i);
             if (PictureExist(name))
             {
-                p = PictureLockData(name, &res);
+                p = PictureLockData(name, &res, RESOURCE_GENERIC);
                 len = ResourceGetSize(res);
                 memcpy(string, p, len);
                 string[len] = '\0';
@@ -758,7 +758,7 @@ IDrawTargetItem(T_word16 x, T_word16 y, T_word16 drawX, T_word16 drawY)
             }
             if (PictureExist(stmp))
             {
-                desc1 = PictureLockData(stmp, &res);
+                desc1 = PictureLockData(stmp, &res, RESOURCE_GENERIC);
                 size = ResourceGetSize(res);
                 desc2 = (T_byte8 *) MemAlloc(size + 64);
                 memcpy(desc2, desc1, size);

@@ -1094,7 +1094,7 @@ InventoryTakeObject(E_inventoryType which, T_3dObject *item)
             p_inv->numitems = 1;
 
             /* get description text */
-            desc1 = PictureLockData(stmp, &res);
+            desc1 = PictureLockData(stmp, &res, RESOURCE_GENERIC);
             p_inv->itemdesc = *((T_equipItemDescription *) desc1);
 
             if (which == INVENTORY_PLAYER)
@@ -2355,7 +2355,7 @@ InventoryDrawElement(T_doubleLinkListElement element)
             /* open the font for drawing number of objects */
             res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
             font = ResourceFind(res, "FontTiny");
-            p_font = ResourceLock(font);
+            p_font = ResourceLock(font, RESOURCE_GENERIC);
             GrSetBitFont(p_font);
 
             sprintf (stmp, "%d", p_inv->numitems);
@@ -3237,7 +3237,7 @@ InventoryIsUseableByClass(T_inventoryItemStruct *p_inv)
     DebugRoutine ("InventoryIsUseableByClass");
 
     DebugCheck (p_inv != NULL);
-    ourclass = 1 << StatsGetPlayerClassType();
+    ourclass = (T_word16) 1 << StatsGetPlayerClassType();
     if (ourclass & p_inv->itemdesc.useable)
     {
         retvalue = TRUE;

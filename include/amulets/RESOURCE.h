@@ -15,6 +15,8 @@ typedef T_word16 T_resourceFile;
 
 typedef T_void *T_resource;
 
+typedef enum {RESOURCE_GENERIC, RESOURCE_OBJECTTYPE, RESOURCE_MAPANIMSTATES} T_resourceFormat;
+
 T_resourceFile
 ResourceOpen(T_byte8 *p_filename);
 
@@ -28,7 +30,7 @@ T_void
 ResourceUnfind(T_resource res);
 
 T_void *
-ResourceLock(T_resource resource);
+ResourceLock(T_resource resource, T_resourceFormat resourceFormat);
 
 T_void
 ResourceUnlock(T_resource resource);

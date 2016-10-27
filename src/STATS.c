@@ -16,11 +16,12 @@
 #elif defined(TARGET_UNIX)
 #include <sys/stat.h>
 #endif
-
+#include <stdlib.h>
 #include "BANNER.H"
 #include "CLIENT.H"
 #include "COLOR.H"
 #include "COMWIN.H"
+#include "FILE.h"
 #include "MESSAGE.H"
 #include "NOTES.H"
 #include "OBJECT.H"
@@ -1667,7 +1668,7 @@ StatsUpdateCreateCharacterUI(T_void)
     TxtboxID = FormGetObjID(500);
 
     sprintf (stmp, "UI/CREATEC/DESC%2.2d.TXT", StatsGetPlayerClassType());
-    description = PictureLockData(stmp, &res);
+    description = PictureLockData(stmp, &res, RESOURCE_GENERIC);
     TxtboxSetNData(TxtboxID, description, ResourceGetSize(res));
     PictureUnlockAndUnfind(res);
 
@@ -3663,7 +3664,7 @@ StatsLoadCharacter(T_byte8 selected)
     if (G_savedCharacters[selected].status == CHARACTER_STATUS_OK)
     {
         /* right now, get the blocks of data off of client drive */
-        sprintf (filename, "S%07d\\CHDATA%02d", G_serverID, selected);
+        sprintf (filename, ConcatenatePaths("S%07d","CHDATA%02d"), G_serverID, selected);
 //printf("Loading char '%s'\n", filename) ;
         fin = fopen(filename, "rb");
         if (fin != NULL)
@@ -3735,7 +3736,7 @@ StatsSaveCharacter(T_byte8 selected)
         DebugCheck (selected < MAX_CHARACTERS_PER_SERVER);
 
         /* go ahead and write the stats structure + equip to disk for now */
-        sprintf (filename, "S%07d//CHDATA%02d", G_serverID, selected);
+        sprintf (filename, ConcatenatePaths("S%07d", "CHDATA%02d"), G_serverID, selected);
         fout = fopen(filename, "wb");
         if (fout != NULL)
         {

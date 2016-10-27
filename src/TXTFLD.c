@@ -81,7 +81,7 @@ TxtfldCreate(T_word16 x1,
                 DebugCheck (fontname != NULL);
                 /* open the selected font */
                 p_Txtfld->font = ResourceFind(res, fontname);
-                p_font = ResourceLock(p_Txtfld->font);
+                p_font = ResourceLock(p_Txtfld->font, RESOURCE_GENERIC);
                 GrSetBitFont(p_font);
                 /* determine the height of the font */
                 fheight = p_font->height;
@@ -418,7 +418,7 @@ TxtfldTextDrawCallBack(T_graphicID graphicID, T_word16 index)
     p_graphic = (T_graphicStruct *) graphicID;
     p_Txtfld = (T_TxtfldStruct *) G_TxtfldArray[index];
 
-    p_font = ResourceLock(p_Txtfld->font);
+    p_font = ResourceLock(p_Txtfld->font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     GrDrawRectangle(p_graphic->locx - 1,

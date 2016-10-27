@@ -189,7 +189,7 @@ OverlaySetAnimation(T_word16 animationNumber)
 
     IUnlockAnimation();
     G_animation = (T_overlayAnimation *)
-        PictureLockData(filename, &G_animationResource);
+        PictureLockData(filename, &G_animationResource, RESOURCE_GENERIC);
     ILockAnimation(prefix);
     G_animationNumber = animationNumber;
 
@@ -381,9 +381,7 @@ ILockAnimation(T_byte8 *prefix)
                 G_animation->imageNames[i]);
 //printf("%d) Image %s\n", i, filename) ;
             G_images[i] =
-                PictureLockData(
-                    filename,
-                    &G_imageResources[i]);
+                PictureLockData(filename, &G_imageResources[i], RESOURCE_GENERIC);
 //printf("    %p %p\n", G_images[i], G_imageResources[i]) ;
         }
     }

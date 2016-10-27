@@ -15,6 +15,7 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include <platform/deserialization.h>
 #include "AREASND.H"
 #include "MEMORY.H"
 #include "OBJECT.H"
@@ -56,123 +57,6 @@ typedef enum T_word16 {
     OBJECT_ANIMATE_UNKNOWN
 } E_objectAnimateType ;
 */
-
-/** !!! Apparently, GNU CC does not allow you to specify the storage type **/
-/** for an enum!  It doesn't issue a warning, it just makes all enums into **/
-/** ints, which in our world are T_word32's.  Thus the structure no longer **/
-/** works with the same res file.  For now, I just redefined things as **/
-/** follows, to get it to work. **/
-
-typedef T_word16 E_objectAnimateType;
-
-#define OBJECT_ANIMATE_ORDERED 0
-#define OBJECT_ANIMATE_BOUNCE  1
-#define OBJECT_ANIMATE_RANDOM  2
-#define OBJECT_ANIMATE_UNKNOWN 3
-
-/*-------------------------------------------------------------------------*
- * Typedef:  T_objectStance
- *-------------------------------------------------------------------------*/
-/**
- *  An animated object can be broken down into the number of stances
- *  that makes up the animation.  A stance is in itself an animation
- *  state (e.g., walking, talking, flying, etc.) or transition
- *  (e.g. landing, getting hit, taking off, etc.).
- *
- *  @param numFrames -- Number of frames that make up this stance.
- *  @param speed -- Interval in between animation frames.
- *      A speed of 0 means not to animate at all.  This
- *      is useful for objects with only one frame.
- *  @param type -- What type of animation
- *      (See E_objectAnimateType)
- *  @param nextStance -- Stance to go to after completion of animation.
- *  @param offsetFrameList -- Offset in bytes from the beginning of
- *      T_objectType structure that this stance is in to
- *      the list of frames that make up this stance.
- *
- *<!-----------------------------------------------------------------------*/
-typedef struct
-{
-    T_word16 numFrames;
-    T_word16 speed;
-    E_objectAnimateType type;
-    T_word16 nextStance;
-    T_word16 offsetFrameList;
-} PACK T_objectStance;
-
-/*-------------------------------------------------------------------------*
- * Typedef:  T_objectFrame
- *-------------------------------------------------------------------------*/
-/**
- *  An object Frame is a part of a stance animation at one moment.
- *  A frame can have either 1 or 8 pictures for each angle.
- *
- *  @param numAngles -- how many views does this frame have.   Only
- *      1 or 8 is allowed.
- *  @param offsetPicList -- Offset in bytes from the beginning of
- *      T_objectType structure that this is in to the
- *      list of pics (T_objectPic) that make up this
- *      frame.
- *
- *<!-----------------------------------------------------------------------*/
-typedef struct
-{
-    T_byte8 numAngles;
-    T_word16 offsetPicList;
-    T_word16 soundNum; /* 0 = no sound */
-    T_word16 soundRadius;
-    T_word16 objectAttributes;
-} PACK T_objectFrame;
-
-/*-------------------------------------------------------------------------*
- * Typedef:  T_objectPic
- *-------------------------------------------------------------------------*/
-/**
- *  Picture information block for one angle of a frame.
- *
- *  @param number -- Index number of picture to use in resource file
- *      for this object.
- *  @param resource -- Resource for picture when locked in memory.
- *      NULL when not locked in memory.
- *  @param p_pic -- Pointer to picture when locked in memory.
- *      NULL when not locked in memory.
- *
- *<!-----------------------------------------------------------------------*/
-typedef struct
-{
-    T_sword16 number;
-    T_resource resource;
-    T_void *p_pic;
-} PACK T_objectPic;
-
-/*-------------------------------------------------------------------------*
- * Typedef:  T_objectType
- *-------------------------------------------------------------------------*/
-/**
- *  T_objectType is the description structure for an object used in the
- *  game.  It describes everything that needs to be know about this object
- *  and how it interacts with the world.   This is basically the class
- *  description for the object, and instances are made from this type.
- *
- *  @param numStances -- Number of stances that make up this object
- *  @param lockCount -- How many times this type of object has been
- *      locked into memory.  This feature is used to try
- *      to keep as much art in memory as possible.
- *
- *<!-----------------------------------------------------------------------*/
-typedef struct
-{
-    T_word16 numStances;
-    T_word32 lockCount;
-    T_word16 radius;
-    T_word16 attributes;
-    T_word16 weight;
-    T_word16 value;
-    T_word32 script;
-    T_word16 health;
-    T_word16 objMoveAttr;
-    T_objectStance stances[1];
-} PACK T_objectType;
 
 /*-------------------------------------------------------------------------*
  * Typedef:  T_objTypeInstanceStruct
@@ -273,7 +157,7 @@ ObjTypeCreate(T_word16 objTypeNum, T_3dObject *p_obj)
 
         /* Note that PictureLockData does a PictureFind */
         p_type = p_objType->p_objectType =
-            (T_objectType *) PictureLockData(resName, &p_objType->resource);
+            (T_objectType *) PictureLockData(resName, &p_objType->resource, RESOURCE_OBJECTTYPE);
         DebugCheck(p_objType->resource != RESOURCE_BAD);
 
         /* Does this instance/type need to be a piece-wise object */
@@ -444,12 +328,12 @@ ObjTypeDestroy(T_objTypeInstance objTypeInst)
         /* This is a copy in memory.  Just free it from memory. */
         MemFree(p_objType->p_objectType);
 #ifndef NDEBUG
-        memset(p_objType->p_objectType, 0xCC, sizeof(T_objectType)) ;
+        memset(p_objType->p_objectType, 0xCC, sizeof(T_objectType));
 #endif
     }
 
 #ifndef NDEBUG
-    memset(p_objType, 0x11, sizeof(T_objTypeInstanceStruct)) ;
+    memset(p_objType, 0x11, sizeof(T_objTypeInstanceStruct));
 #endif
     /* Now we can free the instance block. */
     MemFree(p_objType);
@@ -516,11 +400,12 @@ ObjTypeAnimate(
 
         /* Check to see if the current frame is not above the limit */
 #ifndef NDEBUG
-        if (p_objType->frameNumber >= p_stance->numFrames)  {
-         printf("frame#: %d, max: %d\n",
-             p_objType->frameNumber,
-             p_stance->numFrames) ;
-         ObjTypePrint(stdout, p_objType) ;
+        if (p_objType->frameNumber >= p_stance->numFrames)
+        {
+            printf("frame#: %d, max: %d\n",
+                   p_objType->frameNumber,
+                   p_stance->numFrames);
+            ObjTypePrint(stdout, p_objType);
         }
 #endif
         DebugCheck(p_objType->frameNumber < p_stance->numFrames);
@@ -616,9 +501,10 @@ ObjTypeAnimate(
             default:
                 /* Better check for illegal types. */
 #ifndef NDEBUG
-                if (p_stance->type >= OBJECT_ANIMATE_UNKNOWN)  {
-                    printf("Bad animation stance %d (%p)\n", p_stance->type, p_stance) ;
-                    ObjTypePrint(stdout, objTypeInst) ;
+                if (p_stance->type >= OBJECT_ANIMATE_UNKNOWN)
+                {
+                    printf("Bad animation stance %d (%p)\n", p_stance->type, p_stance);
+                    ObjTypePrint(stdout, objTypeInst);
                 }
 #endif
                 DebugCheck(p_stance->type < OBJECT_ANIMATE_UNKNOWN);
@@ -634,9 +520,10 @@ ObjTypeAnimate(
 
         /* Make sure we have a legal frame number. */
 #ifndef NDEBUG
-        if (p_objType->frameNumber >= p_stance->numFrames)  {
-            printf("Bad animation frame %d\n", p_objType->frameNumber) ;
-            ObjTypePrint(stdout, objTypeInst) ;
+        if (p_objType->frameNumber >= p_stance->numFrames)
+        {
+            printf("Bad animation frame %d\n", p_objType->frameNumber);
+            ObjTypePrint(stdout, objTypeInst);
         }
 #endif
         DebugCheck(p_objType->frameNumber < p_stance->numFrames);
@@ -841,9 +728,10 @@ ObjTypeGetPicture(
 
     /* Make sure we have a legal stance number. */
 #ifndef NDEBUG
-    if (p_objType->stanceNumber >= p_type->numStances)  {
-        printf("Bad animation stance %d\n", p_objType->stanceNumber) ;
-        ObjTypePrint(stdout, objTypeInst) ;
+    if (p_objType->stanceNumber >= p_type->numStances)
+    {
+        printf("Bad animation stance %d\n", p_objType->stanceNumber);
+        ObjTypePrint(stdout, objTypeInst);
     }
 #endif
     DebugCheck(p_objType->stanceNumber < p_type->numStances);
@@ -853,9 +741,10 @@ ObjTypeGetPicture(
 
     /* Make sure we have a legal frame number. */
 #ifndef NDEBUG
-    if (p_objType->frameNumber >= p_stance->numFrames)  {
-        printf("Bad animation frame %d\n", p_objType->frameNumber) ;
-        ObjTypePrint(stdout, objTypeInst) ;
+    if (p_objType->frameNumber >= p_stance->numFrames)
+    {
+        printf("Bad animation frame %d\n", p_objType->frameNumber);
+        ObjTypePrint(stdout, objTypeInst);
     }
 #endif
     DebugCheck(p_objType->frameNumber < p_stance->numFrames);
@@ -884,11 +773,12 @@ ObjTypeGetPicture(
     }
 
 #ifndef NDEBUG
-    if (angle >= p_frame->numAngles)  {
-        printf("angle: %04X  numAng: %d  ", oldAngle, p_frame->numAngles) ;
-        printf("stanceNum: %d  frameNum: %d\n", p_objType->stanceNumber, p_objType->frameNumber) ;
-        printf("trying angle %d\n", angle) ;
-        ObjTypePrint(stdout, objTypeInst) ;
+    if (angle >= p_frame->numAngles)
+    {
+        printf("angle: %04X  numAng: %d  ", oldAngle, p_frame->numAngles);
+        printf("stanceNum: %d  frameNum: %d\n", p_objType->stanceNumber, p_objType->frameNumber);
+        printf("trying angle %d\n", angle);
+        ObjTypePrint(stdout, objTypeInst);
     }
 #endif
     DebugCheck(angle < p_frame->numAngles);
@@ -914,7 +804,7 @@ ObjTypeGetPicture(
 
 #ifndef NDEBUG
     if (p_picData == NULL)
-        ObjTypePrint(stdout, objTypeInst) ;
+        ObjTypePrint(stdout, objTypeInst);
 #endif
     DebugCheck(p_picData != NULL);
     DebugEnd();
@@ -1435,92 +1325,96 @@ ObjTypeGetMoveFlags(T_objTypeInstance objTypeInst)
  *  @param objTypeInst -- instance to dispaly
  *
  *<!-----------------------------------------------------------------------*/
-T_void ObjTypePrint(FILE *fp, T_objTypeInstance objTypeInst)
+T_void
+ObjTypePrint(FILE *fp, T_objTypeInstance objTypeInst)
 {
-    T_objTypeInstanceStruct *p_objType ;
-    T_objectType *p_type ;
-    T_objectStance *p_stance ;
-    T_objectFrame *p_frame ;
-    T_objectPic *p_pic ;
-    T_word16 frameNum ;
-    T_word16 stanceNum ;
-    T_word16 picNum ;
+    T_objTypeInstanceStruct *p_objType;
+    T_objectType *p_type;
+    T_objectStance *p_stance;
+    T_objectFrame *p_frame;
+    T_objectPic *p_pic;
+    T_word16 frameNum;
+    T_word16 stanceNum;
+    T_word16 picNum;
 
     DebugRoutine("ObjTypePrint");
 
     /* Get the correct type of pointer. */
-    p_objType = (T_objTypeInstanceStruct *)objTypeInst ;
+    p_objType = (T_objTypeInstanceStruct *) objTypeInst;
 
     /* Get the pointer to the type. */
-    p_type = p_objType->p_objectType ;
+    p_type = p_objType->p_objectType;
 
 //fprintf(fp, ">>\n") ;
 //fwrite(p_type, 1000, 1, fp) ;
 //fprintf(fp, "<<\n") ;
-    fprintf(fp, "ObjTypeInst: %p\n", objTypeInst) ;
-    fprintf(fp, "  nextAnimationTime: %d\n", p_objType->nextAnimationTime) ;
-    fprintf(fp, "  objTypeNum:        %d\n", p_objType->objTypeNum) ;
-    fprintf(fp, "  resource:          %p\n", p_objType->resource) ;
-    fprintf(fp, "  stanceNumber:      %d\n", p_objType->stanceNumber) ;
-    fprintf(fp, "  frameNumber:       %d\n", p_objType->frameNumber) ;
-    fprintf(fp, "  stateData:         %d\n", p_objType->stateData) ;
+    fprintf(fp, "ObjTypeInst: %p\n", objTypeInst);
+    fprintf(fp, "  nextAnimationTime: %d\n", p_objType->nextAnimationTime);
+    fprintf(fp, "  objTypeNum:        %d\n", p_objType->objTypeNum);
+    fprintf(fp, "  resource:          %p\n", p_objType->resource);
+    fprintf(fp, "  stanceNumber:      %d\n", p_objType->stanceNumber);
+    fprintf(fp, "  frameNumber:       %d\n", p_objType->frameNumber);
+    fprintf(fp, "  stateData:         %d\n", p_objType->stateData);
 
-    fprintf(fp, "  p_objectType: %p\n", p_type) ;
-    fprintf(fp, "    numStances: %d\n", p_type->numStances) ;
-    fprintf(fp, "    lockCount:  %d\n", p_type->lockCount) ;
-    fprintf(fp, "    radius:     %d\n", p_type->radius) ;
-    fprintf(fp, "    attributes: %d\n", p_type->attributes) ;
-    fprintf(fp, "    weight:     %d\n", p_type->weight) ;
-    fprintf(fp, "    value:      %d\n", p_type->value) ;
-    fprintf(fp, "    script:     %ld\n", p_type->script) ;
-    fprintf(fp, "    health:     %d\n", p_type->health) ;
-    fprintf(fp, "    objMoveAttr:%d\n\n", p_type->objMoveAttr) ;
+    fprintf(fp, "  p_objectType: %p\n", p_type);
+    fprintf(fp, "    numStances: %d\n", p_type->numStances);
+    fprintf(fp, "    lockCount:  %d\n", p_type->lockCount);
+    fprintf(fp, "    radius:     %d\n", p_type->radius);
+    fprintf(fp, "    attributes: %d\n", p_type->attributes);
+    fprintf(fp, "    weight:     %d\n", p_type->weight);
+    fprintf(fp, "    value:      %d\n", p_type->value);
+    fprintf(fp, "    script:     %ld\n", p_type->script);
+    fprintf(fp, "    health:     %d\n", p_type->health);
+    fprintf(fp, "    objMoveAttr:%d\n\n", p_type->objMoveAttr);
 
     /* Go through each stance in the object type. */
     for (stanceNum = 0, p_stance = p_type->stances;
          stanceNum < p_type->numStances;
-         stanceNum++, p_stance++)  {
-        fprintf(fp, "      stance %d\n", stanceNum) ;
-        fprintf(fp, "        speed:   %d\n", p_stance->speed) ;
-        fprintf(fp, "        type:    %d\n", p_stance->type) ;
-        fprintf(fp, "        nextStan:%d\n", p_stance->nextStance) ;
-        fprintf(fp, "        offsetFr:%d\n", p_stance->offsetFrameList) ;
+         stanceNum++, p_stance++)
+    {
+        fprintf(fp, "      stance %d\n", stanceNum);
+        fprintf(fp, "        speed:   %d\n", p_stance->speed);
+        fprintf(fp, "        type:    %d\n", p_stance->type);
+        fprintf(fp, "        nextStan:%d\n", p_stance->nextStance);
+        fprintf(fp, "        offsetFr:%d\n", p_stance->offsetFrameList);
 
         /* Find the appropriate frame list for this stance. */
         p_frame = (T_objectFrame *)
-                      (&(((T_byte8 *)p_type)[p_stance->offsetFrameList])) ;
+            (&(((T_byte8 *) p_type)[p_stance->offsetFrameList]));
 
-        for (frameNum=0;
-             frameNum<p_stance->numFrames;
-             frameNum++, p_frame++)  {
-             fprintf(fp, "        frame %d\n", frameNum) ;
-             fprintf(fp, "          numAng:    %d\n", p_frame->numAngles) ;
-             fprintf(fp, "          offsetPic: %d\n", p_frame->offsetPicList) ;
-             fprintf(fp, "          soundNum:  %d\n", p_frame->soundNum) ;
-             fprintf(fp, "          soundRad:  %d\n", p_frame->soundRadius) ;
-             fprintf(fp, "          objAttr:   %d\n", p_frame->objectAttributes) ;
-             /* Find the appropriate picture list. */
-             p_pic = (T_objectPic *)
-                             (&(((T_byte8 *)p_type)[p_frame->offsetPicList])) ;
+        for (frameNum = 0;
+             frameNum < p_stance->numFrames;
+             frameNum++, p_frame++)
+        {
+            fprintf(fp, "        frame %d\n", frameNum);
+            fprintf(fp, "          numAng:    %d\n", p_frame->numAngles);
+            fprintf(fp, "          offsetPic: %d\n", p_frame->offsetPicList);
+            fprintf(fp, "          soundNum:  %d\n", p_frame->soundNum);
+            fprintf(fp, "          soundRad:  %d\n", p_frame->soundRadius);
+            fprintf(fp, "          objAttr:   %d\n", p_frame->objectAttributes);
+            /* Find the appropriate picture list. */
+            p_pic = (T_objectPic *)
+                (&(((T_byte8 *) p_type)[p_frame->offsetPicList]));
 
-             /* Only 1, 4, or 8 angles per frame. */
-             DebugCheck((p_frame->numAngles == 1) ||
-                        (p_frame->numAngles == 8) ||
-                        (p_frame->numAngles == 4)) ;
+            /* Only 1, 4, or 8 angles per frame. */
+            DebugCheck((p_frame->numAngles == 1) ||
+                (p_frame->numAngles == 8) ||
+                (p_frame->numAngles == 4));
 
-             for (picNum=0 ;
-                  picNum < p_frame->numAngles;
-                  picNum++, p_pic++)  {
-                 fprintf(fp, "          angle %d\n", picNum) ;
-                 fprintf(fp, "            p_pic: %p\n", p_pic) ;
-                 fprintf(fp, "              picture: %p\n", p_pic->p_pic) ;
-                 fprintf(fp, "              number:  %d\n", p_pic->number) ;
-                 fprintf(fp, "              resource:%p\n", p_pic->resource) ;
-             }
+            for (picNum = 0;
+                 picNum < p_frame->numAngles;
+                 picNum++, p_pic++)
+            {
+                fprintf(fp, "          angle %d\n", picNum);
+                fprintf(fp, "            p_pic: %p\n", p_pic);
+                fprintf(fp, "              picture: %p\n", p_pic->p_pic);
+                fprintf(fp, "              number:  %d\n", p_pic->number);
+                fprintf(fp, "              resource:%p\n", p_pic->resource);
+            }
         }
     }
 
-    DebugEnd() ;
+    DebugEnd();
 }
 #endif
 
@@ -1849,8 +1743,8 @@ IBuildView(
             else
             {
 #ifndef NDEBUG
-                printf("Locking non-existant part: %s\n", partName) ;
-                DebugCheck(FALSE) ;
+                printf("Locking non-existant part: %s\n", partName);
+                DebugCheck(FALSE);
 #endif
             }
         }

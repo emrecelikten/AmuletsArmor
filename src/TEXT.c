@@ -213,7 +213,7 @@ TextDrawCallBack(T_graphicID graphicID, T_word16 index)
     p_text = (T_textStruct *) G_textarray[index];
 
     res = ResourceOpen(SAMPLE_RESOURCE_FILENAME);
-    p_font = ResourceLock(p_text->font);
+    p_font = ResourceLock(p_text->font, RESOURCE_GENERIC);
 
     GrSetBitFont(p_font);
     GrSetCursorPosition(p_graphic->locx + p_graphic->xoff, p_graphic->locy + p_graphic->yoff);
@@ -265,7 +265,7 @@ TextSetText(T_textID textID, const T_byte8 *string)
     p_graphic = (T_graphicStruct *) p_text->p_graphicID;
 
     /* lock in the font */
-    p_font = ResourceLock(p_text->font);
+    p_font = ResourceLock(p_text->font, RESOURCE_GENERIC);
     GrSetBitFont(p_font);
 
     /* find the length of the new text, for width calculations */

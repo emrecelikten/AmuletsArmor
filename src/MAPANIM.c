@@ -237,9 +237,7 @@ MapAnimateLoad(T_word32 number)
             p_states =
             p_mapAnimHeader->p_states =
                 (T_mapAnimStates *)
-                    PictureLockData(
-                        name,
-                        &p_mapAnimHeader->res);
+                    PictureLockData(name, &p_mapAnimHeader->res, RESOURCE_MAPANIMSTATES);
             DebugCheck(p_mapAnimHeader->p_states != NULL);
         }
         else

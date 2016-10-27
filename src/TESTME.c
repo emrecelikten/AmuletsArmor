@@ -104,7 +104,7 @@ IShowScreen(
     MousePushEventHandler(IShowScreenNextPage);
 
     time = TickerGet() + timeout;
-    p_bitmap = (T_bitmap *) PictureLockData(picName, &res);
+    p_bitmap = (T_bitmap *) PictureLockData(picName, &res, RESOURCE_GENERIC);
     DebugCheck (p_bitmap != NULL);
     if (p_bitmap)
     {

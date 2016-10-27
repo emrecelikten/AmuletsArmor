@@ -71,7 +71,7 @@ SpellsInitSpells(T_void)
     while (PictureExist(stmp))
     {
         /* lock in a new spell structure */
-        p_spell = (T_spellStruct *) PictureLockData(stmp, &res);
+        p_spell = (T_spellStruct *) PictureLockData(stmp, &res, RESOURCE_GENERIC);
 
         DebugCheck (p_spell != NULL);
 
@@ -322,7 +322,7 @@ SpellsClearRunes(T_buttonID buttonID)
     for (i = 0; i < 4; i++)
         G_curspell[i] = 0;
 
-    pic = (T_bitmap *) PictureLockData("UI/3DUI/SPSTRIP", &res);
+    pic = (T_bitmap *) PictureLockData("UI/3DUI/SPSTRIP", &res, RESOURCE_GENERIC);
     DebugCheck(pic != NULL);
 
     if (pic != NULL)
@@ -362,7 +362,7 @@ SpellsBackspace(T_buttonID buttonID)
     for (i = 0; i < 4; i++)
         G_curspell[i] = 0;
 
-    pic = (T_bitmap *) PictureLockData("UI/3DUI/SPSTRIP", &res);
+    pic = (T_bitmap *) PictureLockData("UI/3DUI/SPSTRIP", &res, RESOURCE_GENERIC);
     DebugCheck(pic != NULL);
 
     if (pic != NULL)
@@ -617,7 +617,7 @@ SpellsCastSpell(T_buttonID buttonID)
         {
             /* get a pointer to this spell's spell struct */
             res = DoubleLinkListElementGetData(element);
-            p_spell = (T_spellStruct *) PictureLockDataQuick(res);
+            p_spell = (T_spellStruct *) PictureLockDataQuick(res, RESOURCE_GENERIC);
             DebugCheck (p_spell != NULL);
 
             /* check to see if code matches */

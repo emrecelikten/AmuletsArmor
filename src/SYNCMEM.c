@@ -13,6 +13,8 @@
  *
  *<!-----------------------------------------------------------------------*/
 
+#include <GENERAL.h>
+#include <SYNCMEM.h>
 #ifndef NDEBUG
 typedef struct {
     char *p_name ;

@@ -285,7 +285,7 @@ UIGroupDraw(T_void)
     if (p_group->background != RESOURCE_BAD)
     {
         /* Let's bring in the background. */
-        p_background = ResourceLock(p_group->background);
+        p_background = ResourceLock(p_group->background, RESOURCE_GENERIC);
 
         /* Draw it in the upper left hand corner. */
         GrDrawBitmap(p_background, 0, 0);

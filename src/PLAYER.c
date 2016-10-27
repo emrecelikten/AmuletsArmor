@@ -1352,7 +1352,7 @@ PlayerDraw(T_word16 x, T_word16 y)
         {
             sprintf(name, "OBJS/%05d/32000", G_playerBodyParts[i] & 0x0FFF);
 //printf("Drawing body part %s at %d\n", name, i) ; fflush(stdout) ;
-            p_pic = (T_bitmap *) PictureLockData(name, &res);
+            p_pic = (T_bitmap *) PictureLockData(name, &res, RESOURCE_GENERIC);
             DebugCheck(p_pic != NULL);
 //printf("Size (%d, %d)\n", p_pic->sizex, p_pic->sizey) ; fflush(stdout) ;
             GrDrawCompressedBitmapAndClipAndColor(

@@ -876,7 +876,7 @@ IScriptLoad(T_word32 number)
     DebugRoutine("IScriptLoad");
 
     /* Create the script name. */
-    sprintf((char *) filename, "S%ld.SRP", number);
+    sprintf((char *) filename, ConcatenatePaths("levels", "S%ld.SRP"), number);
 
     /* Load the script. */
     p_loaded = (T_byte8 *) FileLoad(filename, &size);

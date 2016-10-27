@@ -193,8 +193,8 @@ MapLoad(T_word32 mapNumber)
 
 
 //    puts("MapLoad: Loading backdrop and music") ;
-    sprintf(infoFileName, "L%ld.I", mapNumber);
-    p_infoFile = PictureLockData(infoFileName, &r_infoFile);
+    sprintf(infoFileName, ConcatenatePaths("levels", "L%ld.I"), mapNumber);
+    p_infoFile = PictureLockData(infoFileName, &r_infoFile, RESOURCE_GENERIC);
     strcpy(backgroundName, "CLOUDS2.PIC");
     if (p_infoFile)
     {
@@ -211,7 +211,7 @@ MapLoad(T_word32 mapNumber)
 
     TickerPause();
     PromptStatusBarUpdate(5);
-    sprintf(filename, "l%u.map", mapNumber);
+    sprintf(filename, ConcatenatePaths("levels", "L%u.map"), mapNumber);
 
 //puts("MapLoad: Door Init") ; fflush(stdout) ;
     DoorInitialize();
@@ -300,7 +300,7 @@ MapLoad(T_word32 mapNumber)
     CreaturesCheck();
 
     sprintf(infoFileName, "L%ld.I", mapNumber);
-    p_infoFile = PictureLockData(infoFileName, &r_infoFile);
+    p_infoFile = PictureLockData(infoFileName, &r_infoFile, RESOURCE_GENERIC);
     if (p_infoFile)
     {
         sscanf(p_infoFile, "%s%s%d", G_songName, backgroundName, &dummyvar);
@@ -1719,7 +1719,7 @@ MapExist(T_word32 num)
     T_byte8 filename[20];
 
     DebugRoutine("MapExist");
-    sprintf(filename, "l%u.map", num);
+    sprintf(filename, ConcatenatePaths("levels", "L%u.map"), num);
 
     if (FileExist(filename))
     {

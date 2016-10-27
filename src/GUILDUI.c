@@ -317,7 +317,7 @@ GuildUIBuildMapList(T_void)
         DebugCheck (p_mapStruct != NULL);
 
         /* lock in data 'text file' */
-        dataIn = (T_byte8 *) PictureLockData(stmp, &res);
+        dataIn = (T_byte8 *) PictureLockData(stmp, &res, RESOURCE_GENERIC);
         size = ResourceGetSize(res);
 
         /* scan for newline */

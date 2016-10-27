@@ -819,7 +819,7 @@ ControlExamineObject(T_3dObject *p_obj)
             if (PictureExist(stmp))
             {
                 /* show description file */
-                desc1 = PictureLockData(stmp, &res);
+                desc1 = PictureLockData(stmp, &res, RESOURCE_GENERIC);
                 size = ResourceGetSize(res);
                 desc2 = (T_byte8 *) MemAlloc(size + 64);
                 memcpy (desc2, desc1, size);
@@ -863,7 +863,7 @@ ControlExamineObject(T_3dObject *p_obj)
             if (PictureExist(stmp))
             {
                 /* show description file */
-                desc1 = PictureLockData(stmp, &res);
+                desc1 = PictureLockData(stmp, &res, RESOURCE_GENERIC);
                 size = ResourceGetSize(res);
                 desc2 = (T_byte8 *) MemAlloc(size + 64);
                 memcpy (desc2, desc1, size);

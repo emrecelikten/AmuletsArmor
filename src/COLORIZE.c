@@ -62,7 +62,7 @@ ColorizeInitialize(T_void)
             G_colorizeTables[i] =
                 PictureLockData(
                     resName,
-                    &G_colorizeTablesRes[i]);
+                    &G_colorizeTablesRes[i], RESOURCE_GENERIC);
 //printf("Locking colorizeTables: %p %p\n", G_colorizeTables[i], G_colorizeTablesRes[i]) ;
             DebugCheck(G_colorizeTables[i] != NULL);
             DebugCheck(G_colorizeTablesRes[i] != RESOURCE_BAD);
