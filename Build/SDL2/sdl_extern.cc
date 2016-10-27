@@ -5,12 +5,14 @@ extern "C" {
 static T_buttonClick G_mouseButton = 0;
 static T_word16 G_mouseX = 0;
 static T_word16 G_mouseY = 0;
+extern SDL_Window *window;
 
 T_void
 MouseSet(int newX, int newY)
 {
     newX >>= 1;
     newY >>= 1; // scale for large screen
+
     if (newX > 319)
         newX = 319;
     if (newY > 199)
@@ -29,7 +31,7 @@ OutsideMouseDriverGet(T_word16 *xPos, T_word16 *yPos)
 void
 OutsideMouseDriverSet(T_word16 xPos, T_word16 yPos)
 {
-    //SDL_WarpMouse(xPos * 2, yPos * 2);
+    SDL_WarpMouseInWindow(window, xPos * 2, yPos * 2);
     MouseSet(xPos * 2, yPos * 2);
 }
 

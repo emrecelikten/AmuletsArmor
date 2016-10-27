@@ -12,28 +12,12 @@ static uint32_t *large_pixels;
 static SDL_Texture *texture;
 static SDL_Surface *screen;
 static SDL_PixelFormat *format;
-void
-UpdateMouse(void)
-{
-    int flags = 0;
-    int x, y;
-    Uint32 state;
-
-    state = SDL_GetMouseState(&x, &y);
-
-    MouseSet(x, y);
-    if (state & SDL_BUTTON_LMASK)
-        flags |= MOUSE_BUTTON_LEFT;
-    if (state & SDL_BUTTON_RMASK)
-        flags |= MOUSE_BUTTON_RIGHT;
-    if (state & SDL_BUTTON_MMASK)
-        flags |= MOUSE_BUTTON_MIDDLE;
-    MouseSetButton(flags);
-}
+SDL_Window *window;
 
 void
 HandleSDLEvents()
 {
+    T_buttonClick flags = 0;
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
@@ -55,6 +39,19 @@ HandleSDLEvents()
 //                    if (screen == NULL)
 //                        exit(1); /* If you can't switch back for some reason, then epic fail */
                 }
+                break;
+            case SDL_MOUSEMOTION:
+                MouseSet(event.motion.x, event.motion.y);
+                break;
+            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.state & SDL_BUTTON_LMASK)
+                    flags |= MOUSE_BUTTON_LEFT;
+                if (event.button.state & SDL_BUTTON_RMASK)
+                    flags |= MOUSE_BUTTON_RIGHT;
+                if (event.button.state & SDL_BUTTON_MMASK)
+                    flags |= MOUSE_BUTTON_MIDDLE;
+                MouseSetButton(flags);
                 break;
         }
     }
@@ -152,7 +149,7 @@ SDLEngineUpdate(char *p_screen, unsigned char *palette)
 
         // Handle IO updates
         HandleSDLEvents();
-        UpdateMouse();
+//        UpdateMouse();
         KeyboardUpdate(TRUE);
 #if CAP_SPEED_TO_100_FPS
         Sleep(1);
@@ -169,23 +166,23 @@ InitSDLGraphics()
 //                                       SDL_WINDOWPOS_UNDEFINED,
 //                                       SCREEN_WIDTH,
 //                                       SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN);
-    SDL_Window *win = SDL_CreateWindow("Amulets & Armor",
-                                       SDL_WINDOWPOS_UNDEFINED,
-                                       SDL_WINDOWPOS_UNDEFINED,
-                                       SCREEN_WIDTH,
-                                       SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Amulets & Armor",
+                               SDL_WINDOWPOS_UNDEFINED,
+                               SDL_WINDOWPOS_UNDEFINED,
+                               SCREEN_WIDTH,
+                               SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
-    if (win == nullptr)
+    if (window == nullptr)
     {
         std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return 1;
     }
 
-    renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == nullptr)
     {
-        SDL_DestroyWindow(win);
+        SDL_DestroyWindow(window);
         std::cout << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return 1;
@@ -195,7 +192,7 @@ InitSDLGraphics()
     if (screen == nullptr)
     {
         SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(win);
+        SDL_DestroyWindow(window);
         std::cout << "SDL_CreateRGBSurface Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return 1;
@@ -206,7 +203,7 @@ InitSDLGraphics()
     if (screen2 == nullptr)
     {
         SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(win);
+        SDL_DestroyWindow(window);
         std::cout << "SDL_CreateRGBSurface Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return 1;
@@ -230,6 +227,9 @@ InitSDLGraphics()
 
     game_main(NULL, NULL);
 
+    SDL_FreeSurface(screen);
+    SDL_FreeSurface(screen2);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(win);
+    SDL_DestroyWindow(window);
 }
