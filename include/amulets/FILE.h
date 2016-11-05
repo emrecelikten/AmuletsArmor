@@ -6,11 +6,17 @@
 
 #include "GENERAL.H"
 
-#define MDAT_RESOURCE_FILENAME "res/MDAT.RES"
-#define PICTURE_RESOURCE_FILENAME "res/PICS.RES"
-#define SAMPLE_RESOURCE_FILENAME "res/SAMPLE.RES"
-#define SOUNDS_RESOURCE_FILENAME "res/SOUNDS.RES"
-#define SOUNDS16_RESOURCE_FILENAME "res/SOUNDS16.RES"
+#if defined(TARGET_UNIX)
+#define ConcatenatePaths(parent, sub) parent "/" sub
+#elif defined(TARGET_DOS) || defined(TARGET_WIN32)
+#define ConcatenatePaths(parent, sub) parent "\" sub
+#endif
+
+#define MDAT_RESOURCE_FILENAME ConcatenatePaths("res", "MDAT.RES")
+#define PICTURE_RESOURCE_FILENAME ConcatenatePaths("res", "PICS.RES")
+#define SAMPLE_RESOURCE_FILENAME ConcatenatePaths("res", "SAMPLE.RES")
+#define SOUNDS_RESOURCE_FILENAME ConcatenatePaths("res", "SOUNDS.RES")
+#define SOUNDS16_RESOURCE_FILENAME ConcatenatePaths("res", "SOUNDS16.RES")
 
 
 typedef T_word32 T_file;
@@ -59,11 +65,6 @@ FileFindNext(T_byte8 *filename);
 E_Boolean
 FileExist(T_byte8 *p_filename);
 
-#if defined(TARGET_UNIX)
-#define ConcatenatePaths(parent, sub) parent "/" sub
-#elif defined(TARGET_DOS) || defined(TARGET_WIN32)
-#define ConcatenatePaths(parent, sub) parent "\" sub
-#endif
 
 #endif
 
