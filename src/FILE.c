@@ -297,7 +297,6 @@ FileGetSize(T_byte8 *p_filename)
 #if defined(TARGET_WIN32)
     FILE *fp;
 
-    DebugRoutine("FileGetSize");
     fp = fopen(p_filename, "rb");
     if (fp) {
         size = filelength(fileno(fp));
@@ -308,7 +307,6 @@ FileGetSize(T_byte8 *p_filename)
 #elif defined(TARGET_UNIX)
     FILE *fp;
 
-    DebugRoutine("FileGetSize");
     fp = fopen(p_filename, "rb");
     if (fp)
     {
