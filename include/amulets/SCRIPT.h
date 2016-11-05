@@ -31,6 +31,85 @@ typedef T_byte8 E_scriptFlag;
 #define SCRIPT_FLAG_GREATER_THAN_OR_EQUAL  7
 #define SCRIPT_FLAG_UNKNOWN                8
 
+#define SCRIPT_TAG             (*((T_word32 *)"SpT"))
+#define SCRIPT_TAG_BAD         (*((T_word32 *)"sBd"))
+#define SCRIPT_TAG_DISCARDABLE (*((T_word32 *)"DsP"))
+
+#define SCRIPT_INSTANCE_TAG             (*((T_word32 *)"SiT"))
+#define SCRIPT_INSTANCE_TAG_BAD         (*((T_word32 *)"sIb"))
+
+#define SCRIPT_MAX_STRING 80
+
+#define OBJECT_SCRIPT_ATTR_X                   0
+#define OBJECT_SCRIPT_ATTR_Y                   1
+#define OBJECT_SCRIPT_ATTR_Z                   2
+#define OBJECT_SCRIPT_ATTR_MAX_VELOCITY        3
+#define OBJECT_SCRIPT_ATTR_STANCE              4
+#define OBJECT_SCRIPT_ATTR_WAS_BLOCKED         5
+#define OBJECT_SCRIPT_ATTR_X16                 6
+#define OBJECT_SCRIPT_ATTR_Y16                 7
+#define OBJECT_SCRIPT_ATTR_Z16                 8
+#define OBJECT_SCRIPT_ATTR_ANGLE               9
+#define OBJECT_SCRIPT_ATTR_UNKNOWN             10
+
+typedef struct
+{
+    T_byte8 length;
+    T_byte8 data[SCRIPT_MAX_STRING];
+} T_scriptString;
+
+typedef union
+{
+    T_sword32 number;
+    T_scriptString *p_string;
+} T_scriptNumberOrString;
+
+typedef struct
+{
+    E_scriptDataType type;
+    T_scriptNumberOrString ns;
+} T_scriptDataItem;
+
+typedef struct T_scriptHeader_
+{
+    T_word16 highestEvent;            /* Number of events in this script */
+    /* that might be handled. */
+    T_word16 highestPlace;            /* Number of places in this script */
+    /* that might be handled. */
+    T_word32 sizeCode;                /* size of code. */
+    T_word32 reserved[6];             /* Reserved for future use. */
+    T_word32 number;                  /* Script number to identify it. */
+    T_word32 tag;                     /* Tag to tell its memory state. */
+    struct T_scriptHeader_ *p_next;          /* Pointer to next script. */
+    struct T_scriptHeader_ *p_prev;          /* Pointer to previous script. */
+    T_word32 lockCount;               /* Number of users of this script. */
+    /* A lock count of zero means that */
+    /* the script is discardable. */
+    T_byte8 *p_code;                  /* Pointer to code area. */
+    T_word16 *p_events;               /* Pointer to events list. */
+    T_word16 *p_places;               /* Pointer to places list. */
+} PACK T_scriptHeader;
+
+typedef struct
+{
+    T_word32 instanceTag;
+    T_scriptHeader *p_header;
+    T_word32 owner;
+    /* Identifier of owner (may be pointer) */
+
+    T_scriptDataItem vars[256];
+} T_scriptInstance;
+
+typedef struct
+{
+    T_scriptHeader *p_script;
+    T_word16 position;
+} T_continueData;
+
+typedef T_word16 (*T_scriptCommand)(
+    T_scriptHeader *script,
+    T_word16 position);
+
 T_void
 ScriptInitialize(T_void);
 

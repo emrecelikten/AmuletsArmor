@@ -14,16 +14,17 @@
 
 #include "GENERAL.h"
 #include "OBJTYPE.h"
+
 #if defined(TARGET_UNIX)
 #include <unistd.h>
+
 #elif defined(TARGET_OS_WIN32)
 // TODO: Win
 #include <direct.h>
 #endif
 #include <IRESOURC.H>
 #include <MEMORY.h>
-#include <OBJTYPE.h>
-#include <IRESOURC.h>
+#include <SCRIPT.h>
 #include "platform/deserialization.h"
 
 T_sword32
@@ -196,7 +197,7 @@ DeserializeObjectType(T_file file, T_resourceEntry *p_resourceEntry)
     memcpy(p_dst, p_src, picListOffset);
 
     /* Initialize frame pointer to the start of frames in the new memory address */
-    p_frame = (T_objectFrame*)(p_dst + ((T_objectType *) p_src)->stances[0].offsetFrameList);
+    p_frame = (T_objectFrame *) (p_dst + ((T_objectType *) p_src)->stances[0].offsetFrameList);
 
     p_src += picListOffset;
     p_dst += picListOffset;
@@ -217,5 +218,53 @@ DeserializeObjectType(T_file file, T_resourceEntry *p_resourceEntry)
     }
 
     MemFree(buf);
+}
+
+T_scriptHeader *
+DeserializeScriptHeader(const T_file file, const T_word32 size)
+{
+    char buf[size];
+    T_scriptHeader *header;
+    ssize_t offset = 0;
+
+    header = MemAlloc(size + POINTER_SIZE_DIFF * 5);
+
+    read(file, buf, size);
+
+    memcpy(&(header->highestEvent), buf, sizeof(T_word16));
+    offset += sizeof(T_word16);
+
+    memcpy(&(header->highestPlace), buf + offset, sizeof(T_word16));
+    offset += sizeof(T_word16);
+
+    memcpy(&(header->sizeCode), buf + offset, sizeof(T_word32));
+    offset += sizeof(T_word32);
+
+    memcpy(&(header->reserved), buf + offset, sizeof(T_word32) * 6);
+    offset += sizeof(T_word32) * 6;
+
+    memcpy(&(header->number), buf + offset, sizeof(T_word32));
+    offset += sizeof(T_word32);
+
+    memcpy(&(header->tag), buf + offset, sizeof(T_word32));
+    offset += sizeof(T_word32);
+
+    /* Skip the pointers */
+    header->p_next = NULL;
+    header->p_prev = NULL;
+    offset += sizeof(T_word32) * 2;
+
+    memcpy(&(header->lockCount), buf + offset, sizeof(T_word32));
+    offset += sizeof(T_word32);
+
+    header->p_code = NULL;
+    header->p_events = NULL;
+    header->p_places = NULL;
+    offset += sizeof(T_word32) * 3;
+
+    /* Copy the rest of the raw data in buffer */
+    memcpy(header + 1, buf + offset, size - offset);
+
+    return header;
 }
 

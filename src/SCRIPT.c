@@ -14,12 +14,12 @@
  * @{
  *
  *<!-----------------------------------------------------------------------*/
+#include "platform/deserialization.h"
 #include "3D_TRIG.H"
 #include "AREASND.H"
 #include "CLIENT.H"
 #include "CRELOGIC.H"
 #include "DOOR.H"
-#include "FILE.H"
 #include "MAP.H"
 #include "MEMORY.H"
 #include "MESSAGE.H"
@@ -33,85 +33,6 @@
 #include "SOUND.H"
 #include "STATS.H"
 #include "SYNCTIME.H"
-
-#define SCRIPT_TAG             (*((T_word32 *)"SpT"))
-#define SCRIPT_TAG_BAD         (*((T_word32 *)"sBd"))
-#define SCRIPT_TAG_DISCARDABLE (*((T_word32 *)"DsP"))
-
-#define SCRIPT_INSTANCE_TAG             (*((T_word32 *)"SiT"))
-#define SCRIPT_INSTANCE_TAG_BAD         (*((T_word32 *)"sIb"))
-
-#define SCRIPT_MAX_STRING 80
-
-#define OBJECT_SCRIPT_ATTR_X                   0
-#define OBJECT_SCRIPT_ATTR_Y                   1
-#define OBJECT_SCRIPT_ATTR_Z                   2
-#define OBJECT_SCRIPT_ATTR_MAX_VELOCITY        3
-#define OBJECT_SCRIPT_ATTR_STANCE              4
-#define OBJECT_SCRIPT_ATTR_WAS_BLOCKED         5
-#define OBJECT_SCRIPT_ATTR_X16                 6
-#define OBJECT_SCRIPT_ATTR_Y16                 7
-#define OBJECT_SCRIPT_ATTR_Z16                 8
-#define OBJECT_SCRIPT_ATTR_ANGLE               9
-#define OBJECT_SCRIPT_ATTR_UNKNOWN             10
-
-typedef struct
-{
-    T_byte8 length;
-    T_byte8 data[SCRIPT_MAX_STRING];
-} T_scriptString;
-
-typedef union
-{
-    T_sword32 number;
-    T_scriptString *p_string;
-} T_scriptNumberOrString;
-
-typedef struct
-{
-    E_scriptDataType type;
-    T_scriptNumberOrString ns;
-} T_scriptDataItem;
-
-typedef struct T_scriptHeader_
-{
-    T_word16 highestEvent;            /* Number of events in this script */
-    /* that might be handled. */
-    T_word16 highestPlace;            /* Number of places in this script */
-    /* that might be handled. */
-    T_word32 sizeCode;                /* size of code. */
-    T_word32 reserved[6];             /* Reserved for future use. */
-    T_word32 number;                  /* Script number to identify it. */
-    T_word32 tag;                     /* Tag to tell its memory state. */
-    struct T_scriptHeader_ *p_next;          /* Pointer to next script. */
-    struct T_scriptHeader_ *p_prev;          /* Pointer to previous script. */
-    T_word32 lockCount;               /* Number of users of this script. */
-    /* A lock count of zero means that */
-    /* the script is discardable. */
-    T_byte8 *p_code;                  /* Pointer to code area. */
-    T_word16 *p_events;               /* Pointer to events list. */
-    T_word16 *p_places;               /* Pointer to places list. */
-} T_scriptHeader;
-
-typedef struct
-{
-    T_word32 instanceTag;
-    T_scriptHeader *p_header;
-    T_word32 owner;
-    /* Identifier of owner (may be pointer) */
-
-    T_scriptDataItem vars[256];
-} T_scriptInstance;
-
-typedef struct
-{
-    T_scriptHeader *p_script;
-    T_word16 position;
-} T_continueData;
-
-typedef T_word16 (*T_scriptCommand)(
-    T_scriptHeader *script,
-    T_word16 position);
 
 /* Accessor functions/macros. */
 #define ScriptGetPrevious(p_script)  ((p_script)->p_prev)
@@ -177,44 +98,60 @@ typedef T_word16 (*T_scriptCommand)(
 /* Internal prototype: */
 static T_void
 IDestroyScriptList(T_void);
+
 static T_void
 IRemoveScriptFromList(T_scriptHeader *p_script);
+
 static T_void
 IDestroyScript(T_scriptHeader *p_script);
+
 static T_scriptHeader *
 IFindScriptByNumber(T_word32 number);
+
 static T_void
 IReclaimScript(T_scriptHeader *p_script);
+
 static T_script
 IScriptInstantiate(T_scriptHeader *p_script);
+
 static T_scriptHeader *
 IScriptLoad(T_word32 number);
+
 static T_void
 IScriptMakeDiscardable(T_scriptHeader *p_script);
+
 static T_void
 IDestroyScriptInstance(T_scriptInstance *p_instance);
+
 static T_void
 IMemoryRequestDiscardScript(T_void *p_block);
+
 static T_word16
 IExecuteCode(T_scriptHeader *script, T_word16 position);
+
 static T_scriptDataItem *
 ILookupVariable(
     T_scriptHeader *p_script,
     T_word16 varNumber);
+
 static T_scriptDataItem *
 IScriptGetVariable(
     T_scriptHeader *p_script,
     T_word16 *position);
+
 static T_void
 ICopyData(
     T_scriptDataItem *dest,
     T_scriptDataItem *source);
+
 static T_void
 IPascalToCString(T_byte8 *p_cstring, T_scriptString *p_pstring);
+
 static T_word16
 IGetPlace(
     T_scriptHeader *p_script,
     T_scriptDataItem *p_value);
+
 static T_sword16
 IPascalStringCompare(
     T_scriptString *p_string1,
@@ -222,136 +159,200 @@ IPascalStringCompare(
 
 static T_word16
 ICommandSet(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandPrint(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandIf(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGoto(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandAdd(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSubtract(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandMuliply(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDivide(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandIncrement(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDecrement(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandCompare(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSound(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandChangeSideTexture(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectSetType(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandTeleport(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDoorCycle(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDoorLock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDoorUnlock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandAreaSound(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGotoPlace(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDelay(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSlideFloor(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSlideCeiling(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGosub(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandRandom(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectSound(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectSet(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectGet(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandError(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandLookForPlayer(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandIfNot(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectGetAngleToObject(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandAbsolute(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandClear(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandNegate(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectDistanceToObject(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectAccelForward(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectDamageForward(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSubtract16(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandTextBoxSetSelection(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandObjectShootObject(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandPlayerObjectGet(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGetFloorHeight(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGetCeilingHeight(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDoorIncreaseLock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDoorDecreaseLock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSideState(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandWallState(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSectorState(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGivePlayerXP(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGiveAllPlayersXP(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandEffect(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSectorSetLight(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGenerateMissile(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandPlayerHasItem(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandIsEffectActive(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandActivateGenerator(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandDeactiveGenerator(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandGroupState(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandBlock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandUnblock(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandToggleSwitch(T_scriptHeader *script, T_word16 position);
+
 static T_word16
 ICommandSlideFloorNice(
     T_scriptHeader *script,
     T_word16 position);
+
 static T_word16
 ICommandSlideCeilingNice(
     T_scriptHeader *script,
     T_word16 position);
+
 static T_word16
 ICommandJournalEntry(T_scriptHeader *script, T_word16 position);
 
@@ -868,6 +869,7 @@ static T_scriptHeader *
 IScriptLoad(T_word32 number)
 {
     T_byte8 filename[40];
+    T_file file;
     T_word32 size;
     T_byte8 *p_loaded;
     T_scriptHeader *p_script;
@@ -879,8 +881,10 @@ IScriptLoad(T_word32 number)
     sprintf((char *) filename, ConcatenatePaths("levels", "S%ld.SRP"), number);
 
     /* Load the script. */
-    p_loaded = (T_byte8 *) FileLoad(filename, &size);
-    p_script = (T_scriptHeader *) p_loaded;
+    file = FileOpen(filename, FILE_MODE_READ);
+    size = FileGetSize(filename);
+    p_script = DeserializeScriptHeader(file, size);
+    FileClose(file);
 
     /* Bomb if we didn't load it. */
     DebugCheck(p_script != NULL);
@@ -1219,12 +1223,12 @@ ScriptRunPlace(
         {
 #ifndef NDEBUG
             fprintf(stderr, "Cannot execute place %d for script %p\n",
-placeNumber,
-script) ;
-printf("Cannot execute place %d for script %p\n",
-placeNumber,
-script) ;
-DebugCheck(FALSE) ;
+                    placeNumber,
+                    script);
+            printf("Cannot execute place %d for script %p\n",
+                   placeNumber,
+                   script);
+            DebugCheck(FALSE);
 #endif
         }
     }
@@ -1232,12 +1236,12 @@ DebugCheck(FALSE) ;
     {
 #ifndef NDEBUG
         fprintf(stderr, "Cannot execute place %d for script %p\n",
-placeNumber,
-script) ;
-printf("Cannot execute place %d for script %p\n",
-placeNumber,
-script) ;
-DebugCheck(FALSE) ;
+                placeNumber,
+                script);
+        printf("Cannot execute place %d for script %p\n",
+               placeNumber,
+               script);
+        DebugCheck(FALSE);
 #endif
     }
 
@@ -3517,9 +3521,10 @@ ICommandObjectShootObject(
 
     p_obj = ObjectFind((T_word16) value.ns.number);
 #ifndef NDEBUG
-    if (p_obj == NULL)  {
-printf("Unknown object %d\n", value.ns.number) ;
-}
+    if (p_obj == NULL)
+    {
+        printf("Unknown object %d\n", value.ns.number);
+    }
 #endif
     DebugCheck(p_obj != NULL);
     if (p_obj)

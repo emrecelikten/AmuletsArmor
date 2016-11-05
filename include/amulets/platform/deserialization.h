@@ -4,7 +4,8 @@
 
 #ifndef AMULETSARMOR_SERIALIZATION_H
 #define AMULETSARMOR_SERIALIZATION_H
-#include "IRESOURC.H"
+#include "IRESOURC.h"
+#include "SCRIPT.h"
 
 #define POINTER_SIZE_DIFF (sizeof(void*) - sizeof(int))
 
@@ -16,5 +17,8 @@ LoadResourceEntries(T_file file, T_resourceEntry *resourceEntry, T_word32 numEnt
 
 T_void
 DeserializeObjectType(T_file file, T_resourceEntry *p_resourceEntry);
+
+T_scriptHeader *
+DeserializeScriptHeader(T_file file, T_word32 size);
 
 #endif //AMULETSARMOR_SERIALIZATION_H
