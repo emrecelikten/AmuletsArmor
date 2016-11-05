@@ -17,6 +17,7 @@
 #include "3D_COLLI.H"
 #include "3D_IO.H"
 #include "3D_VIEW.H"
+#include "FILE.h"
 #include "MAP.H"
 #include "MAPANIM.H"
 #include "MEMORY.H"
@@ -229,7 +230,7 @@ MapAnimateLoad(T_word32 number)
     {
         /* Get the appropriate name. */
 //        sprintf(name, "L%ld.ANI", number) ;
-        strcpy(name, "map.ani");
+        strcpy(name, ConcatenatePaths("levels", "MAP.ANI"));
 
         /* Lock the data into memory. */
         if (PictureExist(name))
