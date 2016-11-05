@@ -299,7 +299,7 @@ MapLoad(T_word32 mapNumber)
     ActivitiesRun(0);
     CreaturesCheck();
 
-    sprintf(infoFileName, "L%ld.I", mapNumber);
+    sprintf(infoFileName, ConcatenatePaths("levels", "L%ld.I"), mapNumber);
     p_infoFile = PictureLockData(infoFileName, &r_infoFile, RESOURCE_GENERIC);
     if (p_infoFile)
     {
